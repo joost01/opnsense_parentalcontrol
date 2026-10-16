@@ -1,0 +1,35 @@
+<form>
+    <field>
+        <id>bedtime.enabled</id>
+        <label>Ingeschakeld</label>
+        <type>checkbox</type>
+    </field>
+    <field>
+        <id>bedtime.group</id>
+        <label>Groep</label>
+        <type>dropdown</type>
+    </field>
+    <field>
+        <id>bedtime.days</id>
+        <label>Dagen</label>
+        <type>select_multiple</type>
+        <help>De dagen waarop deze bedtijd begint.</help>
+    </field>
+    <field>
+        <id>bedtime.start</id>
+        <label>Begin (UU:MM)</label>
+        <type>text</type>
+        <help>Vanaf dit tijdstip is internet geblokkeerd.</help>
+    </field>
+    <field>
+        <id>bedtime.end</id>
+        <label>Einde (UU:MM)</label>
+        <type>text</type>
+        <help>Is het einde eerder dan het begin (bijv. 21:00 tot 07:00), dan loopt de bedtijd door tot de volgende ochtend. Begin en einde mogen niet gelijk zijn.</help>
+    </field>
+    <field>
+        <id>bedtime.description</id>
+        <label>Omschrijving</label>
+        <type>text</type>
+    </field>
+</form>

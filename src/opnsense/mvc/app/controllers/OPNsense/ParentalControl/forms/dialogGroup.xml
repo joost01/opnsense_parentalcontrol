@@ -1,0 +1,17 @@
+<form>
+    <field>
+        <id>group.enabled</id>
+        <label>Ingeschakeld</label>
+        <type>checkbox</type>
+    </field>
+    <field>
+        <id>group.name</id>
+        <label>Naam</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>group.description</id>
+        <label>Omschrijving</label>
+        <type>text</type>
+    </field>
+</form>

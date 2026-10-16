@@ -1,0 +1,122 @@
+<model>
+    <mount>//OPNsense/ParentalControl</mount>
+    <version>1.0.0</version>
+    <description>Ouderlijk toezicht</description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </enabled>
+            <tick_interval type="IntegerField">
+                <Default>10</Default>
+                <MinimumValue>5</MinimumValue>
+                <MaximumValue>60</MaximumValue>
+                <Required>Y</Required>
+                <ValidationMessage>Kies een interval tussen 5 en 60 seconden.</ValidationMessage>
+            </tick_interval>
+        </general>
+        <groups>
+            <group type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <name type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[\p{L}0-9 _.\-]{1,64}$/u</Mask>
+                    <ValidationMessage>Gebruik 1-64 tekens: letters, cijfers, spatie, punt, streepje of underscore.</ValidationMessage>
+                    <Constraints>
+                        <check001>
+                            <ValidationMessage>Deze groepsnaam bestaat al.</ValidationMessage>
+                            <type>UniqueConstraint</type>
+                        </check001>
+                    </Constraints>
+                </name>
+                <description type="TextField">
+                    <Mask>/^.{0,255}$/u</Mask>
+                </description>
+            </group>
+        </groups>
+        <devices>
+            <device type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <name type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[\p{L}0-9 _.\-]{1,64}$/u</Mask>
+                    <ValidationMessage>Gebruik 1-64 tekens: letters, cijfers, spatie, punt, streepje of underscore.</ValidationMessage>
+                </name>
+                <mac type="MacAddressField">
+                    <Required>Y</Required>
+                    <ValidationMessage>Vul een geldig MAC-adres in (aa:bb:cc:dd:ee:ff).</ValidationMessage>
+                    <Constraints>
+                        <check001>
+                            <ValidationMessage>Dit MAC-adres zit al in een groep. Een apparaat kan maar in een groep zitten.</ValidationMessage>
+                            <type>UniqueConstraint</type>
+                        </check001>
+                    </Constraints>
+                </mac>
+                <group type="ModelRelationField">
+                    <Model>
+                        <groups>
+                            <source>OPNsense.ParentalControl.ParentalControl</source>
+                            <items>groups.group</items>
+                            <display>name</display>
+                        </groups>
+                    </Model>
+                    <Required>Y</Required>
+                    <ValidationMessage>Kies een groep.</ValidationMessage>
+                </group>
+            </device>
+        </devices>
+        <bedtimes>
+            <bedtime type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <group type="ModelRelationField">
+                    <Model>
+                        <groups>
+                            <source>OPNsense.ParentalControl.ParentalControl</source>
+                            <items>groups.group</items>
+                            <display>name</display>
+                        </groups>
+                    </Model>
+                    <Required>Y</Required>
+                    <ValidationMessage>Kies een groep.</ValidationMessage>
+                </group>
+                <days type="OptionField">
+                    <Required>Y</Required>
+                    <Multiple>Y</Multiple>
+                    <OptionValues>
+                        <mon>Maandag</mon>
+                        <tue>Dinsdag</tue>
+                        <wed>Woensdag</wed>
+                        <thu>Donderdag</thu>
+                        <fri>Vrijdag</fri>
+                        <sat>Zaterdag</sat>
+                        <sun>Zondag</sun>
+                    </OptionValues>
+                    <ValidationMessage>Kies minimaal een dag.</ValidationMessage>
+                </days>
+                <start type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^([01][0-9]|2[0-3]):[0-5][0-9]$/</Mask>
+                    <ValidationMessage>Gebruik het formaat UU:MM (24 uur).</ValidationMessage>
+                </start>
+                <end type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^([01][0-9]|2[0-3]):[0-5][0-9]$/</Mask>
+                    <ValidationMessage>Gebruik het formaat UU:MM (24 uur).</ValidationMessage>
+                </end>
+                <description type="TextField">
+                    <Mask>/^.{0,255}$/u</Mask>
+                </description>
+            </bedtime>
+        </bedtimes>
+    </items>
+</model>

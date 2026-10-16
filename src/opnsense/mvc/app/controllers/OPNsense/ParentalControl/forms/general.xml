@@ -1,0 +1,14 @@
+<form>
+    <field>
+        <id>general.enabled</id>
+        <label>Ingeschakeld</label>
+        <type>checkbox</type>
+        <help>Schakel het ouderlijk toezicht in. De firewall wordt hierbij herladen.</help>
+    </field>
+    <field>
+        <id>general.tick_interval</id>
+        <label>Controle-interval (seconden)</label>
+        <type>text</type>
+        <help>Hoe vaak de daemon bedtijden controleert en apparaten blokkeert of vrijgeeft (5-60).</help>
+    </field>
+</form>

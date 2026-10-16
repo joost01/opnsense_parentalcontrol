@@ -1,0 +1,24 @@
+<form>
+    <field>
+        <id>device.enabled</id>
+        <label>Ingeschakeld</label>
+        <type>checkbox</type>
+    </field>
+    <field>
+        <id>device.name</id>
+        <label>Naam</label>
+        <type>text</type>
+        <help>Bijvoorbeeld "iPad van Sam".</help>
+    </field>
+    <field>
+        <id>device.mac</id>
+        <label>MAC-adres</label>
+        <type>text</type>
+        <help>Schakel privacy-/random-MAC uit voor dit netwerk op het apparaat, anders verandert het adres.</help>
+    </field>
+    <field>
+        <id>device.group</id>
+        <label>Groep</label>
+        <type>dropdown</type>
+    </field>
+</form>

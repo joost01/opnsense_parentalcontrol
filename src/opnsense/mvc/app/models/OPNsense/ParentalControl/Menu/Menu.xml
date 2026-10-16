@@ -1,0 +1,7 @@
+<menu>
+    <Services>
+        <ParentalControl VisibleName="Ouderlijk toezicht" cssClass="fa fa-child fa-fw">
+            <Settings VisibleName="Instellingen" url="/ui/parentalcontrol"/>
+        </ParentalControl>
+    </Services>
+</menu>
