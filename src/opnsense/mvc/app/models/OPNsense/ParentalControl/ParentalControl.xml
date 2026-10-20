@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/ParentalControl</mount>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <description>Ouderlijk toezicht</description>
     <items>
         <general>
@@ -15,6 +15,20 @@
                 <Required>Y</Required>
                 <ValidationMessage>Kies een interval tussen 5 en 60 seconden.</ValidationMessage>
             </tick_interval>
+            <activity_threshold type="IntegerField">
+                <Default>60</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>100000</MaximumValue>
+                <Required>Y</Required>
+                <ValidationMessage>Vul een getal in (KB per minuut).</ValidationMessage>
+            </activity_threshold>
+            <idle_grace type="IntegerField">
+                <Default>3</Default>
+                <MinimumValue>0</MinimumValue>
+                <MaximumValue>60</MaximumValue>
+                <Required>Y</Required>
+                <ValidationMessage>Kies 0 tot 60 minuten.</ValidationMessage>
+            </idle_grace>
         </general>
         <groups>
             <group type="ArrayField">
@@ -78,7 +92,7 @@
                     <Default>1</Default>
                     <Required>Y</Required>
                 </enabled>
-                <group type="ModelRelationField">
+                <groups type="ModelRelationField">
                     <Model>
                         <groups>
                             <source>OPNsense.ParentalControl.ParentalControl</source>
@@ -86,9 +100,10 @@
                             <display>name</display>
                         </groups>
                     </Model>
+                    <Multiple>Y</Multiple>
                     <Required>Y</Required>
-                    <ValidationMessage>Kies een groep.</ValidationMessage>
-                </group>
+                    <ValidationMessage>Kies minimaal een groep.</ValidationMessage>
+                </groups>
                 <days type="OptionField">
                     <Required>Y</Required>
                     <Multiple>Y</Multiple>

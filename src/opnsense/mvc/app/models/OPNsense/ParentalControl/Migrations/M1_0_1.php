@@ -1,0 +1,32 @@
+<?php
+
+namespace OPNsense\ParentalControl\Migrations;
+
+use OPNsense\Base\BaseModelMigration;
+use OPNsense\Core\Config;
+
+/**
+ * Versie 1.0.1: een bedtijd kan voor meerdere groepen gelden.
+ * Het oude veld 'group' wordt overgenomen in 'groups'.
+ */
+class M1_0_1 extends BaseModelMigration
+{
+    public function run($model)
+    {
+        $old = [];
+        $cfg = Config::getInstance()->object();
+        if (isset($cfg->OPNsense->ParentalControl->bedtimes->bedtime)) {
+            foreach ($cfg->OPNsense->ParentalControl->bedtimes->bedtime as $bedtime) {
+                $uuid = (string)$bedtime->attributes()['uuid'];
+                if (isset($bedtime->group) && (string)$bedtime->group !== '') {
+                    $old[$uuid] = (string)$bedtime->group;
+                }
+            }
+        }
+        foreach ($model->bedtimes->bedtime->iterateItems() as $uuid => $node) {
+            if (isset($old[$uuid])) {
+                $node->groups = $old[$uuid];
+            }
+        }
+    }
+}

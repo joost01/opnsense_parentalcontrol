@@ -5,9 +5,10 @@
         <type>checkbox</type>
     </field>
     <field>
-        <id>bedtime.group</id>
-        <label>Groep</label>
-        <type>dropdown</type>
+        <id>bedtime.groups</id>
+        <label>Groepen</label>
+        <type>select_multiple</type>
+        <help>Dit schema geldt voor alle gekozen groepen.</help>
     </field>
     <field>
         <id>bedtime.days</id>

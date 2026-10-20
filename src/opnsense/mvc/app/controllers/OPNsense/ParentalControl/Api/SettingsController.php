@@ -3,6 +3,7 @@
 namespace OPNsense\ParentalControl\Api;
 
 use OPNsense\Base\ApiMutableModelControllerBase;
+use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 
 class SettingsController extends ApiMutableModelControllerBase
@@ -59,11 +60,25 @@ class SettingsController extends ApiMutableModelControllerBase
     {
         $names = $this->groupNames();
         foreach ($result['rows'] as &$row) {
-            if (isset($row['group'])) {
-                $row['group'] = $names[$row['group']] ?? $row['group'];
+            foreach (['group', 'groups'] as $field) {
+                if (isset($row[$field])) {
+                    $parts = array_filter(explode(',', (string)$row[$field]));
+                    $row[$field] = implode(', ', array_map(function ($p) use ($names) {
+                        return $names[$p] ?? $p;
+                    }, $parts));
+                }
             }
         }
         return $result;
+    }
+
+    private function usedMacs()
+    {
+        $used = [];
+        foreach ($this->getModel()->devices->device->iterateItems() as $device) {
+            $used[strtolower((string)$device->mac)] = true;
+        }
+        return $used;
     }
 
     /* ---------- groepen ---------- */
@@ -97,8 +112,8 @@ class SettingsController extends ApiMutableModelControllerBase
             }
         }
         foreach ($mdl->bedtimes->bedtime->iterateItems() as $bedtime) {
-            if ((string)$bedtime->group === $uuid) {
-                return ['result' => 'failed', 'message' => 'Groep heeft nog bedtijden.'];
+            if (in_array($uuid, explode(',', (string)$bedtime->groups))) {
+                return ['result' => 'failed', 'message' => 'Groep wordt nog gebruikt in een bedtijd.'];
             }
         }
         return $this->delBase('groups.group', $uuid);
@@ -116,6 +131,72 @@ class SettingsController extends ApiMutableModelControllerBase
         return $this->resolveGroups(
             $this->searchBase('devices.device', ['enabled', 'name', 'mac', 'group'], 'name')
         );
+    }
+
+    /**
+     * Apparaten die OPNsense kent (DHCP-reserveringen, leases, ARP/NDP),
+     * zonder de MAC-adressen die al in de plugin staan.
+     */
+    public function knownDevicesAction()
+    {
+        $list = json_decode(trim((new Backend())->configdRun('parentalcontrol devices')), true);
+        $used = $this->usedMacs();
+        $rows = [];
+        foreach (is_array($list) ? $list : [] as $item) {
+            if (!empty($item['mac']) && !isset($used[$item['mac']])) {
+                $rows[] = $item;
+            }
+        }
+        return ['rows' => $rows];
+    }
+
+    /**
+     * Voeg meerdere bekende apparaten tegelijk toe aan een groep.
+     * POST: group=<uuid>, devices[n][mac], devices[n][name]
+     */
+    public function addKnownDevicesAction()
+    {
+        $result = ['result' => 'failed'];
+        if (!$this->request->isPost()) {
+            return $result;
+        }
+        $group = (string)$this->request->getPost('group', 'string', '');
+        $devices = $this->request->getPost('devices');
+        if ($group === '' || !is_array($devices) || count($devices) == 0) {
+            $result['message'] = 'Kies een groep en minimaal een apparaat.';
+            return $result;
+        }
+        $mdl = $this->getModel();
+        $used = $this->usedMacs();
+        $added = 0;
+        foreach ($devices as $dev) {
+            $mac = strtolower(trim((string)($dev['mac'] ?? '')));
+            if ($mac === '' || isset($used[$mac])) {
+                continue;
+            }
+            $name = trim(preg_replace('/[^\p{L}0-9 _.\-]/u', '', (string)($dev['name'] ?? '')));
+            $name = mb_substr($name, 0, 64);
+            if ($name === '') {
+                $name = 'Apparaat ' . substr(str_replace(':', '', $mac), -4);
+            }
+            $node = $mdl->devices->device->Add();
+            $node->setNodes(['enabled' => '1', 'name' => $name, 'mac' => $mac, 'group' => $group]);
+            $used[$mac] = true;
+            $added++;
+        }
+        $msgs = $mdl->performValidation();
+        foreach ($msgs as $msg) {
+            if (!isset($result['validations'])) {
+                $result['validations'] = [];
+            }
+            $result['validations'][$msg->getField()] = $msg->getMessage();
+        }
+        if (empty($result['validations'])) {
+            $mdl->serializeToConfig();
+            Config::getInstance()->save();
+            $result = ['result' => 'saved', 'added' => $added];
+        }
+        return $result;
     }
 
     public function getDeviceAction($uuid = null)
@@ -148,7 +229,7 @@ class SettingsController extends ApiMutableModelControllerBase
     public function searchBedtimeAction()
     {
         $result = $this->resolveGroups(
-            $this->searchBase('bedtimes.bedtime', ['enabled', 'group', 'days', 'start', 'end', 'description'])
+            $this->searchBase('bedtimes.bedtime', ['enabled', 'groups', 'days', 'start', 'end', 'description'])
         );
         foreach ($result['rows'] as &$row) {
             $days = array_filter(explode(',', (string)$row['days']));

@@ -11,4 +11,16 @@
         <type>text</type>
         <help>Hoe vaak de daemon bedtijden controleert en apparaten blokkeert of vrijgeeft (5-60).</help>
     </field>
+    <field>
+        <id>general.activity_threshold</id>
+        <label>Activiteitsdrempel (KB per minuut)</label>
+        <type>text</type>
+        <help>Een groep telt als "in gebruik" zodra minstens een apparaat meer dan dit verkeer genereert. Verhoog de waarde als apparaten die stilliggen toch tijd verbruiken.</help>
+    </field>
+    <field>
+        <id>general.idle_grace</id>
+        <label>Naloop (minuten)</label>
+        <type>text</type>
+        <help>Korte pauzes zonder verkeer (bijv. een pagina lezen) tellen mee als er binnen deze tijd weer verkeer is. Daarna stopt de teller.</help>
+    </field>
 </form>
