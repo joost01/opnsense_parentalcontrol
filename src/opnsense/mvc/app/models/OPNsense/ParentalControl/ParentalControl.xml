@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/ParentalControl</mount>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <description>Ouderlijk toezicht</description>
     <items>
         <general>
@@ -133,5 +133,48 @@
                 </description>
             </bedtime>
         </bedtimes>
+        <budgets>
+            <budget type="ArrayField">
+                <enabled type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </enabled>
+                <groups type="ModelRelationField">
+                    <Model>
+                        <groups>
+                            <source>OPNsense.ParentalControl.ParentalControl</source>
+                            <items>groups.group</items>
+                            <display>name</display>
+                        </groups>
+                    </Model>
+                    <Multiple>Y</Multiple>
+                    <Required>Y</Required>
+                    <ValidationMessage>Kies minimaal een groep.</ValidationMessage>
+                </groups>
+                <days type="OptionField">
+                    <Required>Y</Required>
+                    <Multiple>Y</Multiple>
+                    <OptionValues>
+                        <mon>Maandag</mon>
+                        <tue>Dinsdag</tue>
+                        <wed>Woensdag</wed>
+                        <thu>Donderdag</thu>
+                        <fri>Vrijdag</fri>
+                        <sat>Zaterdag</sat>
+                        <sun>Zondag</sun>
+                    </OptionValues>
+                    <ValidationMessage>Kies minimaal een dag.</ValidationMessage>
+                </days>
+                <minutes type="IntegerField">
+                    <Required>Y</Required>
+                    <MinimumValue>0</MinimumValue>
+                    <MaximumValue>1440</MaximumValue>
+                    <ValidationMessage>Vul het aantal minuten in (0 tot 1440).</ValidationMessage>
+                </minutes>
+                <description type="TextField">
+                    <Mask>/^.{0,255}$/u</Mask>
+                </description>
+            </budget>
+        </budgets>
     </items>
 </model>

@@ -36,11 +36,14 @@ class ServiceController extends ApiControllerBase
                 $history[$day] = (int)round($data['history'][$day][$uuid] ?? 0);
             }
             $enabled = (string)$group->enabled === '1';
+            $info = $data['groups'][$uuid] ?? [];
             $rows[] = [
                 'uuid' => $uuid,
                 'name' => (string)$group->name,
                 'enabled' => $enabled,
-                'state' => $data['groups'][$uuid]['state'] ?? 'unknown',
+                'state' => $info['state'] ?? 'unknown',
+                'limit' => isset($info['limit']) ? (int)round($info['limit']) : null,
+                'extra' => (int)round($info['extra'] ?? 0),
                 'history' => $history,
             ];
         }
@@ -48,6 +51,30 @@ class ServiceController extends ApiControllerBase
             return strcasecmp($a['name'], $b['name']);
         });
         return ['running' => !empty($data['running']), 'dates' => $dates, 'rows' => $rows];
+    }
+
+    /**
+     * Extra tijd toevoegen aan de dagelijkse tijd van een groep (vandaag).
+     * POST: group=<uuid>, minutes=1..720
+     */
+    public function addTimeAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $uuid = (string)$this->request->getPost('group', 'string', '');
+        $minutes = (int)$this->request->getPost('minutes', 'int', 0);
+        $known = false;
+        foreach ((new ParentalControl())->groups->group->iterateItems() as $id => $group) {
+            if ($id === $uuid) {
+                $known = true;
+            }
+        }
+        if (!$known || $minutes < 1 || $minutes > 720) {
+            return ['status' => 'failed', 'message' => 'Ongeldige invoer.'];
+        }
+        $response = trim((new Backend())->configdpRun('parentalcontrol addtime', [$uuid, (string)$minutes]));
+        return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
     }
 
     public function startAction()

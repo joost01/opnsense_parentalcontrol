@@ -116,6 +116,11 @@ class SettingsController extends ApiMutableModelControllerBase
                 return ['result' => 'failed', 'message' => 'Groep wordt nog gebruikt in een bedtijd.'];
             }
         }
+        foreach ($mdl->budgets->budget->iterateItems() as $budget) {
+            if (in_array($uuid, explode(',', (string)$budget->groups))) {
+                return ['result' => 'failed', 'message' => 'Groep wordt nog gebruikt in een tijdbudget.'];
+            }
+        }
         return $this->delBase('groups.group', $uuid);
     }
 
@@ -231,6 +236,11 @@ class SettingsController extends ApiMutableModelControllerBase
         $result = $this->resolveGroups(
             $this->searchBase('bedtimes.bedtime', ['enabled', 'groups', 'days', 'start', 'end', 'description'])
         );
+        return $this->formatDays($result);
+    }
+
+    private function formatDays($result)
+    {
         foreach ($result['rows'] as &$row) {
             $days = array_filter(explode(',', (string)$row['days']));
             $row['days'] = implode(' ', array_map(function ($d) {
@@ -238,6 +248,45 @@ class SettingsController extends ApiMutableModelControllerBase
             }, $days));
         }
         return $result;
+    }
+
+    /* ---------- tijdbudgetten ---------- */
+
+    public function searchBudgetAction()
+    {
+        $result = $this->formatDays($this->resolveGroups(
+            $this->searchBase('budgets.budget', ['enabled', 'groups', 'days', 'minutes', 'description'])
+        ));
+        foreach ($result['rows'] as &$row) {
+            $min = (int)$row['minutes'];
+            $row['minutes'] = intdiv($min, 60) . 'u ' . sprintf('%02d', $min % 60) . 'm';
+        }
+        return $result;
+    }
+
+    public function getBudgetAction($uuid = null)
+    {
+        return $this->getBase('budget', 'budgets.budget', $uuid);
+    }
+
+    public function addBudgetAction()
+    {
+        return $this->addBase('budget', 'budgets.budget');
+    }
+
+    public function setBudgetAction($uuid)
+    {
+        return $this->setBase('budget', 'budgets.budget', $uuid);
+    }
+
+    public function delBudgetAction($uuid)
+    {
+        return $this->delBase('budgets.budget', $uuid);
+    }
+
+    public function toggleBudgetAction($uuid, $enabled = null)
+    {
+        return $this->toggleBase('budgets.budget', $uuid, $enabled);
     }
 
     public function getBedtimeAction($uuid = null)

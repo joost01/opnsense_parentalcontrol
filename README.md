@@ -12,8 +12,9 @@ Ouderlijk toezicht voor OPNsense.
 | Groepen met een of meer apparaten (op MAC-adres), ook te kiezen uit DHCP-reserveringen/leases/ARP | klaar |
 | Flexibele bedtijdschema's per dag/week, een schema voor meerdere groepen | klaar |
 | Overzicht verbruikte tijd per groep (gelijktijdig gebruik telt eenmaal) | klaar (alleen meten) |
-| Dagbudget per groep, blokkeren bij verstrijken tijd | gepland |
-| Extra tijd en verlengingsverzoeken (per 15 min) met "tijd is op"-pagina | gepland |
+| Dagbudget per groep (per weekdag instelbaar, een regel voor meerdere groepen), blokkeren als de tijd op is | klaar |
+| Extra tijd handmatig toevoegen (+15/+30/+60 min in het overzicht) | klaar |
+| Verlengingsverzoeken (eenmaal per 15 min, ouder keurt goed/af) met "tijd is op"-pagina | gepland |
 | Websiteprofielen op leeftijd | gepland |
 | SafeSearch afdwingen | gepland |
 
@@ -28,6 +29,10 @@ Ouderlijk toezicht voor OPNsense.
   een apparaat meer verkeer had dan de activiteitsdrempel (bytes-delta over de pf-states,
   `pfctl -ss -vv`). Korte pauzes tellen mee dankzij een instelbare naloop.
   Verbruik staat in `/var/db/parentalcontrol/usage.json` (35 dagen).
+
+- Budgetten: de laagste passende regel per groep en dag geldt; de teller begint om middernacht
+  opnieuw. Is budget plus extra tijd op, dan wordt de groep geblokkeerd zoals bij een bedtijd.
+- Extra tijd gaat via een wachtrij (`/var/db/parentalcontrol/queue`) naar de daemon en werkt direct.
 
 ## Beperkingen
 

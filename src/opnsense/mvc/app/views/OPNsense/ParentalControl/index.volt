@@ -25,6 +25,7 @@
         $('#grid-groups').UIBootgrid(gridOptions('group'));
         $('#grid-devices').UIBootgrid(gridOptions('device'));
         $('#grid-bedtimes').UIBootgrid(gridOptions('bedtime'));
+        $('#grid-budgets').UIBootgrid(gridOptions('budget'));
 
         $('#saveAct').click(function () {
             $('#saveAct_progress').addClass('fa fa-spinner fa-pulse');
@@ -47,6 +48,7 @@
             idle:     ['label-info', 'Recent actief'],
             inactive: ['label-default', 'Inactief'],
             bedtime:  ['label-warning', 'Bedtijd (geblokkeerd)'],
+            exhausted: ['label-danger', 'Tijd op (geblokkeerd)'],
             unknown:  ['label-default', '-']
         };
 
@@ -54,6 +56,12 @@
             sec = Math.round(sec);
             const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
             return h > 0 ? h + 'u ' + String(m).padStart(2, '0') + 'm' : m + 'm';
+        }
+
+        function addTime(uuid, minutes) {
+            ajaxCall('/api/parentalcontrol/service/add_time', {group: uuid, minutes: minutes}, function () {
+                loadUsage();
+            });
         }
 
         function loadUsage() {
@@ -66,7 +74,10 @@
                 const head = $('<tr>')
                     .append($('<th>').text('Groep'))
                     .append($('<th>').text('Status'))
-                    .append($('<th>').text('Vandaag'));
+                    .append($('<th>').text('Vandaag'))
+                    .append($('<th>').text('Budget'))
+                    .append($('<th>').text('Resterend'))
+                    .append($('<th>').text('Extra tijd'));
                 past.forEach(function (d) {
                     head.append($('<th>').text(d.substr(8, 2) + '-' + d.substr(5, 2)));
                 });
@@ -75,17 +86,33 @@
                 const body = $('#usage_table tbody').empty();
                 (data.rows || []).forEach(function (row) {
                     const st = row.enabled ? (stateLabels[row.state] || stateLabels.unknown) : ['label-default', 'Uitgeschakeld'];
+                    const used = row.history[today] || 0;
+                    let budget = 'onbeperkt', remaining = '-';
+                    if (row.limit !== null) {
+                        budget = fmt(row.limit) + (row.extra > 0 ? ' (+' + fmt(row.extra) + ')' : '');
+                        remaining = fmt(Math.max(0, row.limit + row.extra - used));
+                    }
+                    const extra = $('<td>');
+                    [15, 30, 60].forEach(function (n) {
+                        extra.append($('<button type="button" class="btn btn-xs btn-default" style="margin-right: 3px;">')
+                            .text('+' + n + 'm')
+                            .prop('disabled', !row.enabled)
+                            .click(function () { addTime(row.uuid, n); }));
+                    });
                     const tr = $('<tr>')
                         .append($('<td>').text(row.name))
                         .append($('<td>').append($('<span class="label">').addClass(st[0]).text(st[1])))
-                        .append($('<td class="today">').text(fmt(row.history[today] || 0)));
+                        .append($('<td class="today">').text(fmt(used)))
+                        .append($('<td>').text(budget))
+                        .append($('<td>').text(remaining))
+                        .append(extra);
                     past.forEach(function (d) {
                         tr.append($('<td>').text(fmt(row.history[d] || 0)));
                     });
                     body.append(tr);
                 });
                 if (!(data.rows || []).length) {
-                    body.append($('<tr>').append($('<td colspan="3">').text('Nog geen groepen aangemaakt.')));
+                    body.append($('<tr>').append($('<td colspan="6">').text('Nog geen groepen aangemaakt.')));
                 }
             });
         }
@@ -164,6 +191,7 @@
     <li><a data-toggle="tab" href="#groups">{{ lang._('Groepen') }}</a></li>
     <li><a data-toggle="tab" href="#devices">{{ lang._('Apparaten') }}</a></li>
     <li><a data-toggle="tab" href="#bedtimes">{{ lang._('Bedtijden') }}</a></li>
+    <li><a data-toggle="tab" href="#budgets">{{ lang._('Tijdbudgetten') }}</a></li>
 </ul>
 
 <div class="tab-content content-box">
@@ -268,6 +296,31 @@
             </tfoot>
         </table>
     </div>
+    <div id="budgets" class="tab-pane fade in">
+        <table id="grid-budgets" class="table table-condensed table-hover table-striped" data-editDialog="DialogBudget">
+            <thead>
+            <tr>
+                <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">{{ lang._('Aan') }}</th>
+                <th data-column-id="groups" data-type="string">{{ lang._('Groepen') }}</th>
+                <th data-column-id="days" data-type="string">{{ lang._('Dagen') }}</th>
+                <th data-column-id="minutes" data-type="string">{{ lang._('Apparaattijd per dag') }}</th>
+                <th data-column-id="description" data-type="string">{{ lang._('Omschrijving') }}</th>
+                <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">{{ lang._('Acties') }}</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+            <tr>
+                <td></td>
+                <td colspan="5">
+                    <button data-action="add" type="button" class="btn btn-xs btn-primary"><span class="fa fa-plus fa-fw"></span></button>
+                    <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o fa-fw"></span></button>
+                </td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
 
 <div class="content-box" style="padding-bottom: 1.5em; margin-top: 1em;">
@@ -318,4 +371,5 @@
 
 {{ partial("layout_partials/base_dialog", ['fields': formDialogGroup, 'id': 'DialogGroup', 'label': lang._('Groep bewerken')]) }}
 {{ partial("layout_partials/base_dialog", ['fields': formDialogDevice, 'id': 'DialogDevice', 'label': lang._('Apparaat bewerken')]) }}
+{{ partial("layout_partials/base_dialog", ['fields': formDialogBudget, 'id': 'DialogBudget', 'label': lang._('Tijdbudget bewerken')]) }}
 {{ partial("layout_partials/base_dialog", ['fields': formDialogBedtime, 'id': 'DialogBedtime', 'label': lang._('Bedtijd bewerken')]) }}

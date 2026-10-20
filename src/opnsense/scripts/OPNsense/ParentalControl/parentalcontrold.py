@@ -7,6 +7,10 @@ parentalcontrold - ouderlijk toezicht voor OPNsense.
   * tijdtelling: per tick wordt per groep EEN keer de verstreken tijd opgeteld als
     minstens een apparaat van de groep actief was (gelijktijdig gebruik telt dus
     niet dubbel). Activiteit = bytes-delta over de pf-states van de apparaten.
+  * dagbudgetten: is het budget (plus extra tijd) van een groep op, dan wordt de groep
+    op dezelfde manier geblokkeerd als bij een bedtijd
+  * extra tijd: de GUI zet een commando in een wachtrij (QUEUE_DIR); de daemon verwerkt
+    die direct en telt de minuten bij de extra tijd van vandaag
 """
 import json
 import os
@@ -25,6 +29,7 @@ from pc_common import norm_ip, norm_mac, neighbours, run  # noqa: E402
 CONFIG_XML = '/conf/config.xml'
 USAGE_FILE = '/var/db/parentalcontrol/usage.json'
 STATUS_FILE = '/var/run/parentalcontrol/status.json'
+QUEUE_DIR = '/var/db/parentalcontrol/queue'
 ANCHOR = 'parentalcontrol'
 PFCTL = '/sbin/pfctl'
 DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']  # datetime.weekday() volgorde
@@ -69,6 +74,14 @@ def window_active(win, now):
     if s < e:
         return today and s <= minute < e
     return (today and minute >= s) or (yesterday and minute < e)
+
+
+def daily_limit(budgets, uuid, now):
+    """Laagste passende dagbudget in seconden voor deze groep, of None (onbeperkt)."""
+    day = DAYS[now.weekday()]
+    limits = [b['minutes'] * 60 for b in budgets
+              if b['enabled'] and uuid in b['groups'] and day in b['days'] and b['minutes'] is not None]
+    return min(limits) if limits else None
 
 
 def table_name(uuid):
@@ -192,13 +205,18 @@ class GroupTimer:
 
 
 class UsageStore:
+    """Verbruik en extra tijd per dag per groep (seconden)."""
+
     def __init__(self, path):
         self.path = path
         self.days = {}
+        self.extra = {}
         self.dirty = False
         try:
             with open(path) as handle:
-                self.days = json.load(handle).get('days', {})
+                data = json.load(handle)
+            self.days = data.get('days', {})
+            self.extra = data.get('extra', {})
         except (OSError, ValueError):
             pass
 
@@ -210,11 +228,20 @@ class UsageStore:
     def get(self, day, uuid):
         return self.days.get(day, {}).get(uuid, 0.0)
 
+    def add_extra(self, day, uuid, secs):
+        entry = self.extra.setdefault(day, {})
+        entry[uuid] = entry.get(uuid, 0.0) + secs
+        self.dirty = True
+
+    def get_extra(self, day, uuid):
+        return self.extra.get(day, {}).get(uuid, 0.0)
+
     def save(self):
         cutoff = (date.today() - timedelta(days=USAGE_KEEP_DAYS)).isoformat()
         self.days = {k: v for k, v in self.days.items() if k >= cutoff}
+        self.extra = {k: v for k, v in self.extra.items() if k >= cutoff}
         try:
-            atomic_write(self.path, {'days': self.days})
+            atomic_write(self.path, {'days': self.days, 'extra': self.extra})
             self.dirty = False
         except OSError as err:
             log('verbruik opslaan mislukt: %s' % err, syslog.LOG_ERR)
@@ -225,7 +252,7 @@ class UsageStore:
 def parse_config(root):
     node = root.find('OPNsense/ParentalControl')
     cfg = {'enabled': False, 'interval': 10, 'threshold_kb': 60, 'grace_min': 3,
-           'groups': {}, 'devices': [], 'bedtimes': []}
+           'groups': {}, 'devices': [], 'bedtimes': [], 'budgets': []}
     if node is None:
         return cfg
     cfg['enabled'] = node.findtext('general/enabled') == '1'
@@ -264,11 +291,22 @@ def parse_config(root):
             'start': parse_hhmm(b.findtext('start')),
             'end': parse_hhmm(b.findtext('end')),
         })
+    for b in node.findall('budgets/budget'):
+        try:
+            minutes = int(b.findtext('minutes'))
+        except (TypeError, ValueError):
+            minutes = None
+        cfg['budgets'].append({
+            'enabled': b.findtext('enabled') == '1',
+            'groups': set(filter(None, (b.findtext('groups') or '').split(','))),
+            'days': set(filter(None, (b.findtext('days') or '').split(','))),
+            'minutes': minutes,
+        })
     return cfg
 
 
 EMPTY_CFG = {'enabled': False, 'interval': 10, 'threshold_kb': 60, 'grace_min': 3,
-             'groups': {}, 'devices': [], 'bedtimes': []}
+             'groups': {}, 'devices': [], 'bedtimes': [], 'budgets': []}
 
 
 # ---------------------------------------------------------------- daemon
@@ -322,15 +360,26 @@ class Daemon:
         if not self.ensure_anchor(groups):
             return
         now = datetime.now()
+        day = now.date().isoformat()
+        self.process_queue(cfg, day)
         mono = time.monotonic()
         dt = 0.0 if self.last_mono is None else min(mono - self.last_mono, 2.0 * cfg['interval'])
         self.last_mono = mono
 
-        in_bedtime = {
-            g['uuid']: any(window_active(w, now) for w in cfg['bedtimes']
-                           if w['enabled'] and g['uuid'] in w['groups'])
-            for g in groups
-        }
+        # Reden van blokkeren per groep: 'bedtime', 'exhausted' (tijd op) of None
+        limits, reasons = {}, {}
+        for g in groups:
+            uuid = g['uuid']
+            limits[uuid] = daily_limit(cfg['budgets'], uuid, now)
+            if any(window_active(w, now) for w in cfg['bedtimes']
+                   if w['enabled'] and uuid in w['groups']):
+                reasons[uuid] = 'bedtime'
+            elif (limits[uuid] is not None and
+                  self.usage.get(day, uuid) >= limits[uuid] + self.usage.get_extra(day, uuid)):
+                reasons[uuid] = 'exhausted'
+            else:
+                reasons[uuid] = None
+
         neigh = neighbours() if groups else {}
         group_ips = {g['uuid']: set() for g in groups}
         for d in cfg['devices']:
@@ -338,17 +387,49 @@ class Daemon:
                 group_ips[d['group']] |= neigh.get(d['mac'], set())
 
         for g in groups:
-            blocked = in_bedtime[g['uuid']]
-            self.apply(g, group_ips[g['uuid']] if blocked else set(), blocked)
+            reason = reasons[g['uuid']]
+            self.apply(g, group_ips[g['uuid']] if reason else set(), reason)
 
         if groups:
-            self.measure(groups, group_ips, in_bedtime, dt, now)
-        self.write_status(groups, now)
+            self.measure(groups, group_ips, reasons, dt, now)
+        self.write_status(groups, now, limits)
         if self.usage.dirty and mono - self.last_save >= USAGE_SAVE_INTERVAL:
             self.usage.save()
             self.last_save = mono
 
-    def measure(self, groups, group_ips, in_bedtime, dt, now):
+    def process_queue(self, cfg, day):
+        """Verwerk commando's uit de GUI (extra tijd toevoegen)."""
+        try:
+            names = sorted(n for n in os.listdir(QUEUE_DIR) if n.endswith('.json') and not n.startswith('.'))
+        except OSError:
+            return
+        for name in names:
+            path = os.path.join(QUEUE_DIR, name)
+            try:
+                with open(path) as handle:
+                    cmd = json.load(handle)
+            except (OSError, ValueError):
+                cmd = {}
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+            uuid, minutes = cmd.get('group'), cmd.get('minutes')
+            if (cmd.get('action') == 'add_time' and uuid in cfg['groups'] and
+                    isinstance(minutes, int) and 0 < minutes <= 720):
+                self.usage.add_extra(day, uuid, minutes * 60)
+                self.usage.save()
+                log('groep "%s": %d minuten extra tijd toegevoegd' % (cfg['groups'][uuid]['name'], minutes))
+            else:
+                log('ongeldig commando genegeerd: %s' % name, syslog.LOG_WARNING)
+
+    def queue_pending(self):
+        try:
+            return any(n.endswith('.json') and not n.startswith('.') for n in os.listdir(QUEUE_DIR))
+        except OSError:
+            return False
+
+    def measure(self, groups, group_ips, reasons, dt, now):
         cfg = self.cfg
         ip_group = {}
         for uuid, ips in group_ips.items():
@@ -360,14 +441,14 @@ class Daemon:
         day = now.date().isoformat()
         for g in groups:
             uuid = g['uuid']
-            active = (not in_bedtime[uuid]) and dt > 0 and deltas.get(uuid, 0) >= threshold
+            active = reasons[uuid] is None and dt > 0 and deltas.get(uuid, 0) >= threshold
             timer = self.timers.setdefault(uuid, GroupTimer())
             secs = timer.update(active, dt, cfg['grace_min'] * 60)
             if secs:
                 self.usage.add(day, uuid, secs)
-            self.states[uuid] = 'bedtime' if in_bedtime[uuid] else timer.state(active)
+            self.states[uuid] = reasons[uuid] or timer.state(active)
 
-    def write_status(self, groups, now):
+    def write_status(self, groups, now, limits):
         day = now.date().isoformat()
         cutoff = (now.date() - timedelta(days=8)).isoformat()
         status = {
@@ -379,6 +460,8 @@ class Daemon:
                     'name': g['name'],
                     'state': self.states.get(g['uuid'], 'inactive'),
                     'used_today': self.usage.get(day, g['uuid']),
+                    'limit': limits.get(g['uuid']),
+                    'extra': self.usage.get_extra(day, g['uuid']),
                 } for g in groups
             },
             'history': {k: v for k, v in self.usage.days.items() if k >= cutoff},
@@ -388,7 +471,7 @@ class Daemon:
         except OSError as err:
             log('status schrijven mislukt: %s' % err, syslog.LOG_ERR)
 
-    def apply(self, group, want, is_active):
+    def apply(self, group, want, reason):
         table = group['table']
         have = self.last.get(table, set())
         if want != have:
@@ -402,10 +485,13 @@ class Daemon:
             for ip in sorted(want - have):
                 run([PFCTL, '-k', ip])  # bestaande verbindingen verbreken
             self.last[table] = want
-        if self.blocking.get(group['uuid']) != is_active:
-            self.blocking[group['uuid']] = is_active
-            log('groep "%s": bedtijd %s (%d adres(sen) geblokkeerd)' %
-                (group['name'], 'actief' if is_active else 'voorbij', len(want)))
+        if self.blocking.get(group['uuid']) != reason:
+            self.blocking[group['uuid']] = reason
+            if reason:
+                log('groep "%s": geblokkeerd (%s), %d adres(sen)' %
+                    (group['name'], 'bedtijd' if reason == 'bedtime' else 'tijd op', len(want)))
+            else:
+                log('groep "%s": vrijgegeven' % group['name'])
 
     def stop(self, *_):
         self.running = False
@@ -419,6 +505,8 @@ class Daemon:
             deadline = time.monotonic() + (self.cfg['interval'] if self.cfg else 10)
             while self.running and time.monotonic() < deadline:
                 time.sleep(1)
+                if self.queue_pending():
+                    break
         self.usage.save()
         # Blokkades blijven bewust staan bij stoppen (geen gat bij herstart);
         # 'service.sh cleanup' maakt het anchor leeg.
