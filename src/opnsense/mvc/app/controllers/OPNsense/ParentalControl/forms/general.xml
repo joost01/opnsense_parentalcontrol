@@ -23,4 +23,96 @@
         <type>text</type>
         <help>Korte pauzes zonder verkeer (bijv. een pagina lezen) tellen mee als er binnen deze tijd weer verkeer is. Daarna stopt de teller.</help>
     </field>
+    <field>
+        <id>general.header_blockpage</id>
+        <label>Blokkeerpagina en verzoeken</label>
+        <type>header</type>
+    </field>
+    <field>
+        <id>general.blockpage</id>
+        <label>Blokkeerpagina tonen</label>
+        <type>checkbox</type>
+        <help>Geblokkeerde apparaten krijgen uitleg te zien (HTTP-verkeer en DNS worden omgeleid naar de firewall). Zonder deze optie wordt verkeer stil genegeerd. HTTPS-sites tonen een foutmelding van de browser.</help>
+    </field>
+    <field>
+        <id>general.page_port</id>
+        <label>Poort blokkeerpagina</label>
+        <type>text</type>
+        <help>De pagina luistert alleen lokaal (127.0.0.1 en ::1) op deze poort. Je hoeft niets te openen.</help>
+    </field>
+    <field>
+        <id>general.header_dns</id>
+        <label>DNS (AdGuard)</label>
+        <type>header</type>
+    </field>
+    <field>
+        <id>general.dns_servers</id>
+        <label>DNS-server(s)</label>
+        <type>text</type>
+        <help>IP-adres(sen) van AdGuard (komma-gescheiden, maximaal 4; geef ook het IPv6-adres op als het bestaat). Geblokkeerde apparaten mogen alleen deze server(s) voor DNS gebruiken. Leeg laten = DNS van geblokkeerde apparaten gaat naar Unbound op deze firewall.</help>
+    </field>
+    <field>
+        <id>general.dns_enforce</id>
+        <label>DNS afdwingen</label>
+        <type>checkbox</type>
+        <help>Al het DNS-verkeer (poort 53, TCP en UDP) van clients op de gekozen interfaces wordt omgeleid naar de eerste DNS-server hierboven, ook als een apparaat zelf 8.8.8.8 of een andere server gebruikt. De DNS-server zelf wordt uitgezonderd.</help>
+    </field>
+    <field>
+        <id>general.dns_interfaces</id>
+        <label>Interfaces met clients</label>
+        <type>select_multiple</type>
+        <help>Kies uitsluitend interfaces aan de LAN-kant, nooit WAN. Anders kan je DNS-server van buitenaf bereikbaar worden.</help>
+    </field>
+    <field>
+        <id>general.dns_block_encrypted</id>
+        <label>Versleutelde DNS blokkeren</label>
+        <type>checkbox</type>
+        <help>Blokkeert DNS-over-TLS (poort 853) en HTTPS-verkeer naar bekende openbare DNS-resolvers van Google, Cloudflare, Quad9, OpenDNS en AdGuard (niet uitputtend). De DNS-server zelf wordt uitgezonderd.</help>
+    </field>
+    <field>
+        <id>general.request_enabled</id>
+        <label>Verzoeken om extra tijd toestaan</label>
+        <type>checkbox</type>
+    </field>
+    <field>
+        <id>general.request_cooldown</id>
+        <label>Tijd tussen verzoeken (minuten)</label>
+        <type>text</type>
+        <help>Een groep kan hooguit een verzoek per periode doen. Ook na afwijzen.</help>
+    </field>
+    <field>
+        <id>general.header_notify</id>
+        <label>Meldingen aan de ouder</label>
+        <type>header</type>
+    </field>
+    <field>
+        <id>general.ntfy_server</id>
+        <label>ntfy-server</label>
+        <type>text</type>
+        <help>Bijvoorbeeld https://ntfy.sh of je eigen server (zonder pad).</help>
+    </field>
+    <field>
+        <id>general.ntfy_topic</id>
+        <label>ntfy-topic</label>
+        <type>text</type>
+        <help>Kies een moeilijk te raden naam en abonneer je erop in de ntfy-app.</help>
+    </field>
+    <field>
+        <id>general.ntfy_token</id>
+        <label>ntfy-toegangstoken</label>
+        <type>password</type>
+        <help>Optioneel, voor een beveiligd topic.</help>
+    </field>
+    <field>
+        <id>general.webhook_url</id>
+        <label>Webhook-URL</label>
+        <type>text</type>
+        <help>Optioneel: JSON-POST (event, title, message, click), bijvoorbeeld voor Home Assistant.</help>
+    </field>
+    <field>
+        <id>general.gui_url</id>
+        <label>Link naar deze pagina</label>
+        <type>text</type>
+        <help>Wordt in de melding gezet, bijvoorbeeld https://192.168.1.1/ui/parentalcontrol. Goedkeuren gebeurt altijd in de beveiligde GUI.</help>
+    </field>
 </form>

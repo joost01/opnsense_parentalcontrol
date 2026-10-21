@@ -116,11 +116,65 @@
                 }
             });
         }
+        /* ---------- verzoeken om extra tijd ---------- */
+
+        const reqLabels = {
+            pending:  ['label-warning', 'Wacht op beslissing'],
+            approved: ['label-success', 'Goedgekeurd'],
+            denied:   ['label-danger', 'Afgewezen'],
+            expired:  ['label-default', 'Verlopen']
+        };
+
+        function decide(id, decision) {
+            ajaxCall('/api/parentalcontrol/service/resolve_request', {id: id, decision: decision}, function () {
+                setTimeout(function () { loadRequests(); loadUsage(); }, 1500);
+            });
+        }
+
+        function loadRequests() {
+            ajaxGet('/api/parentalcontrol/service/requests', {}, function (data) {
+                const body = $('#req_table tbody').empty();
+                const rows = data.rows || [];
+                const pending = rows.filter(function (r) { return r.status === 'pending'; }).length;
+                $('#req_badge').text(pending).toggleClass('hidden', pending === 0);
+                rows.forEach(function (r) {
+                    const st = reqLabels[r.status] || ['label-default', r.status];
+                    const when = new Date(r.created * 1000).toLocaleString('nl-NL', {
+                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
+                    const actions = $('<td>');
+                    if (r.status === 'pending') {
+                        actions.append($('<button type="button" class="btn btn-xs btn-success" style="margin-right: 4px;">')
+                            .text('Goedkeuren').click(function () { decide(r.id, 'approve'); }));
+                        actions.append($('<button type="button" class="btn btn-xs btn-danger">')
+                            .text('Afwijzen').click(function () { decide(r.id, 'deny'); }));
+                    }
+                    body.append($('<tr>')
+                        .append($('<td>').text(when))
+                        .append($('<td>').text(r.name))
+                        .append($('<td>').text(r.minutes + ' min'))
+                        .append($('<td>').append($('<span class="label">').addClass(st[0]).text(st[1])))
+                        .append(actions));
+                });
+                if (!rows.length) {
+                    body.append($('<tr>').append($('<td colspan="5">').text('Geen verzoeken.')));
+                }
+            });
+        }
+
+        $('#testNotifyAct').click(function () {
+            ajaxCall('/api/parentalcontrol/service/test_notification', {}, function (data) {
+                stdDialogInform('Testmelding',
+                    data.status === 'ok' ? 'Testmelding verstuurd.' : (data.message || 'Versturen mislukt.'),
+                    'Sluiten');
+            });
+        });
+
         loadUsage();
+        loadRequests();
         setInterval(function () {
-            if ($('#overview').hasClass('active')) { loadUsage(); }
+            if ($('#overview').hasClass('active')) { loadUsage(); loadRequests(); }
         }, 10000);
-        $('a[href="#overview"]').on('shown.bs.tab', loadUsage);
+        $('a[href="#overview"]').on('shown.bs.tab', function () { loadUsage(); loadRequests(); });
 
         /* ---------- bekende apparaten toevoegen ---------- */
 
@@ -204,6 +258,19 @@
                 <thead></thead>
                 <tbody></tbody>
             </table>
+            <h4 style="margin-top: 1.5em;">{{ lang._('Verzoeken om extra tijd') }} <span id="req_badge" class="badge hidden"></span></h4>
+            <table id="req_table" class="table table-striped table-condensed">
+                <thead>
+                <tr>
+                    <th>{{ lang._('Wanneer') }}</th>
+                    <th>{{ lang._('Groep') }}</th>
+                    <th>{{ lang._('Gevraagd') }}</th>
+                    <th>{{ lang._('Status') }}</th>
+                    <th>{{ lang._('Beslissing') }}</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
             <p class="text-muted">
                 {{ lang._('Verbruikte tijd is de tijd waarin minstens één apparaat van de groep netwerkverkeer had. Gelijktijdig gebruik van meerdere apparaten telt één keer. Het is een benadering van schermtijd.') }}
             </p>
@@ -217,6 +284,10 @@
             <button class="btn btn-primary" id="saveAct" type="button">
                 <b>{{ lang._('Opslaan') }}</b> <i id="saveAct_progress"></i>
             </button>
+            <button class="btn btn-default" id="testNotifyAct" type="button">
+                {{ lang._('Testmelding versturen') }}
+            </button>
+            <span class="text-muted">{{ lang._('Gebruikt de opgeslagen instellingen: sla eerst op.') }}</span>
         </div>
     </div>
 

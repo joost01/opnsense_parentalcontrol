@@ -43,13 +43,21 @@ function parentalcontrol_start()
 }
 
 /**
- * Registreert een pf-anchor. De daemon laadt zelf de regels en tables in dit anchor,
+ * Registreert een pf-anchor (filter, rdr en nat). De daemon laadt zelf de regels en tables in dit anchor,
  * zodat de firewall niet bij elke blokkade herladen hoeft te worden.
  */
 function parentalcontrol_firewall($fw)
 {
     if (!parentalcontrol_enabled()) {
         return;
+    }
+    foreach (['rdr', 'nat'] as $type) {
+        try {
+            // rdr: blokkeerpagina en DNS-omleiding; nat: terugkeerpad als AdGuard in hetzelfde subnet staat
+            $fw->registerAnchor('parentalcontrol', $type, 200, 'head');
+        } catch (\Throwable $e) {
+            syslog(LOG_WARNING, 'parentalcontrol: ' . $type . '-anchor registreren mislukt: ' . $e->getMessage());
+        }
     }
     $fw->registerAnchor('parentalcontrol', 'fw', 200, 'head');
 }

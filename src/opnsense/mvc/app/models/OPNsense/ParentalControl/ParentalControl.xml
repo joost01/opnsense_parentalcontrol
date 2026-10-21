@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/ParentalControl</mount>
-    <version>1.0.2</version>
+    <version>1.0.5</version>
     <description>Ouderlijk toezicht</description>
     <items>
         <general>
@@ -29,6 +29,65 @@
                 <Required>Y</Required>
                 <ValidationMessage>Kies 0 tot 60 minuten.</ValidationMessage>
             </idle_grace>
+            <blockpage type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </blockpage>
+            <page_port type="IntegerField">
+                <Default>8089</Default>
+                <MinimumValue>1024</MinimumValue>
+                <MaximumValue>65535</MaximumValue>
+                <Required>Y</Required>
+                <ValidationMessage>Kies een poort tussen 1024 en 65535.</ValidationMessage>
+            </page_port>
+            <dns_servers type="TextField">
+                <Mask>/^([0-9a-fA-F:.]{2,45}(\s*,\s*[0-9a-fA-F:.]{2,45}){0,3})?$/</Mask>
+                <ValidationMessage>Vul een of meer IP-adressen in, gescheiden door komma's (maximaal 4), of laat leeg.</ValidationMessage>
+            </dns_servers>
+            <dns_enforce type="BooleanField">
+                <Default>0</Default>
+                <Required>Y</Required>
+            </dns_enforce>
+            <dns_interfaces type="InterfaceField">
+                <Multiple>Y</Multiple>
+                <ValidationMessage>Kies de interfaces waarop de clients zitten.</ValidationMessage>
+            </dns_interfaces>
+            <dns_block_encrypted type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </dns_block_encrypted>
+            <request_enabled type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </request_enabled>
+            <request_cooldown type="IntegerField">
+                <Default>15</Default>
+                <MinimumValue>1</MinimumValue>
+                <MaximumValue>1440</MaximumValue>
+                <Required>Y</Required>
+                <ValidationMessage>Kies 1 tot 1440 minuten.</ValidationMessage>
+            </request_cooldown>
+            <ntfy_server type="TextField">
+                <Default>https://ntfy.sh</Default>
+                <Mask>/^(https?:\/\/[^\s\/]{1,255})?$/</Mask>
+                <ValidationMessage>Vul een server in zoals https://ntfy.sh (zonder pad), of laat leeg.</ValidationMessage>
+            </ntfy_server>
+            <ntfy_topic type="TextField">
+                <Mask>/^[A-Za-z0-9_\-]{0,64}$/</Mask>
+                <ValidationMessage>Gebruik alleen letters, cijfers, _ en -.</ValidationMessage>
+            </ntfy_topic>
+            <ntfy_token type="TextField">
+                <Mask>/^[A-Za-z0-9_\-]{0,128}$/</Mask>
+                <ValidationMessage>Ongeldig token.</ValidationMessage>
+            </ntfy_token>
+            <webhook_url type="TextField">
+                <Mask>/^(https?:\/\/\S{1,500})?$/</Mask>
+                <ValidationMessage>Vul een geldige http(s)-URL in, of laat leeg.</ValidationMessage>
+            </webhook_url>
+            <gui_url type="TextField">
+                <Mask>/^(https?:\/\/\S{1,500})?$/</Mask>
+                <ValidationMessage>Vul een geldige http(s)-URL in, of laat leeg.</ValidationMessage>
+            </gui_url>
         </general>
         <groups>
             <group type="ArrayField">

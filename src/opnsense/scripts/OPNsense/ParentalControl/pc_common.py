@@ -4,8 +4,15 @@ import re
 import subprocess
 
 
-def run(cmd, stdin=None):
-    return subprocess.run(cmd, input=stdin, capture_output=True, text=True)
+def run(cmd, stdin=None, timeout=20):
+    """Voer een commando uit. Hangt of ontbreekt het, dan volgt een resultaat met returncode 124/127
+    in plaats van een blokkerende daemon of een exception."""
+    try:
+        return subprocess.run(cmd, input=stdin, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(cmd, 124, '', 'timeout after %ds' % timeout)
+    except OSError as err:
+        return subprocess.CompletedProcess(cmd, 127, '', str(err))
 
 
 def norm_mac(mac):
@@ -65,3 +72,10 @@ def neighbours(skip_permanent=False):
         for mac, ips in parsed.items():
             result.setdefault(mac, set()).update(ips)
     return result
+
+
+def fmt_dur(sec):
+    """Seconden -> '1u 05m' of '12m'."""
+    sec = int(round(sec))
+    h, m = sec // 3600, (sec % 3600) // 60
+    return '%du %02dm' % (h, m) if h else '%dm' % m

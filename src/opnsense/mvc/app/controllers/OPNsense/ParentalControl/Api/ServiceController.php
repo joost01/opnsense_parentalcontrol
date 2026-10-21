@@ -77,6 +77,44 @@ class ServiceController extends ApiControllerBase
         return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
     }
 
+    /**
+     * Verzoeken om extra tijd (openstaande eerst).
+     */
+    public function requestsAction()
+    {
+        $data = json_decode(trim((new Backend())->configdRun('parentalcontrol requests')), true);
+        return ['rows' => is_array($data) ? $data : []];
+    }
+
+    /**
+     * Verzoek goedkeuren of afwijzen. POST: id=<hex>, decision=approve|deny
+     */
+    public function resolveRequestAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $id = (string)$this->request->getPost('id', 'string', '');
+        $decision = (string)$this->request->getPost('decision', 'string', '');
+        if (!preg_match('/^[0-9a-f]{6,32}$/', $id) || !in_array($decision, ['approve', 'deny'], true)) {
+            return ['status' => 'failed', 'message' => 'Ongeldige invoer.'];
+        }
+        $response = trim((new Backend())->configdpRun('parentalcontrol resolve', [$id, $decision]));
+        return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
+    }
+
+    /**
+     * Testmelding versturen met de opgeslagen instellingen.
+     */
+    public function testNotificationAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $response = trim((new Backend())->configdRun('parentalcontrol testnotify'));
+        return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
+    }
+
     public function startAction()
     {
         if ($this->request->isPost()) {
