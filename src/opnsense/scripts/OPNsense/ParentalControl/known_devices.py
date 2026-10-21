@@ -14,6 +14,7 @@ import xml.etree.ElementTree as ET
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pc_common import neighbours, norm_mac  # noqa: E402
 
+KEA_CONFIG = '/usr/local/etc/kea/kea-dhcp4.conf'
 CONFIG_XML = '/conf/config.xml'
 ISC_LEASES = '/var/dhcpd/var/db/dhcpd.leases'
 KEA_LEASES = '/var/db/kea/kea-leases4.csv'
@@ -33,6 +34,18 @@ def reservations(root):
     for h in root.findall('OPNsense/Dnsmasq/hosts'):                    # Dnsmasq
         for mac in (h.findtext('hwaddr') or '').split(','):
             found.append((mac, h.findtext('ip'), h.findtext('host') or h.findtext('descr')))
+    return found
+
+
+def kea_config_reservations(path):
+    """[(mac, ip, naam)] uit de Kea-configuratie die de DHCP-server werkelijk gebruikt."""
+    with open(path) as handle:
+        dhcp4 = json.load(handle).get('Dhcp4', {})
+    found = []
+    pools = [dhcp4.get('reservations', [])] + [sub.get('reservations', []) for sub in dhcp4.get('subnet4', [])]
+    for pool in pools:
+        for r in pool:
+            found.append((r.get('hw-address'), r.get('ip-address'), r.get('hostname')))
     return found
 
 
@@ -117,13 +130,33 @@ def collect(reserved, leases, live):
 
 
 def main():
-    reserved = []
-    try:
-        reserved = reservations(ET.parse(CONFIG_XML).getroot())
-    except (OSError, ET.ParseError):
-        pass
-    leases = read(ISC_LEASES, isc_leases) + read(KEA_LEASES, kea_leases) + read(DNSMASQ_LEASES, dnsmasq_leases)
-    print(json.dumps(collect(reserved, leases, neighbours(skip_permanent=True))))
+    debug = '--debug' in sys.argv
+    errors, sources = [], {}
+
+    def gather(name, func):
+        try:
+            sources[name] = func()
+        except Exception as err:  # een kapotte bron mag de rest niet blokkeren
+            sources[name] = []
+            errors.append('%s: %r' % (name, err))
+
+    gather('config.xml-reserveringen', lambda: reservations(ET.parse(CONFIG_XML).getroot()))
+    gather('kea-config', lambda: kea_config_reservations(KEA_CONFIG) if os.path.exists(KEA_CONFIG) else [])
+    gather('isc-leases', lambda: read(ISC_LEASES, isc_leases))
+    gather('kea-leases', lambda: read(KEA_LEASES, kea_leases))
+    gather('dnsmasq-leases', lambda: read(DNSMASQ_LEASES, dnsmasq_leases))
+    gather('arp/ndp', lambda: neighbours(skip_permanent=True))
+    reserved = sources['config.xml-reserveringen'] + sources['kea-config']
+    leases = sources['isc-leases'] + sources['kea-leases'] + sources['dnsmasq-leases']
+    rows = collect(reserved, leases, sources['arp/ndp'])
+    if debug:
+        for name, data in sources.items():
+            print('%-26s %d item(s)' % (name, len(data)), file=sys.stderr)
+        for err in errors:
+            print('FOUT %s' % err, file=sys.stderr)
+        for item in reserved:
+            print('reservering: %r -> %s' % (item, norm_mac(item[0])), file=sys.stderr)
+    print(json.dumps(rows))
 
 
 if __name__ == '__main__':

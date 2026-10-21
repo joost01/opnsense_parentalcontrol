@@ -161,6 +161,30 @@ class ScriptTests(unittest.TestCase):
             self.assertTrue(self.run_script('resolve_request.py', *bad, queue=queue).startswith('ERROR'), bad)
         self.assertEqual(self.run_script('resolve_request.py', 'abcdef123456', 'deny', queue=queue), 'OK')
 
+    def test_norm_mac_formats(self):
+        pc = load('pc_common_test', 'pc_common.py')
+        for raw in ('AA:BB:CC:DD:EE:01', 'aa-bb-cc-dd-ee-01', 'aabbccddee01', 'aabb.ccdd.ee01', ' AA:bb:CC:dd:EE:1 '):
+            self.assertEqual(pc.norm_mac(raw), 'aa:bb:cc:dd:ee:01', raw)
+        self.assertEqual(pc.norm_mac('0:1b:2c:3d:4e:5f'), '00:1b:2c:3d:4e:5f')
+        for bad in (None, '', 'zz:bb:cc:dd:ee:01', 'aa:bb:cc:dd:ee', 'aa:bb:cc:dd:ee:011', '(incomplete)'):
+            self.assertIsNone(pc.norm_mac(bad), bad)
+
+    def test_kea_reservations_from_config_xml_and_kea_json(self):
+        xml = ('<opnsense><OPNsense><Kea><dhcp4><reservations><reservation uuid="r1"><subnet>s1</subnet>'
+               '<ip_address>192.168.1.50</ip_address><hw_address>AA-BB-CC-DD-EE-01</hw_address>'
+               '<hostname>sams-ipad</hostname></reservation></reservations></dhcp4></Kea></OPNsense></opnsense>')
+        reserved = kd.reservations(parse(xml))
+        rows = kd.collect(reserved, [], {})
+        self.assertEqual((rows[0]['mac'], rows[0]['name'], rows[0]['ips']),
+                         ('aa:bb:cc:dd:ee:01', 'sams-ipad', ['192.168.1.50']))
+        path = os.path.join(tempfile.mkdtemp(), 'kea-dhcp4.conf')
+        with open(path, 'w') as handle:
+            json.dump({'Dhcp4': {'subnet4': [{'subnet': '192.168.1.0/24', 'reservations': [
+                {'hw-address': 'aa:bb:cc:dd:ee:02', 'ip-address': '192.168.1.51', 'hostname': 'tv'}]}],
+                'reservations': [{'hw-address': 'aa:bb:cc:dd:ee:03', 'ip-address': '192.168.1.52'}]}}, handle)
+        self.assertEqual(kd.kea_config_reservations(path), [
+            ('aa:bb:cc:dd:ee:03', '192.168.1.52', None), ('aa:bb:cc:dd:ee:02', '192.168.1.51', 'tv')])
+
     def test_known_devices_sources_merge(self):
         leases = ('lease 192.168.1.20 {\n  binding state active;\n  hardware ethernet a0:b1:c2:d3:e4:f5;\n'
                   '  client-hostname "Sams-iPad";\n}\nlease 192.168.1.21 {\n  binding state free;\n'

@@ -16,11 +16,20 @@ def run(cmd, stdin=None, timeout=20):
 
 
 def norm_mac(mac):
-    """ndp/arp laten soms voorloopnullen weg: normaliseer naar aa:bb:cc:dd:ee:ff."""
+    """Normaliseer naar aa:bb:cc:dd:ee:ff. Accepteert aa:bb:.. , aa-bb-.. , aabb.ccdd.eeff,
+    aabbccddeeff en de notatie zonder voorloopnullen die ndp/arp gebruiken."""
+    text = (mac or '').strip().lower()
+    digits = None
+    if re.fullmatch(r'[0-9a-f]{12}', text):
+        digits = text
+    elif re.fullmatch(r'([0-9a-f]{4}\.){2}[0-9a-f]{4}', text):
+        digits = text.replace('.', '')
+    if digits:
+        return ':'.join(digits[i:i + 2] for i in range(0, 12, 2))
+    parts = re.split(r'[:-]', text)
+    if len(parts) != 6 or any(not 1 <= len(p) <= 2 for p in parts):
+        return None
     try:
-        parts = (mac or '').strip().lower().split(':')
-        if len(parts) != 6:
-            return None
         return ':'.join('%02x' % int(p, 16) for p in parts)
     except ValueError:
         return None
