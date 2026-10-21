@@ -178,7 +178,7 @@
 
         /* ---------- bekende apparaten toevoegen ---------- */
 
-        $('#addKnownBtn').click(function () {
+        $(document).on('click', '#addKnownBtn', function () {
             $('#known_msg').addClass('hidden');
             $('#known_table tbody').empty().append(
                 $('<tr>').append($('<td colspan="5">').text('Laden...')));
@@ -210,7 +210,7 @@
             });
         });
 
-        $('#known_add').click(function () {
+        $(document).on('click', '#known_add', function () {
             const devices = [];
             $('#known_table tbody tr').each(function () {
                 if ($(this).find('.known_pick').is(':checked')) {
@@ -233,7 +233,7 @@
                 }
             });
         });
-        $('#known_select_all').change(function () {
+        $(document).on('change', '#known_select_all', function () {
             $('#known_table .known_pick').prop('checked', $(this).is(':checked'));
         });
     });
@@ -316,6 +316,11 @@
     </div>
 
     <div id="devices" class="tab-pane fade in">
+        <div class="col-md-12" style="padding: 0.8em 0 0.4em 0;">
+            <button id="addKnownBtn" type="button" class="btn btn-sm btn-default">
+                <span class="fa fa-list fa-fw"></span> {{ lang._('Bekende apparaten toevoegen') }}
+            </button>
+        </div>
         <table id="grid-devices" class="table table-condensed table-hover table-striped" data-editDialog="DialogDevice">
             <thead>
             <tr>
@@ -334,7 +339,6 @@
                 <td colspan="4">
                     <button data-action="add" type="button" class="btn btn-xs btn-primary" title="{{ lang._('Handmatig toevoegen') }}"><span class="fa fa-plus fa-fw"></span></button>
                     <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o fa-fw"></span></button>
-                    <button id="addKnownBtn" type="button" class="btn btn-xs btn-default"><span class="fa fa-list fa-fw"></span> {{ lang._('Bekende apparaten toevoegen') }}</button>
                 </td>
             </tr>
             </tfoot>

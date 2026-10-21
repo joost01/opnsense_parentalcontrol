@@ -1,0 +1,7 @@
+{
+  "name": "parentalcontrol-gui-tests",
+  "private": true,
+  "description": "Browser-level test (jsdom) for the plugin page",
+  "scripts": { "test": "node run.js" },
+  "devDependencies": { "jquery": "^3.7.1", "jsdom": "^24.0.0" }
+}

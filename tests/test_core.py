@@ -185,6 +185,17 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(kd.kea_config_reservations(path), [
             ('aa:bb:cc:dd:ee:03', '192.168.1.52', None), ('aa:bb:cc:dd:ee:02', '192.168.1.51', 'tv')])
 
+    def test_kea_config_tolerates_comments_and_garbage(self):
+        tmp = tempfile.mkdtemp()
+        path = os.path.join(tmp, 'a.conf')
+        with open(path, 'w') as handle:
+            handle.write('# gegenereerd\n/* blok */\n{"Dhcp4": {"reservations": [{"hw-address": "aa:bb:cc:dd:ee:09",'
+                         ' "ip-address": "10.0.0.9"}]}}\n')
+        self.assertEqual(kd.kea_config_reservations(path), [('aa:bb:cc:dd:ee:09', '10.0.0.9', None)])
+        with open(path, 'w') as handle:
+            handle.write('geen json')
+        self.assertEqual(kd.kea_config_reservations(path), [])
+
     def test_known_devices_sources_merge(self):
         leases = ('lease 192.168.1.20 {\n  binding state active;\n  hardware ethernet a0:b1:c2:d3:e4:f5;\n'
                   '  client-hostname "Sams-iPad";\n}\nlease 192.168.1.21 {\n  binding state free;\n'

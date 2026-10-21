@@ -40,7 +40,13 @@ def reservations(root):
 def kea_config_reservations(path):
     """[(mac, ip, naam)] uit de Kea-configuratie die de DHCP-server werkelijk gebruikt."""
     with open(path) as handle:
-        dhcp4 = json.load(handle).get('Dhcp4', {})
+        text = handle.read()
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)                       # Kea staat commentaar toe
+    text = '\n'.join(l for l in text.splitlines() if not l.lstrip().startswith(('#', '//')))
+    try:
+        dhcp4 = json.loads(text).get('Dhcp4', {})
+    except ValueError:
+        return []                                                             # geen leesbare Kea-config: overslaan
     found = []
     pools = [dhcp4.get('reservations', [])] + [sub.get('reservations', []) for sub in dhcp4.get('subnet4', [])]
     for pool in pools:

@@ -96,7 +96,7 @@ python3 -m unittest discover -s tests -v     # alleen Python-standaardbibliothee
 
 De tests bootsen `pfctl`, `arp`, `ndp` en `ifconfig` na (zie `tests/helpers.py`) en dekken onder meer
 bedtijden, tijdtelling, budgetten, blokkeren, verzoeken, de blokkeerpagina, meldingen en DNS-regels.
-GitHub Actions (`.github/workflows/ci.yml`) draait daarnaast `php -l`, `xmllint` en een shell-syntaxcheck.
+De GUI heeft een browser-test (`cd tests/js && npm install && npm test`, jsdom). GitHub Actions (`.github/workflows/ci.yml`) draait daarnaast `php -l`, `xmllint` en een shell-syntaxcheck.
 Tests bewijzen niet dat pf de regels op een echte OPNsense accepteert: test dat altijd op een VM.
 
 ## Robuustheid
