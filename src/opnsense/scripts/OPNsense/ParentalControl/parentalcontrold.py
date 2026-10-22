@@ -29,6 +29,7 @@ from datetime import date, datetime, timedelta
 import ipaddress
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import pc_adguard  # noqa: E402
 import pc_web  # noqa: E402
 from pc_common import fmt_dur, norm_ip, norm_mac, neighbours, run  # noqa: E402
 from pc_notify import notify  # noqa: E402
@@ -181,10 +182,19 @@ def build_dns_lines(plan):
     ifs = '{ %s }' % ' '.join(plan['ifs'])
     tables = ['table <pc_dns_servers> const { %s }' % ' '.join(servers)]
     nat, rdr, filt = [], [], []
+    group_block = bool(plan.get('group_dns_block'))
+    if group_block:
+        tables.append('table <pc_pdev> persist')
     for ifname, net, family in plan['nat']:
         nat.append('nat on %s %s proto { tcp udp } from %s to <pc_dns_servers> port 53 -> (%s)' %
                    (ifname, 'inet6' if family == 6 else 'inet', net, ifname))
     rdr.append('no rdr on %s proto { tcp udp } from any to <pc_dns_servers> port 53' % ifs)
+    if group_block:
+        # apparaten met een profiel: eigen DNS-server wordt geblokkeerd in plaats van omgeleid,
+        # zodat AdGuard het apparaat blijft herkennen en het profiel niet te omzeilen is
+        rdr.append('no rdr on %s proto { tcp udp } from <pc_pdev> to any port 53' % ifs)
+        filt.append('block return in quick on %s proto { tcp udp } from <pc_pdev> to ! <pc_dns_servers> port 53'
+                    % ifs)
     if s4:
         rdr.append('rdr pass on %s inet proto { tcp udp } from ! <pc_dns_servers> to any port 53 -> %s port 53'
                    % (ifs, s4[0]))
@@ -439,12 +449,14 @@ class RequestStore:
 EMPTY_CFG = {'enabled': False, 'interval': 10, 'threshold_kb': 60, 'grace_min': 3,
              'blockpage': True, 'page_port': 8089, 'dns_servers': [], 'dns_enforce': False, 'dns_block_encrypted': True,
              'dns_ifnames': [], 'request_enabled': True, 'request_cooldown': 15,
+             'filter_backend': 'none', 'adguard_url': '', 'adguard_user': '', 'adguard_password': '',
+             'adguard_verify_tls': True, 'dns_group_mode': 'block', 'profiles': {},
              'notify': {}, 'groups': {}, 'devices': [], 'bedtimes': [], 'budgets': []}
 
 
 def parse_config(root):
     node = root.find('OPNsense/ParentalControl')
-    cfg = dict(EMPTY_CFG, groups={}, devices=[], bedtimes=[], budgets=[], notify={})
+    cfg = dict(EMPTY_CFG, groups={}, devices=[], bedtimes=[], budgets=[], notify={}, profiles={})
     if node is None:
         return cfg
     cfg['enabled'] = node.findtext('general/enabled') == '1'
@@ -472,6 +484,12 @@ def parse_config(root):
         ifname = root.findtext('interfaces/%s/if' % ident.strip()) if ident.strip() else None
         if ifname and re.fullmatch(r'[A-Za-z0-9_.]+', ifname) and ifname not in cfg['dns_ifnames']:
             cfg['dns_ifnames'].append(ifname)
+    cfg['filter_backend'] = node.findtext('general/filter_backend') or 'none'
+    cfg['adguard_url'] = (node.findtext('general/adguard_url') or '').strip()
+    cfg['adguard_user'] = node.findtext('general/adguard_user') or ''
+    cfg['adguard_password'] = node.findtext('general/adguard_password') or ''
+    cfg['adguard_verify_tls'] = node.findtext('general/adguard_verify_tls', '1') == '1'
+    cfg['dns_group_mode'] = node.findtext('general/dns_group_mode') or 'block'
     cfg['request_enabled'] = node.findtext('general/request_enabled', '1') == '1'
     cfg['request_cooldown'] = num('general/request_cooldown', 15, 1, 1440)
     cfg['notify'] = {k: (node.findtext('general/' + k) or '').strip() for k in
@@ -483,6 +501,19 @@ def parse_config(root):
             'name': g.findtext('name') or uuid,
             'enabled': g.findtext('enabled') == '1',
             'table': table_name(uuid),
+            'profile': g.findtext('profile') or '',
+        }
+    def domains(text):
+        return pc_adguard.clean_domains((text or '').split(','))
+
+    for pr in node.findall('profiles/profile'):
+        cfg['profiles'][pr.get('uuid')] = {
+            'name': pr.findtext('name') or '',
+            'safesearch': pr.findtext('safesearch') == '1',
+            'parental': pr.findtext('parental') == '1',
+            'categories': set(filter(None, (pr.findtext('categories') or '').split(','))),
+            'blocked_domains': domains(pr.findtext('blocked_domains')),
+            'allowed_domains': domains(pr.findtext('allowed_domains')),
         }
     for d in node.findall('devices/device'):
         mac = norm_mac(d.findtext('mac') or '')
@@ -538,6 +569,8 @@ class Daemon:
         self.web_port = None
         self.usage = UsageStore(USAGE_FILE)
         self.requests = RequestStore(REQUESTS_FILE)
+        self.syncer = pc_adguard.Syncer(lambda msg: log(msg))
+        self.loaded_plan = None
         self.last_mono = None
         self.last_save = time.monotonic()
 
@@ -603,7 +636,8 @@ class Daemon:
                     'maar het nat-anchor is niet geregistreerd', syslog.LOG_ERR)
             else:
                 plan = {'servers': list(cfg['dns_servers']), 'ifs': list(cfg['dns_ifnames']), 'nat': nat,
-                        'block_encrypted': cfg['dns_block_encrypted']}
+                        'block_encrypted': cfg['dns_block_encrypted'],
+                        'group_dns_block': cfg['dns_group_mode'] == 'block'}
                 if nat:
                     log('DNS-server staat in hetzelfde subnet als clients: omgeleide queries worden '
                         'via de firewall genat (AdGuard ziet dan het firewall-adres)')
@@ -641,8 +675,11 @@ class Daemon:
             log('anchor laden mislukt: %s' % res.stderr.strip(), syslog.LOG_ERR)
             return False
         self.loaded_rules = rules
+        self.loaded_plan = plan
         # Tables met 'persist' behouden hun inhoud bij herladen; lees die terug.
         self.last = {g['table']: table_show(g['table']) for g in groups}
+        if plan and plan.get('group_dns_block'):
+            self.last['pc_pdev'] = table_show('pc_pdev')
         return True
 
     def plan_registered(self):
@@ -694,6 +731,9 @@ class Daemon:
         for d in cfg['devices']:
             if d['enabled'] and d['group'] in group_ips:
                 group_ips[d['group']] |= neigh.get(d['mac'], set())
+
+        self.configure_backend(groups, group_ips)
+        self.update_pdev(groups, group_ips)
 
         web_ips = {}
         for g in groups:
@@ -856,28 +896,69 @@ class Daemon:
                 } for g in groups
             },
             'history': {k: v for k, v in self.usage.days.items() if k >= cutoff},
+            'backend': self.syncer.get_status(),
         }
         try:
             atomic_write(STATUS_FILE, status)
         except OSError as err:
             log('status schrijven mislukt: %s' % err, syslog.LOG_ERR)
 
-    def apply(self, group, want, reason):
-        table = group['table']
+    def set_table(self, table, want, kill=True):
+        """Maak de pf-table gelijk aan 'want'. Geeft False terug als pf dat weigert."""
         have = self.last.get(table, set())
-        if want != have:
-            if want:
-                res = pfctl(['-t', table, '-T', 'replace'] + sorted(want))
-            else:
-                res = pfctl(['-t', table, '-T', 'flush'])
-            if res.returncode != 0:
-                log('table %s bijwerken mislukt: %s' % (table, res.stderr.strip()), syslog.LOG_ERR)
-                return
+        if want == have:
+            return True
+        if want:
+            res = pfctl(['-t', table, '-T', 'replace'] + sorted(want))
+        else:
+            res = pfctl(['-t', table, '-T', 'flush'])
+        if res.returncode != 0:
+            log('table %s bijwerken mislukt: %s' % (table, res.stderr.strip()), syslog.LOG_ERR)
+            return False
+        if kill:
             # Nieuwe adressen: bestaande verbindingen verbreken. Verwijderde adressen:
             # states opruimen (o.a. de omleiding naar de blokkeerpagina).
             for ip in sorted(want - have) + sorted(have - want):
                 run([PFCTL, '-k', ip])
-            self.last[table] = want
+        self.last[table] = want
+        return True
+
+    def update_pdev(self, groups, group_ips):
+        """Tabel met alle apparaten van groepen met een profiel (voor het blokkeren van eigen DNS)."""
+        plan = self.loaded_plan
+        if not (plan and plan.get('group_dns_block')):
+            return
+        ips = set()
+        for g in groups:
+            if self.cfg['profiles'].get(g.get('profile')):
+                ips |= group_ips[g['uuid']]
+        self.set_table('pc_pdev', ips, kill=False)
+
+    def configure_backend(self, groups, group_ips):
+        """Geef de gewenste profielen door aan de filter-backend (AdGuard) in de achtergrondthread."""
+        cfg = self.cfg
+        if not (cfg['enabled'] and cfg['filter_backend'] == 'adguard' and cfg['adguard_url']):
+            self.syncer.configure(None, None)
+            return
+        clients, keep = {}, set()
+        for g in groups:
+            profile = cfg['profiles'].get(g.get('profile'))
+            if not profile:
+                continue
+            name = pc_adguard.PREFIX + g['name']
+            ips = group_ips[g['uuid']]
+            if ips:
+                clients[name] = {'ids': set(ips), 'profile': profile}
+            else:
+                keep.add(name)           # geen bekende adressen: bestaande client ongemoeid laten
+        settings = {'url': cfg['adguard_url'], 'user': cfg['adguard_user'],
+                    'password': cfg['adguard_password'], 'verify_tls': cfg['adguard_verify_tls']}
+        self.syncer.configure(settings, {'clients': clients, 'keep': keep})
+
+    def apply(self, group, want, reason):
+        table = group['table']
+        if not self.set_table(table, want):
+            return
         if self.blocking.get(group['uuid']) != reason:
             self.blocking[group['uuid']] = reason
             if reason:
@@ -892,6 +973,7 @@ class Daemon:
         self.running = False
 
     def loop(self):
+        self.syncer.start()
         while self.running:
             try:
                 with self.lock:
@@ -903,6 +985,7 @@ class Daemon:
                 time.sleep(1)
                 if self.queue_pending():
                     break
+        self.syncer.stop()
         pc_web.stop(self.web_servers)
         self.usage.save()
         # Blokkades blijven bewust staan bij stoppen (geen gat bij herstart);

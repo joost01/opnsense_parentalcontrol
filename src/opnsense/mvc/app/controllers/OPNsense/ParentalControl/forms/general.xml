@@ -70,6 +70,46 @@
         <help>Blokkeert DNS-over-TLS (poort 853) en HTTPS-verkeer naar bekende openbare DNS-resolvers van Google, Cloudflare, Quad9, OpenDNS en AdGuard (niet uitputtend). De DNS-server zelf wordt uitgezonderd.</help>
     </field>
     <field>
+        <id>general.header_filter</id>
+        <label>Websitefilter en SafeSearch</label>
+        <type>header</type>
+    </field>
+    <field>
+        <id>general.filter_backend</id>
+        <label>Filter-backend</label>
+        <type>dropdown</type>
+        <help>Hiermee worden websiteprofielen en SafeSearch per groep toegepast. De plugin beheert alleen eigen items (clients met het voorvoegsel "PC: " en een eigen blok regels); niets van wat je zelf instelde wordt aangepast.</help>
+    </field>
+    <field>
+        <id>general.adguard_url</id>
+        <label>AdGuard Home-URL</label>
+        <type>text</type>
+        <help>Het adres van de AdGuard Home-webinterface, bijvoorbeeld http://192.168.1.2:3000. De API gebruikt dezelfde poort en inloggegevens.</help>
+    </field>
+    <field>
+        <id>general.adguard_user</id>
+        <label>AdGuard Home-gebruiker</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>general.adguard_password</id>
+        <label>AdGuard Home-wachtwoord</label>
+        <type>password</type>
+        <help>Wordt in de OPNsense-configuratie opgeslagen. Gebruik bij voorkeur een eigen gebruiker voor deze plugin.</help>
+    </field>
+    <field>
+        <id>general.adguard_verify_tls</id>
+        <label>TLS-certificaat controleren</label>
+        <type>checkbox</type>
+        <help>Alleen relevant bij een https-URL. Schakel uit bij een zelfondertekend certificaat.</help>
+    </field>
+    <field>
+        <id>general.dns_group_mode</id>
+        <label>Eigen DNS-server bij groepen met profiel</label>
+        <type>dropdown</type>
+        <help>Apparaten in een groep met een profiel die een andere DNS-server instellen (bijv. 8.8.8.8): blokkeren zorgt dat het profiel niet te omzeilen is. Omleiden stuurt de vragen naar de DNS-server, maar AdGuard herkent het apparaat dan mogelijk niet meer en past het profiel niet toe. Werkt alleen met "DNS afdwingen".</help>
+    </field>
+    <field>
         <id>general.request_enabled</id>
         <label>Verzoeken om extra tijd toestaan</label>
         <type>checkbox</type>

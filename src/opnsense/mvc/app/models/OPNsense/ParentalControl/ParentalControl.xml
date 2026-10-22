@@ -1,6 +1,6 @@
 <model>
     <mount>//OPNsense/ParentalControl</mount>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <description>Ouderlijk toezicht</description>
     <items>
         <general>
@@ -88,6 +88,36 @@
                 <Mask>/^(https?:\/\/\S{1,500})?$/</Mask>
                 <ValidationMessage>Vul een geldige http(s)-URL in, of laat leeg.</ValidationMessage>
             </gui_url>
+            <filter_backend type="OptionField">
+                <Default>none</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <none>Geen</none>
+                    <adguard>AdGuard Home</adguard>
+                </OptionValues>
+            </filter_backend>
+            <adguard_url type="TextField">
+                <Mask>/^(https?:\/\/\S{1,300})?$/</Mask>
+                <ValidationMessage>Vul een URL in zoals http://192.168.1.2:3000, of laat leeg.</ValidationMessage>
+            </adguard_url>
+            <adguard_user type="TextField">
+                <Mask>/^.{0,128}$/</Mask>
+            </adguard_user>
+            <adguard_password type="TextField">
+                <Mask>/^.{0,256}$/</Mask>
+            </adguard_password>
+            <adguard_verify_tls type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </adguard_verify_tls>
+            <dns_group_mode type="OptionField">
+                <Default>block</Default>
+                <Required>Y</Required>
+                <OptionValues>
+                    <block>Blokkeren (aanbevolen bij profielen)</block>
+                    <redirect>Omleiden naar de DNS-server</redirect>
+                </OptionValues>
+            </dns_group_mode>
         </general>
         <groups>
             <group type="ArrayField">
@@ -109,8 +139,62 @@
                 <description type="TextField">
                     <Mask>/^.{0,255}$/u</Mask>
                 </description>
+                <profile type="ModelRelationField">
+                    <Model>
+                        <profiles>
+                            <source>OPNsense.ParentalControl.ParentalControl</source>
+                            <items>profiles.profile</items>
+                            <display>name</display>
+                        </profiles>
+                    </Model>
+                    <Required>N</Required>
+                </profile>
             </group>
         </groups>
+        <profiles>
+            <profile type="ArrayField">
+                <name type="TextField">
+                    <Required>Y</Required>
+                    <Mask>/^[\p{L}0-9 _.\-]{1,64}$/u</Mask>
+                    <ValidationMessage>Gebruik 1-64 tekens: letters, cijfers, spatie, punt, streepje of underscore.</ValidationMessage>
+                    <Constraints>
+                        <check001>
+                            <ValidationMessage>Deze profielnaam bestaat al.</ValidationMessage>
+                            <type>UniqueConstraint</type>
+                        </check001>
+                    </Constraints>
+                </name>
+                <description type="TextField">
+                    <Mask>/^.{0,255}$/u</Mask>
+                </description>
+                <safesearch type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </safesearch>
+                <parental type="BooleanField">
+                    <Default>1</Default>
+                    <Required>Y</Required>
+                </parental>
+                <categories type="OptionField">
+                    <Multiple>Y</Multiple>
+                    <OptionValues>
+                        <social>Sociale media</social>
+                        <messaging>Chat en berichten</messaging>
+                        <games>Games</games>
+                        <video>Video en streaming</video>
+                        <dating>Dating</dating>
+                    </OptionValues>
+                </categories>
+                <blocked_domains type="TextField">
+                    <Mask>/^([A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?(\s*,\s*[A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?)*)?$/</Mask>
+                    <ValidationMessage>Vul domeinnamen in, gescheiden door komma's (bijvoorbeeld voorbeeld.nl, ander.com).</ValidationMessage>
+                </blocked_domains>
+                <allowed_domains type="TextField">
+                    <Mask>/^([A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?(\s*,\s*[A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?)*)?$/</Mask>
+                    <ValidationMessage>Vul domeinnamen in, gescheiden door komma's (bijvoorbeeld voorbeeld.nl, ander.com).</ValidationMessage>
+                </allowed_domains>
+            </profile>
+        </profiles>
         <devices>
             <device type="ArrayField">
                 <enabled type="BooleanField">

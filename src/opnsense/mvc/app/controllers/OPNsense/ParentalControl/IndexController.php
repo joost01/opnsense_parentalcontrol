@@ -10,6 +10,7 @@ class IndexController extends \OPNsense\Base\IndexController
         $this->view->formDialogGroup = $this->getForm('dialogGroup');
         $this->view->formDialogDevice = $this->getForm('dialogDevice');
         $this->view->formDialogBedtime = $this->getForm('dialogBedtime');
+        $this->view->formDialogProfile = $this->getForm('dialogProfile');
         $this->view->formDialogBudget = $this->getForm('dialogBudget');
         $this->view->pick('OPNsense/ParentalControl/index');
     }

@@ -50,7 +50,12 @@ class ServiceController extends ApiControllerBase
         usort($rows, function ($a, $b) {
             return strcasecmp($a['name'], $b['name']);
         });
-        return ['running' => !empty($data['running']), 'dates' => $dates, 'rows' => $rows];
+        return [
+            'running' => !empty($data['running']),
+            'dates' => $dates,
+            'rows' => $rows,
+            'backend' => $data['backend'] ?? null,
+        ];
     }
 
     /**
@@ -113,6 +118,18 @@ class ServiceController extends ApiControllerBase
         }
         $response = trim((new Backend())->configdRun('parentalcontrol testnotify'));
         return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
+    }
+
+    /**
+     * Test de verbinding met de filter-backend (AdGuard Home) met de opgeslagen instellingen.
+     */
+    public function testBackendAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $response = trim((new Backend())->configdRun('parentalcontrol adguardtest'));
+        return ['status' => strpos($response, 'OK') === 0 ? 'ok' : 'failed', 'message' => $response];
     }
 
     public function startAction()

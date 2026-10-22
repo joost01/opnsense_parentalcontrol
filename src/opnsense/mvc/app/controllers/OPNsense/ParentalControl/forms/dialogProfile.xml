@@ -1,0 +1,43 @@
+<form>
+    <field>
+        <id>profile.name</id>
+        <label>Naam</label>
+        <type>text</type>
+        <help>Bijvoorbeeld "6-9 jaar", "10-12 jaar" of "13-15 jaar".</help>
+    </field>
+    <field>
+        <id>profile.description</id>
+        <label>Omschrijving</label>
+        <type>text</type>
+    </field>
+    <field>
+        <id>profile.safesearch</id>
+        <label>SafeSearch afdwingen</label>
+        <type>checkbox</type>
+        <help>Zoekmachines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) worden in de veilige modus gezet.</help>
+    </field>
+    <field>
+        <id>profile.parental</id>
+        <label>Filter voor volwassen inhoud</label>
+        <type>checkbox</type>
+        <help>Schakelt de ouderlijk-toezichtfilter van AdGuard in (volwassen websites).</help>
+    </field>
+    <field>
+        <id>profile.categories</id>
+        <label>Categorieën blokkeren</label>
+        <type>select_multiple</type>
+        <help>Blokkeert bekende diensten in deze categorieën (via de dienstenlijst van AdGuard).</help>
+    </field>
+    <field>
+        <id>profile.blocked_domains</id>
+        <label>Extra geblokkeerde domeinen</label>
+        <type>text</type>
+        <help>Komma-gescheiden. Subdomeinen worden ook geblokkeerd.</help>
+    </field>
+    <field>
+        <id>profile.allowed_domains</id>
+        <label>Altijd toegestane domeinen</label>
+        <type>text</type>
+        <help>Komma-gescheiden. Overschrijft blokkades uit de filterlijsten voor deze groep.</help>
+    </field>
+</form>

@@ -26,6 +26,7 @@
         $('#grid-devices').UIBootgrid(gridOptions('device'));
         $('#grid-bedtimes').UIBootgrid(gridOptions('bedtime'));
         $('#grid-budgets').UIBootgrid(gridOptions('budget'));
+        $('#grid-profiles').UIBootgrid(gridOptions('profile'));
 
         $('#saveAct').click(function () {
             $('#saveAct_progress').addClass('fa fa-spinner fa-pulse');
@@ -67,6 +68,16 @@
         function loadUsage() {
             ajaxGet('/api/parentalcontrol/service/usage', {}, function (data) {
                 $('#usage_warning').toggleClass('hidden', !!data.running);
+                const be = data.backend;
+                const beBox = $('#backend_status').addClass('hidden');
+                if (be && be.state !== 'disabled') {
+                    const cls = {ok: 'alert-success', pending: 'alert-warning'}[be.state] || 'alert-danger';
+                    const label = {ok: 'in orde', pending: 'bezig'}[be.state] || 'fout';
+                    beBox.removeClass('hidden alert-success alert-danger alert-warning')
+                        .addClass(cls)
+                        .text('Filter-backend: ' + label + ' - ' + be.message +
+                              ((be.warnings || []).length ? ' (' + be.warnings.join('; ') + ')' : ''));
+                }
                 const dates = data.dates || [];
                 const today = dates[dates.length - 1];
                 const past = dates.slice(0, -1).reverse();
@@ -161,6 +172,13 @@
             });
         }
 
+        $(document).on('click', '#testBackendAct', function () {
+            ajaxCall('/api/parentalcontrol/service/test_backend', {}, function (data) {
+                stdDialogInform('Filter-backend',
+                    data.message || (data.status === 'ok' ? 'Verbinding gelukt.' : 'Test mislukt.'), 'Sluiten');
+            });
+        });
+
         $('#testNotifyAct').click(function () {
             ajaxCall('/api/parentalcontrol/service/test_notification', {}, function (data) {
                 stdDialogInform('Testmelding',
@@ -246,6 +264,7 @@
     <li><a data-toggle="tab" href="#devices">{{ lang._('Apparaten') }}</a></li>
     <li><a data-toggle="tab" href="#bedtimes">{{ lang._('Bedtijden') }}</a></li>
     <li><a data-toggle="tab" href="#budgets">{{ lang._('Tijdbudgetten') }}</a></li>
+    <li><a data-toggle="tab" href="#profiles">{{ lang._('Websiteprofielen') }}</a></li>
 </ul>
 
 <div class="tab-content content-box">
@@ -254,6 +273,7 @@
             <div id="usage_warning" class="alert alert-warning hidden">
                 {{ lang._('De daemon draait niet; de getoonde status is niet actueel. Schakel de plugin in op het tabblad Algemeen en klik op Toepassen.') }}
             </div>
+            <div id="backend_status" class="alert hidden"></div>
             <table id="usage_table" class="table table-striped table-condensed">
                 <thead></thead>
                 <tbody></tbody>
@@ -287,7 +307,10 @@
             <button class="btn btn-default" id="testNotifyAct" type="button">
                 {{ lang._('Testmelding versturen') }}
             </button>
-            <span class="text-muted">{{ lang._('Gebruikt de opgeslagen instellingen: sla eerst op.') }}</span>
+            <button class="btn btn-default" id="testBackendAct" type="button">
+                {{ lang._('Verbinding met filter-backend testen') }}
+            </button>
+            <span class="text-muted">{{ lang._('Testen gebruikt de opgeslagen instellingen: sla eerst op.') }}</span>
         </div>
     </div>
 
@@ -298,6 +321,7 @@
                 <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
                 <th data-column-id="enabled" data-width="6em" data-type="string" data-formatter="rowtoggle">{{ lang._('Aan') }}</th>
                 <th data-column-id="name" data-type="string">{{ lang._('Naam') }}</th>
+                <th data-column-id="profile" data-type="string">{{ lang._('Websiteprofiel') }}</th>
                 <th data-column-id="description" data-type="string">{{ lang._('Omschrijving') }}</th>
                 <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">{{ lang._('Acties') }}</th>
             </tr>
@@ -306,7 +330,7 @@
             <tfoot>
             <tr>
                 <td></td>
-                <td colspan="3">
+                <td colspan="4">
                     <button data-action="add" type="button" class="btn btn-xs btn-primary"><span class="fa fa-plus fa-fw"></span></button>
                     <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o fa-fw"></span></button>
                 </td>
@@ -396,6 +420,31 @@
             </tfoot>
         </table>
     </div>
+    <div id="profiles" class="tab-pane fade in">
+        <table id="grid-profiles" class="table table-condensed table-hover table-striped" data-editDialog="DialogProfile">
+            <thead>
+            <tr>
+                <th data-column-id="uuid" data-type="string" data-identifier="true" data-visible="false">ID</th>
+                <th data-column-id="name" data-type="string">{{ lang._('Naam') }}</th>
+                <th data-column-id="safesearch" data-width="8em" data-type="string" data-formatter="boolean">{{ lang._('SafeSearch') }}</th>
+                <th data-column-id="parental" data-width="8em" data-type="string" data-formatter="boolean">{{ lang._('Volwassen filter') }}</th>
+                <th data-column-id="categories" data-type="string">{{ lang._('Geblokkeerde categorieën') }}</th>
+                <th data-column-id="description" data-type="string">{{ lang._('Omschrijving') }}</th>
+                <th data-column-id="commands" data-width="7em" data-formatter="commands" data-sortable="false">{{ lang._('Acties') }}</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+            <tr>
+                <td></td>
+                <td colspan="5">
+                    <button data-action="add" type="button" class="btn btn-xs btn-primary"><span class="fa fa-plus fa-fw"></span></button>
+                    <button data-action="deleteSelected" type="button" class="btn btn-xs btn-default"><span class="fa fa-trash-o fa-fw"></span></button>
+                </td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
 
 <div class="content-box" style="padding-bottom: 1.5em; margin-top: 1em;">
@@ -446,5 +495,6 @@
 
 {{ partial("layout_partials/base_dialog", ['fields': formDialogGroup, 'id': 'DialogGroup', 'label': lang._('Groep bewerken')]) }}
 {{ partial("layout_partials/base_dialog", ['fields': formDialogDevice, 'id': 'DialogDevice', 'label': lang._('Apparaat bewerken')]) }}
+{{ partial("layout_partials/base_dialog", ['fields': formDialogProfile, 'id': 'DialogProfile', 'label': lang._('Websiteprofiel bewerken')]) }}
 {{ partial("layout_partials/base_dialog", ['fields': formDialogBudget, 'id': 'DialogBudget', 'label': lang._('Tijdbudget bewerken')]) }}
 {{ partial("layout_partials/base_dialog", ['fields': formDialogBedtime, 'id': 'DialogBedtime', 'label': lang._('Bedtijd bewerken')]) }}

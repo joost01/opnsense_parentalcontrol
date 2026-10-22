@@ -14,4 +14,10 @@
         <label>Omschrijving</label>
         <type>text</type>
     </field>
+    <field>
+        <id>group.profile</id>
+        <label>Websiteprofiel</label>
+        <type>dropdown</type>
+        <help>Optioneel. Het profiel wordt toegepast via de filter-backend op alle apparaten in deze groep.</help>
+    </field>
 </form>

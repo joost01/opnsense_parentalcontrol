@@ -11,6 +11,11 @@ class SettingsController extends ApiMutableModelControllerBase
     protected static $internalModelName = 'parentalcontrol';
     protected static $internalModelClass = 'OPNsense\ParentalControl\ParentalControl';
 
+    private const CATEGORY_LABELS = [
+        'social' => 'Sociale media', 'messaging' => 'Chat', 'games' => 'Games',
+        'video' => 'Video', 'dating' => 'Dating'
+    ];
+
     private const DAY_LABELS = [
         'mon' => 'ma', 'tue' => 'di', 'wed' => 'wo', 'thu' => 'do',
         'fri' => 'vr', 'sat' => 'za', 'sun' => 'zo'
@@ -72,6 +77,20 @@ class SettingsController extends ApiMutableModelControllerBase
         return $result;
     }
 
+    private function resolveProfiles($result)
+    {
+        $names = [];
+        foreach ($this->getModel()->profiles->profile->iterateItems() as $uuid => $profile) {
+            $names[$uuid] = (string)$profile->name;
+        }
+        foreach ($result['rows'] as &$row) {
+            if (isset($row['profile'])) {
+                $row['profile'] = $names[$row['profile']] ?? $row['profile'];
+            }
+        }
+        return $result;
+    }
+
     private function usedMacs()
     {
         $used = [];
@@ -85,7 +104,9 @@ class SettingsController extends ApiMutableModelControllerBase
 
     public function searchGroupAction()
     {
-        return $this->searchBase('groups.group', ['enabled', 'name', 'description'], 'name');
+        return $this->resolveProfiles(
+            $this->searchBase('groups.group', ['enabled', 'name', 'description', 'profile'], 'name')
+        );
     }
 
     public function getGroupAction($uuid = null)
@@ -127,6 +148,49 @@ class SettingsController extends ApiMutableModelControllerBase
     public function toggleGroupAction($uuid, $enabled = null)
     {
         return $this->toggleBase('groups.group', $uuid, $enabled);
+    }
+
+    /* ---------- websiteprofielen ---------- */
+
+    public function searchProfileAction()
+    {
+        $result = $this->searchBase(
+            'profiles.profile',
+            ['name', 'description', 'safesearch', 'parental', 'categories', 'blocked_domains'],
+            'name'
+        );
+        foreach ($result['rows'] as &$row) {
+            $keys = array_filter(explode(',', (string)$row['categories']));
+            $row['categories'] = implode(', ', array_map(function ($k) {
+                return self::CATEGORY_LABELS[$k] ?? $k;
+            }, $keys));
+        }
+        return $result;
+    }
+
+    public function getProfileAction($uuid = null)
+    {
+        return $this->getBase('profile', 'profiles.profile', $uuid);
+    }
+
+    public function addProfileAction()
+    {
+        return $this->addBase('profile', 'profiles.profile');
+    }
+
+    public function setProfileAction($uuid)
+    {
+        return $this->setBase('profile', 'profiles.profile', $uuid);
+    }
+
+    public function delProfileAction($uuid)
+    {
+        foreach ($this->getModel()->groups->group->iterateItems() as $group) {
+            if ((string)$group->profile === $uuid) {
+                return ['result' => 'failed', 'message' => 'Profiel wordt nog gebruikt door een groep.'];
+            }
+        }
+        return $this->delBase('profiles.profile', $uuid);
     }
 
     /* ---------- apparaten ---------- */

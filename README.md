@@ -16,8 +16,9 @@ Ouderlijk toezicht voor OPNsense.
 | Extra tijd handmatig toevoegen (+15/+30/+60 min in het overzicht) | klaar |
 | Blokkeerpagina ("tijd op" / bedtijd) met verlengingsverzoeken (eenmaal per 15 min), goedkeuren/afwijzen in de GUI, melding via ntfy/webhook | klaar |
 | DNS afdwingen: al het poort-53-verkeer (ook hard-gecodeerd 8.8.8.8 e.d.) naar AdGuard, DoT/bekende DoH-resolvers blokkeren | klaar |
-| Websiteprofielen op leeftijd (via de AdGuard Home API) | gepland |
-| SafeSearch afdwingen (via de AdGuard Home API) | gepland |
+| Websiteprofielen op leeftijd (SafeSearch, volwassen filter, categorieën, eigen domeinen) via AdGuard Home | klaar |
+| Websiteprofielen via Unbound (voor wie geen AdGuard gebruikt) | gepland |
+| SafeSearch afdwingen per groep (AdGuard Home) | klaar |
 
 ## Werking
 
@@ -51,6 +52,19 @@ Ouderlijk toezicht voor OPNsense.
   adres van de firewall; queries van clients die gewoon AdGuard gebruiken (via DHCP) behouden hun eigen IP.
   Controle: `pfctl -sn | grep parentalcontrol` moet `rdr-anchor` (en `nat-anchor`) tonen.
 
+- Websiteprofielen (AdGuard Home): een profiel (SafeSearch, volwassen filter, categorieën, extra geblokkeerde
+  en toegestane domeinen) kan aan een groep worden gekoppeld. De daemon maakt per groep een AdGuard-client
+  `PC: <groepsnaam>` met de huidige IP-adressen van de apparaten en houdt die bij. Alleen clients met dat
+  voorvoegsel en een gemarkeerd blok in de gebruikersregels worden beheerd; eigen instellingen blijven
+  onaangeroerd. Synchronisatie draait in een aparte thread; een trage of onbereikbare AdGuard houdt de
+  firewall niet op. Categorieën worden vertaald naar AdGuard-dienst-ID's en gecontroleerd tegen de
+  dienstenlijst van jouw AdGuard-versie (onbekende ID's worden overgeslagen en gemeld).
+- Apparaten in een groep met profiel mogen bij "DNS afdwingen" geen eigen DNS-server gebruiken (standaard:
+  blokkeren), zodat AdGuard het apparaat blijft herkennen en het profiel niet te omzeilen is.
+- Het AdGuard-wachtwoord staat leesbaar in de OPNsense-configuratie; gebruik een eigen gebruiker voor de plugin.
+  Het "volwassen filter" is de ouderlijk-toezichtfunctie van AdGuard, die gehashte domeinvoorvoegsels naar
+  de AdGuard-dienst stuurt.
+
 ## Beperkingen
 
 - HTTPS-sites kunnen niet netjes worden omgeleid: de browser toont een verbindingsfout.
@@ -61,6 +75,10 @@ Ouderlijk toezicht voor OPNsense.
 
 - Apparaten met een willekeurig (privacy-)MAC-adres moeten dat voor jouw netwerk uitzetten.
 - Nieuwe IPv6-privacy-adressen worden pas bij de volgende controle (standaard 10 s) geblokkeerd.
+- Gokken heeft geen eigen categorie (AdGuard kent geen dienst daarvoor): gebruik 'extra geblokkeerde domeinen'
+  of een blokkeerlijst in AdGuard.
+- Profielen werken op IP-adres: wisselt een apparaat van adres, dan duurt het tot de volgende synchronisatie
+  (enkele seconden) voordat AdGuard het nieuwe adres kent.
 - De firewall ziet alleen netwerkverkeer, geen schermtijd; de drempel en naloop zijn benaderingen.
 - Bestaande bedtijden worden bij de update naar model 1.0.1 automatisch omgezet naar het nieuwe veld "groepen".
 
