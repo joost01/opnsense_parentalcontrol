@@ -12,17 +12,14 @@ import base64
 import json
 import re
 import ssl
-import threading
-import time
 import urllib.error
 import urllib.request
+
+from pc_common import BackendError
 
 PREFIX = 'PC: '
 RULES_BEGIN = '! BEGIN parentalcontrol (managed - do not edit)'
 RULES_END = '! END parentalcontrol'
-MIN_SYNC_INTERVAL = 10       # seconden tussen twee synchronisaties
-FULL_SYNC_INTERVAL = 300     # volledige controle, ook zonder wijzigingen
-RETRY_INTERVAL = 30          # wachttijd na een fout
 SAFE_SEARCH_PROVIDERS = ('bing', 'duckduckgo', 'ecosia', 'google', 'pixabay', 'yandex', 'youtube')
 
 # Categorie -> AdGuard-dienst-ID's. Onbekende ID's (andere AdGuard-versie) worden overgeslagen.
@@ -38,7 +35,7 @@ CATEGORY_SERVICES = {
 DOMAIN_RE = re.compile(r'^[a-z0-9]([a-z0-9\-.]{0,251}[a-z0-9])?$')
 
 
-class AdGuardError(Exception):
+class AdGuardError(BackendError):
     pass
 
 
@@ -74,6 +71,22 @@ class AdGuard:
             return json.loads(raw) if raw.strip() else None
         except ValueError:
             return raw
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def describe(self):
+        return 'AdGuard Home %s' % self.status().get('version', '?')
+
+    def test(self):
+        version = self.status().get('version', '?')
+        services = self.service_ids()
+        self.clients()
+        self.user_rules()
+        return 'AdGuard Home %s (%d blokkeerbare diensten bekend)' % (version, len(services))
 
     def status(self):
         data = self._request('GET', '/control/status')
@@ -226,90 +239,3 @@ def sync(api, desired):
     if skipped:
         report['warnings'].append('diensten onbekend voor deze AdGuard-versie: ' + ', '.join(sorted(skipped)))
     return report
-
-
-# ---------------------------------------------------------------- achtergrondthread
-
-class Syncer:
-    """Houdt AdGuard in lijn met de gewenste toestand, buiten de hoofdloop van de daemon."""
-
-    def __init__(self, log):
-        self.log = log
-        self.lock = threading.Lock()
-        self.settings = None
-        self.desired = None
-        self.dirty = False
-        self.status = {'state': 'disabled', 'message': '', 'updated': 0, 'warnings': []}
-        self.next_try = 0.0
-        self.last_sync = 0.0
-        self.running = False
-        self.thread = None
-
-    def configure(self, settings, desired):
-        with self.lock:
-            if settings != self.settings or desired != self.desired:
-                self.settings, self.desired, self.dirty = settings, desired, True
-            if settings is None and self.status['state'] != 'disabled':
-                self.status = {'state': 'disabled', 'message': '', 'updated': time.time(), 'warnings': []}
-            elif settings is not None and self.status['state'] == 'disabled':
-                self.status = {'state': 'pending', 'message': 'wachten op eerste synchronisatie',
-                               'updated': time.time(), 'warnings': []}
-
-    def get_status(self):
-        with self.lock:
-            return dict(self.status)
-
-    def sync_once(self, now=None):
-        """Voer zo nodig een synchronisatie uit. Geeft True terug als er een poging is gedaan."""
-        now = time.time() if now is None else now
-        with self.lock:
-            if self.settings is None or self.desired is None:
-                return False
-            due = self.dirty or now - self.last_sync >= FULL_SYNC_INTERVAL
-            if not due or now < self.next_try or now - self.last_sync < MIN_SYNC_INTERVAL:
-                return False
-            settings, desired = dict(self.settings), self.desired
-            self.dirty = False
-        report = None
-        try:
-            api = AdGuard(settings['url'], settings.get('user', ''), settings.get('password', ''),
-                          settings.get('verify_tls', True))
-            version = api.status().get('version', '?')
-            report = sync(api, desired)
-            status = {'state': 'ok', 'message': 'AdGuard Home %s' % version, 'updated': time.time(),
-                      'warnings': report['warnings']}
-            self.next_try = 0.0
-        except AdGuardError as err:
-            status = {'state': 'error', 'message': str(err), 'updated': time.time(), 'warnings': []}
-            self.next_try = now + RETRY_INTERVAL
-            with self.lock:
-                self.dirty = True                 # opnieuw proberen na de wachttijd
-        with self.lock:
-            previous = self.status
-            self.status, self.last_sync = status, now
-        if previous['state'] != status['state'] or (status['state'] == 'error'
-                                                    and previous['message'] != status['message']):
-            self.log('AdGuard: %s - %s' % (status['state'], status['message']))
-        if report and (report['added'] or report['updated'] or report['deleted'] or report['rules']):
-            self.log('AdGuard: gesynchroniseerd (+%d ~%d -%d clients, regels %s)' % (
-                report['added'], report['updated'], report['deleted'], 'bijgewerkt' if report['rules'] else 'gelijk'))
-        for warning in status['warnings']:
-            if warning not in previous.get('warnings', []):
-                self.log('AdGuard: ' + warning)
-        return True
-
-    def start(self):
-        self.running = True
-        self.thread = threading.Thread(target=self._loop, daemon=True)
-        self.thread.start()
-
-    def stop(self):
-        self.running = False
-
-    def _loop(self):
-        while self.running:
-            try:
-                self.sync_once()
-            except Exception as err:  # de thread mag nooit sterven
-                self.log('AdGuard: onverwachte fout: %r' % err)
-            time.sleep(2)

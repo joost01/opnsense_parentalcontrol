@@ -13,8 +13,8 @@ PROFILE = ('<profile uuid="%s"><name>10-12</name><safesearch>1</safesearch><pare
 
 
 def config(srv_url, password='secret', backend='adguard', group_mode='block', profile_for_g1=True):
-    general = ('<filter_backend>%s</filter_backend><adguard_url>%s</adguard_url><adguard_user>admin</adguard_user>'
-               '<adguard_password>%s</adguard_password><dns_servers>192.168.1.2</dns_servers><dns_enforce>1</dns_enforce>'
+    general = ('<filter_backend>%s</filter_backend><backend_url>%s</backend_url><backend_user>admin</backend_user>'
+               '<backend_password>%s</backend_password><dns_servers>192.168.1.2</dns_servers><dns_enforce>1</dns_enforce>'
                '<dns_interfaces>lan</dns_interfaces><dns_group_mode>%s</dns_group_mode>'
                % (backend, srv_url, password, group_mode))
     groups = ('<group uuid="%s"><enabled>1</enabled><name>Kids</name>%s</group>'
@@ -36,8 +36,24 @@ class ProfileConfigTests(unittest.TestCase):
         self.assertTrue(profile['safesearch'] and profile['parental'])
         self.assertEqual(cfg['groups'][G1]['profile'], P1)
         self.assertEqual(cfg['groups'][G2]['profile'], '')
-        self.assertEqual((cfg['filter_backend'], cfg['adguard_user'], cfg['dns_group_mode']),
+        self.assertEqual((cfg['filter_backend'], cfg['backend_user'], cfg['dns_group_mode']),
                          ('adguard', 'admin', 'block'))
+
+    def test_legacy_adguard_settings_are_still_read(self):
+        xml = config('http://x:3000').replace('backend_url', 'adguard_url').replace('backend_user', 'adguard_user') \
+            .replace('backend_password', 'adguard_password')
+        cfg = make_daemon(xml).d.cfg
+        self.assertEqual((cfg['backend_url'], cfg['backend_user'], cfg['backend_password']),
+                         ('http://x:3000', 'admin', 'secret'))
+
+    def test_pihole_backend_selected_and_backend_groups_parsed(self):
+        xml = config('https://pi.hole', backend='pihole').replace(
+            '<categories>', '<backend_groups>Strict kids, Homework</backend_groups><categories>')
+        ctx = make_daemon(xml)
+        settings = ctx.mod.backend_settings(ctx.d.cfg)
+        self.assertEqual((settings['backend'], settings['url']), ('pihole', 'https://pi.hole'))
+        self.assertEqual(ctx.d.cfg['profiles'][P1]['backend_groups'], ['Strict kids', 'Homework'])
+        self.assertIsNone(ctx.mod.backend_settings(make_daemon(config('https://x', backend='none')).d.cfg))
 
     def test_defaults_without_profile_settings(self):
         cfg = make_daemon(xml_config()).d.cfg
@@ -136,7 +152,7 @@ class ProfileFlowTests(unittest.TestCase):
         status = self.read_status(ctx)
         self.assertEqual(status['backend']['state'], 'error')
         self.assertIn('inloggen mislukt', status['backend']['message'])
-        self.assertTrue(any('AdGuard: error' in m for m in ctx.logs))
+        self.assertTrue(any('filter-backend: error' in m for m in ctx.logs))
 
     def test_redirect_mode_does_not_create_pdev_table(self):
         ctx = make_daemon(config(self.srv.url, group_mode='redirect'), self.fake)

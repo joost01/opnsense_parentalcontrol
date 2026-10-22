@@ -128,7 +128,7 @@ class ServiceController extends ApiControllerBase
         if (!$this->request->isPost()) {
             return ['status' => 'failed'];
         }
-        $response = trim((new Backend())->configdRun('parentalcontrol adguardtest'));
+        $response = trim((new Backend())->configdRun('parentalcontrol backendtest'));
         return ['status' => strpos($response, 'OK') === 0 ? 'ok' : 'failed', 'message' => $response];
     }
 

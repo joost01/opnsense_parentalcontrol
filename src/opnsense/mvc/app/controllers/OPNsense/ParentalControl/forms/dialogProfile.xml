@@ -14,19 +14,25 @@
         <id>profile.safesearch</id>
         <label>SafeSearch afdwingen</label>
         <type>checkbox</type>
-        <help>Zoekmachines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) worden in de veilige modus gezet.</help>
+        <help>Alleen AdGuard Home: zoekmachines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) worden in de veilige modus gezet.</help>
     </field>
     <field>
         <id>profile.parental</id>
         <label>Filter voor volwassen inhoud</label>
         <type>checkbox</type>
-        <help>Schakelt de ouderlijk-toezichtfilter van AdGuard in (volwassen websites).</help>
+        <help>Alleen AdGuard Home: schakelt de ouderlijk-toezichtfilter in (volwassen websites).</help>
     </field>
     <field>
         <id>profile.categories</id>
         <label>Categorieën blokkeren</label>
         <type>select_multiple</type>
-        <help>Blokkeert bekende diensten in deze categorieën (via de dienstenlijst van AdGuard).</help>
+        <help>Alleen AdGuard Home: blokkeert bekende diensten in deze categorieën.</help>
+    </field>
+    <field>
+        <id>profile.backend_groups</id>
+        <label>Groepen in de filter-backend</label>
+        <type>text</type>
+        <help>Alleen Pi-hole: namen van bestaande Pi-hole-groepen (komma-gescheiden) waaraan de apparaten van de groep worden toegevoegd. Koppel in Pi-hole zelf de blokkeerlijsten (bijvoorbeeld voor volwassen inhoud) aan die groepen.</help>
     </field>
     <field>
         <id>profile.blocked_domains</id>

@@ -4,6 +4,7 @@ from fake_adguard import FakeAdGuard
 from helpers import load
 
 ag = load('pc_adguard_test', 'pc_adguard.py')
+be = load('pc_backends_test', 'pc_backends.py')
 
 
 def profile(**kw):
@@ -114,8 +115,8 @@ class SyncerTests(unittest.TestCase):
         self.srv = FakeAdGuard()
         self.addCleanup(self.srv.close)
         self.logs = []
-        self.syncer = ag.Syncer(self.logs.append)
-        self.settings = {'url': self.srv.url, 'user': 'admin', 'password': 'secret', 'verify_tls': True}
+        self.syncer = be.Syncer(self.logs.append)
+        self.settings = {'backend': 'adguard', 'url': self.srv.url, 'user': 'admin', 'password': 'secret', 'verify_tls': True}
 
     def test_sync_status_and_throttling(self):
         self.assertEqual(self.syncer.get_status()['state'], 'disabled')

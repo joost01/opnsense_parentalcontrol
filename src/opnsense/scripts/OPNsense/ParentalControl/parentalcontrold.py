@@ -30,6 +30,7 @@ import ipaddress
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pc_adguard  # noqa: E402
+import pc_backends  # noqa: E402
 import pc_web  # noqa: E402
 from pc_common import fmt_dur, norm_ip, norm_mac, neighbours, run  # noqa: E402
 from pc_notify import notify  # noqa: E402
@@ -449,9 +450,17 @@ class RequestStore:
 EMPTY_CFG = {'enabled': False, 'interval': 10, 'threshold_kb': 60, 'grace_min': 3,
              'blockpage': True, 'page_port': 8089, 'dns_servers': [], 'dns_enforce': False, 'dns_block_encrypted': True,
              'dns_ifnames': [], 'request_enabled': True, 'request_cooldown': 15,
-             'filter_backend': 'none', 'adguard_url': '', 'adguard_user': '', 'adguard_password': '',
-             'adguard_verify_tls': True, 'dns_group_mode': 'block', 'profiles': {},
+             'filter_backend': 'none', 'backend_url': '', 'backend_user': '', 'backend_password': '',
+             'backend_verify_tls': True, 'dns_group_mode': 'block', 'profiles': {},
              'notify': {}, 'groups': {}, 'devices': [], 'bedtimes': [], 'budgets': []}
+
+
+def backend_settings(cfg):
+    """Verbindingsinstellingen voor de gekozen filter-backend, of None als er geen is ingesteld."""
+    if cfg['filter_backend'] not in pc_backends.BACKENDS or not cfg['backend_url']:
+        return None
+    return {'backend': cfg['filter_backend'], 'url': cfg['backend_url'], 'user': cfg['backend_user'],
+            'password': cfg['backend_password'], 'verify_tls': cfg['backend_verify_tls']}
 
 
 def parse_config(root):
@@ -485,10 +494,16 @@ def parse_config(root):
         if ifname and re.fullmatch(r'[A-Za-z0-9_.]+', ifname) and ifname not in cfg['dns_ifnames']:
             cfg['dns_ifnames'].append(ifname)
     cfg['filter_backend'] = node.findtext('general/filter_backend') or 'none'
-    cfg['adguard_url'] = (node.findtext('general/adguard_url') or '').strip()
-    cfg['adguard_user'] = node.findtext('general/adguard_user') or ''
-    cfg['adguard_password'] = node.findtext('general/adguard_password') or ''
-    cfg['adguard_verify_tls'] = node.findtext('general/adguard_verify_tls', '1') == '1'
+    def general(field, legacy=None):
+        value = node.findtext('general/' + field)
+        if value is None and legacy:
+            value = node.findtext('general/' + legacy)      # instellingen van vóór model 1.0.7
+        return value
+
+    cfg['backend_url'] = (general('backend_url', 'adguard_url') or '').strip()
+    cfg['backend_user'] = general('backend_user', 'adguard_user') or ''
+    cfg['backend_password'] = general('backend_password', 'adguard_password') or ''
+    cfg['backend_verify_tls'] = (general('backend_verify_tls', 'adguard_verify_tls') or '1') == '1'
     cfg['dns_group_mode'] = node.findtext('general/dns_group_mode') or 'block'
     cfg['request_enabled'] = node.findtext('general/request_enabled', '1') == '1'
     cfg['request_cooldown'] = num('general/request_cooldown', 15, 1, 1440)
@@ -514,6 +529,7 @@ def parse_config(root):
             'categories': set(filter(None, (pr.findtext('categories') or '').split(','))),
             'blocked_domains': domains(pr.findtext('blocked_domains')),
             'allowed_domains': domains(pr.findtext('allowed_domains')),
+            'backend_groups': [n.strip() for n in (pr.findtext('backend_groups') or '').split(',') if n.strip()],
         }
     for d in node.findall('devices/device'):
         mac = norm_mac(d.findtext('mac') or '')
@@ -569,7 +585,7 @@ class Daemon:
         self.web_port = None
         self.usage = UsageStore(USAGE_FILE)
         self.requests = RequestStore(REQUESTS_FILE)
-        self.syncer = pc_adguard.Syncer(lambda msg: log(msg))
+        self.syncer = pc_backends.Syncer(lambda msg: log(msg))
         self.loaded_plan = None
         self.last_mono = None
         self.last_save = time.monotonic()
@@ -937,7 +953,8 @@ class Daemon:
     def configure_backend(self, groups, group_ips):
         """Geef de gewenste profielen door aan de filter-backend (AdGuard) in de achtergrondthread."""
         cfg = self.cfg
-        if not (cfg['enabled'] and cfg['filter_backend'] == 'adguard' and cfg['adguard_url']):
+        settings = backend_settings(cfg)
+        if not (cfg['enabled'] and settings):
             self.syncer.configure(None, None)
             return
         clients, keep = {}, set()
@@ -951,8 +968,6 @@ class Daemon:
                 clients[name] = {'ids': set(ips), 'profile': profile}
             else:
                 keep.add(name)           # geen bekende adressen: bestaande client ongemoeid laten
-        settings = {'url': cfg['adguard_url'], 'user': cfg['adguard_user'],
-                    'password': cfg['adguard_password'], 'verify_tls': cfg['adguard_verify_tls']}
         self.syncer.configure(settings, {'clients': clients, 'keep': keep})
 
     def apply(self, group, want, reason):

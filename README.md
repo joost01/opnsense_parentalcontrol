@@ -17,7 +17,8 @@ Ouderlijk toezicht voor OPNsense.
 | Blokkeerpagina ("tijd op" / bedtijd) met verlengingsverzoeken (eenmaal per 15 min), goedkeuren/afwijzen in de GUI, melding via ntfy/webhook | klaar |
 | DNS afdwingen: al het poort-53-verkeer (ook hard-gecodeerd 8.8.8.8 e.d.) naar AdGuard, DoT/bekende DoH-resolvers blokkeren | klaar |
 | Websiteprofielen op leeftijd (SafeSearch, volwassen filter, categorieën, eigen domeinen) via AdGuard Home | klaar |
-| Websiteprofielen via Unbound (voor wie geen AdGuard gebruikt) | gepland |
+| Filter-backends: AdGuard Home (volledig), Pi-hole v6 (groepen en eigen domeinen, experimenteel) | klaar |
+| Websiteprofielen via Unbound (voor wie geen externe DNS-filter gebruikt) | gepland |
 | SafeSearch afdwingen per groep (AdGuard Home) | klaar |
 
 ## Werking
@@ -52,6 +53,20 @@ Ouderlijk toezicht voor OPNsense.
   adres van de firewall; queries van clients die gewoon AdGuard gebruiken (via DHCP) behouden hun eigen IP.
   Controle: `pfctl -sn | grep parentalcontrol` moet `rdr-anchor` (en `nat-anchor`) tonen.
 
+- Filter-backends: de backend is een keuze (Algemeen, "Filter-backend"). Wat per backend mogelijk is:
+
+  | | AdGuard Home | Pi-hole v6 |
+  |---|---|---|
+  | Eigen groep/client per plugin-groep | ja | ja |
+  | SafeSearch per groep | ja | nee (kent Pi-hole niet per client) |
+  | Filter voor volwassen inhoud | ja | via eigen blokkeerlijst in een Pi-hole-groep |
+  | Categorieën (sociaal, games, ...) | ja (diensten) | nee |
+  | Extra geblokkeerde/toegestane domeinen | ja | ja |
+  | Bestaande groepen in de backend aanwijzen | nee | ja ("Groepen in de filter-backend") |
+
+  De Pi-hole-koppeling is experimenteel: ze is getest tegen een nagebootste API, nog niet tegen een echte Pi-hole.
+  Een nieuwe backend toevoegen: een module met een API-klasse (`__enter__`/`__exit__`, `describe()`, `test()`) en een
+  functie `sync(api, desired)` naar het voorbeeld van `pc_pihole.py`, registreren in `pc_backends.py` en als optie in het model.
 - Websiteprofielen (AdGuard Home): een profiel (SafeSearch, volwassen filter, categorieën, extra geblokkeerde
   en toegestane domeinen) kan aan een groep worden gekoppeld. De daemon maakt per groep een AdGuard-client
   `PC: <groepsnaam>` met de huidige IP-adressen van de apparaten en houdt die bij. Alleen clients met dat

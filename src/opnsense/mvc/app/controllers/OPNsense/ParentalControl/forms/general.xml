@@ -42,14 +42,14 @@
     </field>
     <field>
         <id>general.header_dns</id>
-        <label>DNS (AdGuard)</label>
+        <label>DNS-filter (AdGuard Home, Pi-hole, ...)</label>
         <type>header</type>
     </field>
     <field>
         <id>general.dns_servers</id>
         <label>DNS-server(s)</label>
         <type>text</type>
-        <help>IP-adres(sen) van AdGuard (komma-gescheiden, maximaal 4; geef ook het IPv6-adres op als het bestaat). Geblokkeerde apparaten mogen alleen deze server(s) voor DNS gebruiken. Leeg laten = DNS van geblokkeerde apparaten gaat naar Unbound op deze firewall.</help>
+        <help>IP-adres(sen) van je DNS-filter, bijvoorbeeld AdGuard Home of Pi-hole (komma-gescheiden, maximaal 4; geef ook het IPv6-adres op als het bestaat). Geblokkeerde apparaten mogen alleen deze server(s) voor DNS gebruiken. Leeg laten = DNS van geblokkeerde apparaten gaat naar Unbound op deze firewall.</help>
     </field>
     <field>
         <id>general.dns_enforce</id>
@@ -78,27 +78,28 @@
         <id>general.filter_backend</id>
         <label>Filter-backend</label>
         <type>dropdown</type>
-        <help>Hiermee worden websiteprofielen en SafeSearch per groep toegepast. De plugin beheert alleen eigen items (clients met het voorvoegsel "PC: " en een eigen blok regels); niets van wat je zelf instelde wordt aangepast.</help>
+        <help>Hiermee worden websiteprofielen per groep toegepast. AdGuard Home ondersteunt SafeSearch, filter voor volwassen inhoud, categorieën en eigen domeinen. Pi-hole ondersteunt groepen en eigen domeinen (SafeSearch en categorieën bestaan daar niet per client). De plugin beheert alleen eigen items (met het voorvoegsel "PC: "); niets van wat je zelf instelde wordt aangepast.</help>
     </field>
     <field>
-        <id>general.adguard_url</id>
-        <label>AdGuard Home-URL</label>
+        <id>general.backend_url</id>
+        <label>Backend-URL</label>
         <type>text</type>
-        <help>Het adres van de AdGuard Home-webinterface, bijvoorbeeld http://192.168.1.2:3000. De API gebruikt dezelfde poort en inloggegevens.</help>
+        <help>Het adres van de webinterface van je DNS-filter: AdGuard Home (bijv. http://192.168.1.2:3000) of Pi-hole (bijv. https://192.168.1.3). De API gebruikt dezelfde poort.</help>
     </field>
     <field>
-        <id>general.adguard_user</id>
-        <label>AdGuard Home-gebruiker</label>
+        <id>general.backend_user</id>
+        <label>Backend-gebruiker</label>
         <type>text</type>
+        <help>Alleen voor AdGuard Home. Pi-hole gebruikt alleen een wachtwoord.</help>
     </field>
     <field>
-        <id>general.adguard_password</id>
-        <label>AdGuard Home-wachtwoord</label>
+        <id>general.backend_password</id>
+        <label>Backend-wachtwoord</label>
         <type>password</type>
-        <help>Wordt in de OPNsense-configuratie opgeslagen. Gebruik bij voorkeur een eigen gebruiker voor deze plugin.</help>
+        <help>Wachtwoord van AdGuard Home, of een app-wachtwoord van Pi-hole (Instellingen, Webinterface/API). Wordt in de OPNsense-configuratie opgeslagen; gebruik bij voorkeur een eigen gebruiker of app-wachtwoord voor deze plugin.</help>
     </field>
     <field>
-        <id>general.adguard_verify_tls</id>
+        <id>general.backend_verify_tls</id>
         <label>TLS-certificaat controleren</label>
         <type>checkbox</type>
         <help>Alleen relevant bij een https-URL. Schakel uit bij een zelfondertekend certificaat.</help>

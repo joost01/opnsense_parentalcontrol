@@ -88,3 +88,7 @@ def fmt_dur(sec):
     sec = int(round(sec))
     h, m = sec // 3600, (sec % 3600) // 60
     return '%du %02dm' % (h, m) if h else '%dm' % m
+
+
+class BackendError(Exception):
+    """Communicatie- of configuratiefout met een filter-backend (AdGuard Home, Pi-hole, ...)."""
