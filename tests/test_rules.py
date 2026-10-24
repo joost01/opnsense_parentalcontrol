@@ -24,7 +24,7 @@ class RulesetTests(unittest.TestCase):
         rules = self.mod.build_ruleset([{'table': 'pc_a'}], 8089, ['192.168.1.2'])
         self.assertIn('rdr pass inet proto tcp from <pc_a> to any port 80 -> 127.0.0.1 port 8089', rules)
         self.assertIn('pass in quick proto { tcp udp } from <pc_a> to { 192.168.1.2 } port 53', rules)
-        self.assertNotIn('port 53 ->', rules)                       # geen omleiding naar Unbound
+        self.assertNotIn('port 53 ->', rules)                       # no redirect to Unbound
         self.assertLess(rules.index('pass in quick'), rules.index('block return'))
 
     def test_block_page_without_dns_server_redirects_to_unbound(self):
@@ -75,15 +75,15 @@ class DnsPlanTests(unittest.TestCase):
 
     def test_missing_anchors_disable_enforcement(self):
         fake = FakeSystem()
-        fake.main_nat = 'rdr-anchor "parentalcontrol" all\n'          # nat-anchor ontbreekt, hairpin nodig
+        fake.main_nat = 'rdr-anchor "parentalcontrol" all\n'          # nat anchor missing, hairpin needed
         ctx = daemon_with(DNS, fake)
         self.assertIsNone(ctx.d.dns_plan())
-        self.assertTrue(any('nat-anchor' in m for m in ctx.logs))
+        self.assertTrue(any('nat anchor' in m for m in ctx.logs))
         fake = FakeSystem()
         fake.main_nat = ''
         ctx = daemon_with(DNS, fake)
         self.assertIsNone(ctx.d.dns_plan())
-        self.assertTrue(any('niet in de firewallregels' in m for m in ctx.logs))
+        self.assertTrue(any('not in the firewall rules' in m for m in ctx.logs))
 
     def test_disabled_without_servers_or_interfaces(self):
         self.assertIsNone(daemon_with(DNS.replace('<dns_enforce>1', '<dns_enforce>0')).d.dns_plan())
@@ -109,7 +109,7 @@ class FallbackTests(unittest.TestCase):
         self.assertIn('block drop', fake.loaded[-1])
         loads = len(fake.loaded)
         ctx.d.ensure_anchor(self.groups)
-        self.assertEqual(len(fake.loaded), loads, 'geen herlaad-lus na terugval')
+        self.assertEqual(len(fake.loaded), loads, 'no reload loop after the fallback')
 
     def test_total_failure_reports_false(self):
         fake = FakeSystem()
@@ -128,7 +128,7 @@ class FallbackTests(unittest.TestCase):
         ctx.d.load_config()
         ctx.d.ensure_anchor(self.groups)
         count = len(fake.loaded)
-        fake.anchor_loaded = False                                    # iemand heeft het anchor leeggemaakt
+        fake.anchor_loaded = False                                    # someone flushed the anchor
         ctx.d.ensure_anchor(self.groups)
         self.assertEqual(len(fake.loaded), count + 1)
 

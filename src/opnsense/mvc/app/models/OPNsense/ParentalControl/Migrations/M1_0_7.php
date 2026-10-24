@@ -6,8 +6,8 @@ use OPNsense\Base\BaseModelMigration;
 use OPNsense\Core\Config;
 
 /**
- * Versie 1.0.7: de AdGuard-instellingen zijn algemene backend-instellingen geworden
- * (adguard_url -> backend_url, enzovoort), zodat ook andere backends (Pi-hole) ze kunnen gebruiken.
+ * Version 1.0.7: the AdGuard settings became generic backend settings
+ * (adguard_url -> backend_url, and so on) so other backends (Pi-hole) can use them too.
  */
 class M1_0_7 extends BaseModelMigration
 {

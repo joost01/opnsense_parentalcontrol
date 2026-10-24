@@ -31,7 +31,7 @@ class ProfileConfigTests(unittest.TestCase):
         cfg = ctx.d.cfg
         profile = cfg['profiles'][P1]
         self.assertEqual(profile['categories'], {'social', 'games'})
-        self.assertEqual(profile['blocked_domains'], ['bad.example'])        # ongeldig domein is weggefilterd
+        self.assertEqual(profile['blocked_domains'], ['bad.example'])        # invalid domain was filtered out
         self.assertEqual(profile['allowed_domains'], ['school.nl'])
         self.assertTrue(profile['safesearch'] and profile['parental'])
         self.assertEqual(cfg['groups'][G1]['profile'], P1)
@@ -94,15 +94,15 @@ class ProfileFlowTests(unittest.TestCase):
     def test_profile_reaches_adguard_and_dns_is_locked_down(self):
         self.tick()
         self.assertTrue(self.d.syncer.sync_once(now=1000))
-        self.assertEqual([c['name'] for c in self.srv.clients], ['PC: Kids'])        # Parents heeft geen profiel
+        self.assertEqual([c['name'] for c in self.srv.clients], ['PC: Kids'])        # Parents has no profile
         client = self.srv.clients[0]
         self.assertEqual(client['ids'], ['192.168.1.20', '192.168.1.21'])
         self.assertTrue(client['parental_enabled'] and client['safe_search']['enabled'])
         self.assertEqual(client['blocked_services'], ['discord'][:0] + ['facebook', 'instagram', 'steam', 'tiktok'])
         self.assertIn("||bad.example^$client='PC: Kids'", self.srv.rules)
-        self.assertEqual(self.fake.tables['pc_pdev'], {'192.168.1.20', '192.168.1.21'})  # alleen apparaten met profiel
+        self.assertEqual(self.fake.tables['pc_pdev'], {'192.168.1.20', '192.168.1.21'})  # only devices with a profile
         self.assertEqual(self.d.loaded_plan['group_dns_block'], True)
-        self.assertEqual(self.read_status()['backend']['state'], 'pending')      # status wordt per tick bijgewerkt
+        self.assertEqual(self.read_status()['backend']['state'], 'pending')      # the status is updated per tick
         self.tick()
         self.assertEqual(self.read_status()['backend']['state'], 'ok')
 
@@ -151,8 +151,8 @@ class ProfileFlowTests(unittest.TestCase):
         ctx.d.tick()                                                               # tick blijft werken
         status = self.read_status(ctx)
         self.assertEqual(status['backend']['state'], 'error')
-        self.assertIn('inloggen mislukt', status['backend']['message'])
-        self.assertTrue(any('filter-backend: error' in m for m in ctx.logs))
+        self.assertIn('login failed', status['backend']['message'])
+        self.assertTrue(any('filter backend: error' in m for m in ctx.logs))
 
     def test_redirect_mode_does_not_create_pdev_table(self):
         ctx = make_daemon(config(self.srv.url, group_mode='redirect'), self.fake)

@@ -1,4 +1,4 @@
-"""Nagebootste Pi-hole v6 API voor tests (sessies, groepen, clients, domeinen)."""
+"""Fake Pi-hole v6 API for tests (sessions, groups, clients, domains)."""
 import json
 import threading
 import urllib.parse
@@ -11,9 +11,9 @@ class FakePiHole:
         self.sessions = set()
         self.logins = self.logouts = 0
         self.groups = [{'name': 'Default', 'id': 0, 'enabled': True, 'comment': ''},
-                       {'name': 'Strict kids', 'id': 7, 'enabled': True, 'comment': 'door beheerder'}]
+                       {'name': 'Strict kids', 'id': 7, 'enabled': True, 'comment': 'by the administrator'}]
         self.clients = []
-        self.domains = [{'domain': 'eigen.example', 'type': 'deny', 'kind': 'exact', 'comment': 'mijn regel',
+        self.domains = [{'domain': 'own.example', 'type': 'deny', 'kind': 'exact', 'comment': 'my own rule',
                          'groups': [0], 'enabled': True}]
         self.next_id = 10
         outer = self

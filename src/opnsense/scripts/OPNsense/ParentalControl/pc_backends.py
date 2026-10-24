@@ -1,8 +1,8 @@
 """
-Keuze van filter-backend en de generieke synchronisatiethread.
+Filter backend selection and the generic synchronisation thread.
 
-Een backend (AdGuard Home, Pi-hole, ...) levert een API-object met __enter__/__exit__, describe() en
-test(), en een sync(api, desired)-functie. Alles wat de beheerder zelf instelde, blijft onaangeroerd.
+A backend (AdGuard Home, Pi-hole, ...) provides an API object with __enter__/__exit__, describe() and
+test(), and a sync(api, desired) function. Everything the administrator configured stays untouched.
 """
 import threading
 import time
@@ -10,10 +10,11 @@ import time
 import pc_adguard
 import pc_pihole
 from pc_common import BackendError
+from pc_i18n import _
 
 MIN_SYNC_INTERVAL = 10       # seconden tussen twee synchronisaties
-FULL_SYNC_INTERVAL = 300     # volledige controle, ook zonder wijzigingen
-RETRY_INTERVAL = 30          # wachttijd na een fout
+FULL_SYNC_INTERVAL = 300     # full check, also without changes
+RETRY_INTERVAL = 30          # wait time after an error
 
 BACKENDS = ('adguard', 'pihole')
 
@@ -27,7 +28,7 @@ def open_backend(settings):
     if kind == 'pihole':
         api = pc_pihole.PiHole(settings.get('url'), settings.get('password', ''), settings.get('verify_tls', True))
         return api, pc_pihole.sync
-    raise BackendError('onbekende filter-backend: %r' % (kind,))
+    raise BackendError(_('unknown filter backend: %r') % (kind,))
 
 
 def connect_and_sync(settings, desired):
@@ -38,13 +39,13 @@ def connect_and_sync(settings, desired):
 
 
 def test_connection(settings):
-    api, _ = open_backend(settings)
+    api, unused = open_backend(settings)
     with api:
         return api.test()
 
 
 class Syncer:
-    """Houdt de backend in lijn met de gewenste toestand, buiten de hoofdloop van de daemon."""
+    """Keeps the backend in line with the desired state, outside the main loop of the daemon."""
 
     def __init__(self, log):
         self.log = log
@@ -65,7 +66,7 @@ class Syncer:
             if settings is None and self.status['state'] != 'disabled':
                 self.status = {'state': 'disabled', 'message': '', 'updated': time.time(), 'warnings': []}
             elif settings is not None and self.status['state'] == 'disabled':
-                self.status = {'state': 'pending', 'message': 'wachten op eerste synchronisatie',
+                self.status = {'state': 'pending', 'message': _('waiting for the first synchronisation'),
                                'updated': time.time(), 'warnings': []}
 
     def get_status(self):
@@ -73,7 +74,7 @@ class Syncer:
             return dict(self.status)
 
     def sync_once(self, now=None):
-        """Voer zo nodig een synchronisatie uit. Geeft True terug als er een poging is gedaan."""
+        """Run a synchronisation if needed. Returns True if an attempt was made."""
         now = time.time() if now is None else now
         with self.lock:
             if self.settings is None or self.desired is None:
@@ -92,19 +93,19 @@ class Syncer:
             status = {'state': 'error', 'message': str(err), 'updated': time.time(), 'warnings': []}
             self.next_try = now + RETRY_INTERVAL
             with self.lock:
-                self.dirty = True                 # opnieuw proberen na de wachttijd
+                self.dirty = True                 # retry after the wait time
         with self.lock:
             previous = self.status
             self.status, self.last_sync = status, now
         if previous['state'] != status['state'] or (status['state'] == 'error'
                                                     and previous['message'] != status['message']):
-            self.log('filter-backend: %s - %s' % (status['state'], status['message']))
+            self.log('filter backend: %s - %s' % (status['state'], status['message']))
         if report and (report['added'] or report['updated'] or report['deleted'] or report['rules']):
-            self.log('filter-backend: gesynchroniseerd (+%d ~%d -%d clients, regels %s)' % (
-                report['added'], report['updated'], report['deleted'], 'bijgewerkt' if report['rules'] else 'gelijk'))
+            self.log('filter backend: synchronised (+%d ~%d -%d clients, rules %s)' % (
+                report['added'], report['updated'], report['deleted'], 'updated' if report['rules'] else 'unchanged'))
         for warning in status['warnings']:
             if warning not in previous.get('warnings', []):
-                self.log('filter-backend: ' + warning)
+                self.log('filter backend: ' + warning)
         return True
 
     def start(self):
@@ -119,6 +120,6 @@ class Syncer:
         while self.running:
             try:
                 self.sync_once()
-            except Exception as err:  # de thread mag nooit sterven
-                self.log('filter-backend: onverwachte fout: %r' % err)
+            except Exception as err:  # the thread must never die
+                self.log('filter backend: unexpected error: %r' % err)
             time.sleep(2)

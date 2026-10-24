@@ -6,8 +6,8 @@ use OPNsense\Base\BaseModelMigration;
 use OPNsense\Core\Config;
 
 /**
- * Versie 1.0.1: een bedtijd kan voor meerdere groepen gelden.
- * Het oude veld 'group' wordt overgenomen in 'groups'.
+ * Version 1.0.1: a bedtime can apply to several groups.
+ * The old field 'group' is copied into 'groups'.
  */
 class M1_0_1 extends BaseModelMigration
 {

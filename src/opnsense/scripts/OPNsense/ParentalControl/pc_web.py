@@ -1,10 +1,10 @@
 """
-Blokkeerpagina voor geblokkeerde apparaten.
+Block page for blocked devices.
 
-De server luistert alleen op 127.0.0.1 en ::1. Verkeer van geblokkeerde apparaten naar
-poort 80 wordt door pf (rdr) hierheen omgeleid; zo werkt ook de captive-portal-detectie
-van Android, iOS en Windows. HTTPS kan niet worden omgeleid zonder certificaatfouten:
-dat verkeer wordt geweigerd.
+The server only listens on 127.0.0.1 and ::1. Traffic from blocked devices to
+port 80 is redirected here by pf (rdr); this also makes the captive portal detection
+of Android, iOS and Windows work. HTTPS cannot be redirected without certificate errors:
+that traffic is rejected.
 """
 import html
 import json
@@ -14,8 +14,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs
 
 from pc_common import fmt_dur, norm_ip
+from pc_i18n import _, language
 
-MAX_CONNECTIONS = 32   # gelijktijdige verbindingen per server; extra verbindingen worden direct gesloten
+MAX_CONNECTIONS = 32   # concurrent connections per server; extra connections are closed immediately
 STATUS_PATH = '/__pc/status'
 REQUEST_PATH = '/__pc/request'
 
@@ -41,48 +42,52 @@ def status_key(info):
 def render_page(info):
     key = esc(status_key(info))
     if not info.get('blocked'):
-        title = 'Je kunt weer verder'
-        body = '<h1>Je kunt weer verder</h1><p>De pagina wordt opnieuw geladen...</p>'
-        script = 'setTimeout(function(){location.reload()},1500);'
-        return _wrap(title, body, script)
+        title = _('You can continue')
+        body = '<h1>%s</h1><p>%s</p>' % (esc(title), esc(_('The page is being reloaded...')))
+        return _wrap(title, body, 'setTimeout(function(){location.reload()},1500);')
 
     name = esc(info['group_name'])
-    if info['reason'] == 'bedtime':
-        title = 'Bedtijd'
-        until = ' tot %s' % esc(info['until']) if info.get('until') else ''
-        body = ('<h1>Het is bedtijd &#127769;</h1><p>Internet voor <b>%s</b> staat uit%s.</p>' % (name, until))
+    reason = info['reason']
+    if reason == 'bedtime':
+        title = _('Bedtime')
+        until = esc(_(' until %s') % info['until']) if info.get('until') else ''
+        body = '<h1>%s &#127769;</h1><p>%s</p>' % (
+            esc(_('It is bedtime')), _('Internet access for <b>%s</b> is switched off%s.') % (name, until))
+    elif reason == 'manual':
+        title = _('Internet switched off')
+        body = '<h1>%s</h1><p>%s</p>' % (
+            esc(title), _('A parent switched off internet access for <b>%s</b> for today.') % name)
     else:
-        title = 'Apparaattijd op'
+        title = _('Device time is up')
         used = fmt_dur(info['used'])
         total = fmt_dur((info['limit'] or 0) + info['extra'])
-        body = ('<h1>Je apparaattijd is op</h1><p>Vandaag gebruikt door <b>%s</b>: %s van %s.</p>'
-                % (name, esc(used), esc(total)))
+        body = '<h1>%s</h1><p>%s</p>' % (
+            esc(_('Your device time is up')),
+            _('Used today by <b>%s</b>: %s of %s.') % (name, esc(used), esc(total)))
         body += _request_section(info)
-
-    script = _script(key)
-    return _wrap(title, body, script)
+    return _wrap(title, body, _script(key))
 
 
 def _request_section(info):
     state = info.get('req_state')
     left = int(info.get('cooldown_left', 0))
     if state == 'pending':
-        return '<p>&#9203; Je verzoek is verstuurd. Wacht tot een ouder antwoordt...</p>'
+        return '<p>&#9203; %s</p>' % esc(_('Your request has been sent. Please wait for a parent to answer...'))
     out = ''
     if state == 'denied':
-        out += '<p>Je laatste verzoek is afgewezen.</p>'
+        out += '<p>%s</p>' % esc(_('Your last request was rejected.'))
     elif state == 'approved':
-        out += '<p>Je laatste verzoek was goedgekeurd.</p>'
+        out += '<p>%s</p>' % esc(_('Your last request was approved.'))
     if info.get('can_request'):
-        out += '<p>Wil je extra tijd vragen?</p>'
+        out += '<p>%s</p>' % esc(_('Would you like to ask for extra time?'))
         for minutes in info['minutes_options']:
-            out += '<button type="button" onclick="ask(%d)">%d minuten</button>' % (minutes, minutes)
+            out += '<button type="button" onclick="ask(%d)">%s</button>' % (minutes, esc(_('%d minutes') % minutes))
         out += '<div class="msg" id="msg"></div>'
     elif left > 0:
-        out += ('<p class="muted">Je kunt over <span id="cd" data-left="%d">%s</span> opnieuw een verzoek doen.</p>'
-                % (left, esc(_mmss(left))))
+        countdown = '<span id="cd" data-left="%d">%s</span>' % (left, esc(_mmss(left)))
+        out += '<p class="muted">%s</p>' % (_('You can make a new request in %s.') % countdown)
     elif not info.get('request_enabled', True):
-        out += '<p class="muted">Extra tijd vragen is uitgeschakeld.</p>'
+        out += '<p class="muted">%s</p>' % esc(_('Asking for extra time is disabled.'))
     return out
 
 
@@ -103,20 +108,20 @@ el.textContent=Math.floor(left/60)+':'+('0'+(left%%60)).slice(-2);},1000);}
 function ask(m){var msg=document.getElementById('msg');
 fetch('%s',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'minutes='+m})
 .then(function(r){return r.json()}).then(function(d){if(d.ok){location.reload();}else{msg.textContent=d.message;}})
-.catch(function(){msg.textContent='Versturen mislukt, probeer het later opnieuw.';});}
-""" % (key, STATUS_PATH, REQUEST_PATH)
+.catch(function(){msg.textContent=%s;});}
+""" % (key, STATUS_PATH, REQUEST_PATH, json.dumps(_('Sending failed, please try again later.')))
 
 
 def _wrap(title, body, script):
-    return ('<!DOCTYPE html><html lang="nl"><head><meta charset="utf-8">'
+    return ('<!DOCTYPE html><html lang="%s"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             '<title>%s</title><style>%s</style></head><body><main>%s</main><script>%s</script></body></html>'
-            % (esc(title), CSS, body, script))
+            % (esc(language()), esc(title), CSS, body, script))
 
 
 def make_handler(daemon):
     class Handler(BaseHTTPRequestHandler):
-        protocol_version = 'HTTP/1.0'   # verbinding sluiten na elk antwoord
+        protocol_version = 'HTTP/1.0'   # close the connection after every response
         server_version = 'ParentalControl'
         timeout = 10
 
@@ -149,7 +154,7 @@ def make_handler(daemon):
                 self._send(200, 'application/json', json.dumps({'key': status_key(info)}), head_only)
                 return
             if not info.get('blocked'):
-                # Niet (meer) geblokkeerd: stuur door naar de oorspronkelijke URL.
+                # No longer blocked: redirect to the original URL.
                 host = self.headers.get('Host', '')
                 if host and all(c.isalnum() or c in '.-:[]' for c in host):
                     self.send_response(302)
@@ -169,7 +174,7 @@ def make_handler(daemon):
 
         def do_POST(self):
             if self.path.split('?', 1)[0] != REQUEST_PATH:
-                self._send(404, 'text/plain; charset=utf-8', 'Niet gevonden')
+                self._send(404, 'text/plain; charset=utf-8', 'Not found')
                 return
             try:
                 length = min(int(self.headers.get('Content-Length', 0)), 1024)
@@ -196,7 +201,7 @@ class _Server(ThreadingHTTPServer):
 
     def process_request(self, request, client_address):
         if not self._slots.acquire(blocking=False):
-            self.shutdown_request(request)   # te druk: voorkomt dat een client threads uitput
+            self.shutdown_request(request)   # too busy: prevents a client from exhausting threads
             return
         super().process_request(request, client_address)
 
@@ -221,7 +226,7 @@ def start(daemon, port, log):
         try:
             server = cls((addr, port), make_handler(daemon))
         except OSError as err:
-            log('blokkeerpagina op %s:%d niet gestart: %s' % (addr, port, err))
+            log('block page on %s:%d not started: %s' % (addr, port, err))
             continue
         threading.Thread(target=server.serve_forever, daemon=True).start()
         servers.append(server)

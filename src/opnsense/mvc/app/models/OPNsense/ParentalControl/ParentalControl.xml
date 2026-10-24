@@ -1,7 +1,7 @@
 <model>
     <mount>//OPNsense/ParentalControl</mount>
     <version>1.0.7</version>
-    <description>Ouderlijk toezicht</description>
+    <description>Parental control</description>
     <items>
         <general>
             <enabled type="BooleanField">
@@ -13,21 +13,21 @@
                 <MinimumValue>5</MinimumValue>
                 <MaximumValue>60</MaximumValue>
                 <Required>Y</Required>
-                <ValidationMessage>Kies een interval tussen 5 en 60 seconden.</ValidationMessage>
+                <ValidationMessage>Choose an interval between 5 and 60 seconds.</ValidationMessage>
             </tick_interval>
             <activity_threshold type="IntegerField">
                 <Default>60</Default>
                 <MinimumValue>1</MinimumValue>
                 <MaximumValue>100000</MaximumValue>
                 <Required>Y</Required>
-                <ValidationMessage>Vul een getal in (KB per minuut).</ValidationMessage>
+                <ValidationMessage>Enter a number (KB per minute).</ValidationMessage>
             </activity_threshold>
             <idle_grace type="IntegerField">
                 <Default>3</Default>
                 <MinimumValue>0</MinimumValue>
                 <MaximumValue>60</MaximumValue>
                 <Required>Y</Required>
-                <ValidationMessage>Kies 0 tot 60 minuten.</ValidationMessage>
+                <ValidationMessage>Choose 0 to 60 minutes.</ValidationMessage>
             </idle_grace>
             <blockpage type="BooleanField">
                 <Default>1</Default>
@@ -38,11 +38,11 @@
                 <MinimumValue>1024</MinimumValue>
                 <MaximumValue>65535</MaximumValue>
                 <Required>Y</Required>
-                <ValidationMessage>Kies een poort tussen 1024 en 65535.</ValidationMessage>
+                <ValidationMessage>Choose a port between 1024 and 65535.</ValidationMessage>
             </page_port>
             <dns_servers type="TextField">
                 <Mask>/^([0-9a-fA-F:.]{2,45}(\s*,\s*[0-9a-fA-F:.]{2,45}){0,3})?$/</Mask>
-                <ValidationMessage>Vul een of meer IP-adressen in, gescheiden door komma's (maximaal 4), of laat leeg.</ValidationMessage>
+                <ValidationMessage>Enter one or more IP addresses separated by commas (at most 4), or leave empty.</ValidationMessage>
             </dns_servers>
             <dns_enforce type="BooleanField">
                 <Default>0</Default>
@@ -50,7 +50,7 @@
             </dns_enforce>
             <dns_interfaces type="InterfaceField">
                 <Multiple>Y</Multiple>
-                <ValidationMessage>Kies de interfaces waarop de clients zitten.</ValidationMessage>
+                <ValidationMessage>Select the interfaces the clients are connected to.</ValidationMessage>
             </dns_interfaces>
             <dns_block_encrypted type="BooleanField">
                 <Default>1</Default>
@@ -65,41 +65,41 @@
                 <MinimumValue>1</MinimumValue>
                 <MaximumValue>1440</MaximumValue>
                 <Required>Y</Required>
-                <ValidationMessage>Kies 1 tot 1440 minuten.</ValidationMessage>
+                <ValidationMessage>Choose 1 to 1440 minutes.</ValidationMessage>
             </request_cooldown>
             <ntfy_server type="TextField">
                 <Default>https://ntfy.sh</Default>
                 <Mask>/^(https?:\/\/[^\s\/]{1,255})?$/</Mask>
-                <ValidationMessage>Vul een server in zoals https://ntfy.sh (zonder pad), of laat leeg.</ValidationMessage>
+                <ValidationMessage>Enter a server such as https://ntfy.sh (without a path), or leave empty.</ValidationMessage>
             </ntfy_server>
             <ntfy_topic type="TextField">
                 <Mask>/^[A-Za-z0-9_\-]{0,64}$/</Mask>
-                <ValidationMessage>Gebruik alleen letters, cijfers, _ en -.</ValidationMessage>
+                <ValidationMessage>Use only letters, digits, _ and -.</ValidationMessage>
             </ntfy_topic>
             <ntfy_token type="TextField">
                 <Mask>/^[A-Za-z0-9_\-]{0,128}$/</Mask>
-                <ValidationMessage>Ongeldig token.</ValidationMessage>
+                <ValidationMessage>Invalid token.</ValidationMessage>
             </ntfy_token>
             <webhook_url type="TextField">
                 <Mask>/^(https?:\/\/\S{1,500})?$/</Mask>
-                <ValidationMessage>Vul een geldige http(s)-URL in, of laat leeg.</ValidationMessage>
+                <ValidationMessage>Enter a valid http(s) URL, or leave empty.</ValidationMessage>
             </webhook_url>
             <gui_url type="TextField">
                 <Mask>/^(https?:\/\/\S{1,500})?$/</Mask>
-                <ValidationMessage>Vul een geldige http(s)-URL in, of laat leeg.</ValidationMessage>
+                <ValidationMessage>Enter a valid http(s) URL, or leave empty.</ValidationMessage>
             </gui_url>
             <filter_backend type="OptionField">
                 <Default>none</Default>
                 <Required>Y</Required>
                 <OptionValues>
-                    <none>Geen</none>
+                    <none>None</none>
                     <adguard>AdGuard Home</adguard>
                     <pihole>Pi-hole (v6)</pihole>
                 </OptionValues>
             </filter_backend>
             <backend_url type="TextField">
                 <Mask>/^(https?:\/\/\S{1,300})?$/</Mask>
-                <ValidationMessage>Vul een URL in zoals http://192.168.1.2:3000, of laat leeg.</ValidationMessage>
+                <ValidationMessage>Enter a URL such as http://192.168.1.2:3000, or leave empty.</ValidationMessage>
             </backend_url>
             <backend_user type="TextField">
                 <Mask>/^.{0,128}$/</Mask>
@@ -115,8 +115,8 @@
                 <Default>block</Default>
                 <Required>Y</Required>
                 <OptionValues>
-                    <block>Blokkeren (aanbevolen bij profielen)</block>
-                    <redirect>Omleiden naar de DNS-server</redirect>
+                    <block>Block (recommended with profiles)</block>
+                    <redirect>Redirect to the DNS server</redirect>
                 </OptionValues>
             </dns_group_mode>
         </general>
@@ -129,10 +129,10 @@
                 <name type="TextField">
                     <Required>Y</Required>
                     <Mask>/^[\p{L}0-9 _.\-]{1,64}$/u</Mask>
-                    <ValidationMessage>Gebruik 1-64 tekens: letters, cijfers, spatie, punt, streepje of underscore.</ValidationMessage>
+                    <ValidationMessage>Use 1-64 characters: letters, digits, space, dot, dash or underscore.</ValidationMessage>
                     <Constraints>
                         <check001>
-                            <ValidationMessage>Deze groepsnaam bestaat al.</ValidationMessage>
+                            <ValidationMessage>This group name already exists.</ValidationMessage>
                             <type>UniqueConstraint</type>
                         </check001>
                     </Constraints>
@@ -157,10 +157,10 @@
                 <name type="TextField">
                     <Required>Y</Required>
                     <Mask>/^[\p{L}0-9 _.\-]{1,64}$/u</Mask>
-                    <ValidationMessage>Gebruik 1-64 tekens: letters, cijfers, spatie, punt, streepje of underscore.</ValidationMessage>
+                    <ValidationMessage>Use 1-64 characters: letters, digits, space, dot, dash or underscore.</ValidationMessage>
                     <Constraints>
                         <check001>
-                            <ValidationMessage>Deze profielnaam bestaat al.</ValidationMessage>
+                            <ValidationMessage>This profile name already exists.</ValidationMessage>
                             <type>UniqueConstraint</type>
                         </check001>
                     </Constraints>
@@ -179,24 +179,24 @@
                 <categories type="OptionField">
                     <Multiple>Y</Multiple>
                     <OptionValues>
-                        <social>Sociale media</social>
-                        <messaging>Chat en berichten</messaging>
+                        <social>Social media</social>
+                        <messaging>Chat and messaging</messaging>
                         <games>Games</games>
-                        <video>Video en streaming</video>
+                        <video>Video and streaming</video>
                         <dating>Dating</dating>
                     </OptionValues>
                 </categories>
                 <backend_groups type="TextField">
                     <Mask>/^([\p{L}0-9 _.\-]{1,64}(\s*,\s*[\p{L}0-9 _.\-]{1,64})*)?$/u</Mask>
-                    <ValidationMessage>Vul namen van groepen in, gescheiden door komma's.</ValidationMessage>
+                    <ValidationMessage>Enter group names separated by commas.</ValidationMessage>
                 </backend_groups>
                 <blocked_domains type="TextField">
                     <Mask>/^([A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?(\s*,\s*[A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?)*)?$/</Mask>
-                    <ValidationMessage>Vul domeinnamen in, gescheiden door komma's (bijvoorbeeld voorbeeld.nl, ander.com).</ValidationMessage>
+                    <ValidationMessage>Enter domain names separated by commas (for example example.com, other.org).</ValidationMessage>
                 </blocked_domains>
                 <allowed_domains type="TextField">
                     <Mask>/^([A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?(\s*,\s*[A-Za-z0-9]([A-Za-z0-9\-\.]{0,251}[A-Za-z0-9])?)*)?$/</Mask>
-                    <ValidationMessage>Vul domeinnamen in, gescheiden door komma's (bijvoorbeeld voorbeeld.nl, ander.com).</ValidationMessage>
+                    <ValidationMessage>Enter domain names separated by commas (for example example.com, other.org).</ValidationMessage>
                 </allowed_domains>
             </profile>
         </profiles>
@@ -209,14 +209,14 @@
                 <name type="TextField">
                     <Required>Y</Required>
                     <Mask>/^[\p{L}0-9 _.\-]{1,64}$/u</Mask>
-                    <ValidationMessage>Gebruik 1-64 tekens: letters, cijfers, spatie, punt, streepje of underscore.</ValidationMessage>
+                    <ValidationMessage>Use 1-64 characters: letters, digits, space, dot, dash or underscore.</ValidationMessage>
                 </name>
                 <mac type="MacAddressField">
                     <Required>Y</Required>
-                    <ValidationMessage>Vul een geldig MAC-adres in (aa:bb:cc:dd:ee:ff).</ValidationMessage>
+                    <ValidationMessage>Enter a valid MAC address (aa:bb:cc:dd:ee:ff).</ValidationMessage>
                     <Constraints>
                         <check001>
-                            <ValidationMessage>Dit MAC-adres zit al in een groep. Een apparaat kan maar in een groep zitten.</ValidationMessage>
+                            <ValidationMessage>This MAC address is already in a group. A device can only be in one group.</ValidationMessage>
                             <type>UniqueConstraint</type>
                         </check001>
                     </Constraints>
@@ -230,7 +230,7 @@
                         </groups>
                     </Model>
                     <Required>Y</Required>
-                    <ValidationMessage>Kies een groep.</ValidationMessage>
+                    <ValidationMessage>Choose a group.</ValidationMessage>
                 </group>
             </device>
         </devices>
@@ -250,31 +250,31 @@
                     </Model>
                     <Multiple>Y</Multiple>
                     <Required>Y</Required>
-                    <ValidationMessage>Kies minimaal een groep.</ValidationMessage>
+                    <ValidationMessage>Choose at least one group.</ValidationMessage>
                 </groups>
                 <days type="OptionField">
                     <Required>Y</Required>
                     <Multiple>Y</Multiple>
                     <OptionValues>
-                        <mon>Maandag</mon>
-                        <tue>Dinsdag</tue>
-                        <wed>Woensdag</wed>
-                        <thu>Donderdag</thu>
-                        <fri>Vrijdag</fri>
-                        <sat>Zaterdag</sat>
-                        <sun>Zondag</sun>
+                        <mon>Monday</mon>
+                        <tue>Tuesday</tue>
+                        <wed>Wednesday</wed>
+                        <thu>Thursday</thu>
+                        <fri>Friday</fri>
+                        <sat>Saturday</sat>
+                        <sun>Sunday</sun>
                     </OptionValues>
-                    <ValidationMessage>Kies minimaal een dag.</ValidationMessage>
+                    <ValidationMessage>Choose at least one day.</ValidationMessage>
                 </days>
                 <start type="TextField">
                     <Required>Y</Required>
                     <Mask>/^([01][0-9]|2[0-3]):[0-5][0-9]$/</Mask>
-                    <ValidationMessage>Gebruik het formaat UU:MM (24 uur).</ValidationMessage>
+                    <ValidationMessage>Use the format HH:MM (24 hours).</ValidationMessage>
                 </start>
                 <end type="TextField">
                     <Required>Y</Required>
                     <Mask>/^([01][0-9]|2[0-3]):[0-5][0-9]$/</Mask>
-                    <ValidationMessage>Gebruik het formaat UU:MM (24 uur).</ValidationMessage>
+                    <ValidationMessage>Use the format HH:MM (24 hours).</ValidationMessage>
                 </end>
                 <description type="TextField">
                     <Mask>/^.{0,255}$/u</Mask>
@@ -297,27 +297,27 @@
                     </Model>
                     <Multiple>Y</Multiple>
                     <Required>Y</Required>
-                    <ValidationMessage>Kies minimaal een groep.</ValidationMessage>
+                    <ValidationMessage>Choose at least one group.</ValidationMessage>
                 </groups>
                 <days type="OptionField">
                     <Required>Y</Required>
                     <Multiple>Y</Multiple>
                     <OptionValues>
-                        <mon>Maandag</mon>
-                        <tue>Dinsdag</tue>
-                        <wed>Woensdag</wed>
-                        <thu>Donderdag</thu>
-                        <fri>Vrijdag</fri>
-                        <sat>Zaterdag</sat>
-                        <sun>Zondag</sun>
+                        <mon>Monday</mon>
+                        <tue>Tuesday</tue>
+                        <wed>Wednesday</wed>
+                        <thu>Thursday</thu>
+                        <fri>Friday</fri>
+                        <sat>Saturday</sat>
+                        <sun>Sunday</sun>
                     </OptionValues>
-                    <ValidationMessage>Kies minimaal een dag.</ValidationMessage>
+                    <ValidationMessage>Choose at least one day.</ValidationMessage>
                 </days>
                 <minutes type="IntegerField">
                     <Required>Y</Required>
                     <MinimumValue>0</MinimumValue>
                     <MaximumValue>1440</MaximumValue>
-                    <ValidationMessage>Vul het aantal minuten in (0 tot 1440).</ValidationMessage>
+                    <ValidationMessage>Enter the number of minutes (0 to 1440).</ValidationMessage>
                 </minutes>
                 <description type="TextField">
                     <Mask>/^.{0,255}$/u</Mask>

@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-"""Geeft de verzoeken om extra tijd als JSON (openstaande eerst, dan nieuwste)."""
+"""Prints the requests for extra time as JSON (open requests first, then newest)."""
 import json
 
 REQUESTS_FILE = '/var/db/parentalcontrol/requests.json'

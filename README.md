@@ -1,156 +1,141 @@
 # os-parentalcontrol
 
-Ouderlijk toezicht voor OPNsense.
+Parental control for OPNsense: device groups, bedtime schedules, daily time budgets, requests for extra
+time, DNS enforcement and website profiles with SafeSearch.
 
-> **Status: vroege ontwikkelversie (stap 1 + verbruiksoverzicht).** Nog niet getest op alle OPNsense-versies.
-> Gebruik eerst een testomgeving (VM).
+> **Status: early development version.** Not yet tested on every OPNsense version. Try it on a test machine
+> (VM) first. Blocking features can lock devices out of the network.
 
-## Functies
+## Features
 
-| Functie | Status |
+| Feature | Status |
 |---|---|
-| Groepen met een of meer apparaten (op MAC-adres), ook te kiezen uit DHCP-reserveringen/leases/ARP | klaar |
-| Flexibele bedtijdschema's per dag/week, een schema voor meerdere groepen | klaar |
-| Overzicht verbruikte tijd per groep (gelijktijdig gebruik telt eenmaal) | klaar (alleen meten) |
-| Dagbudget per groep (per weekdag instelbaar, een regel voor meerdere groepen), blokkeren als de tijd op is | klaar |
-| Extra tijd handmatig toevoegen (+15/+30/+60 min in het overzicht) | klaar |
-| Blokkeerpagina ("tijd op" / bedtijd) met verlengingsverzoeken (eenmaal per 15 min), goedkeuren/afwijzen in de GUI, melding via ntfy/webhook | klaar |
-| DNS afdwingen: al het poort-53-verkeer (ook hard-gecodeerd 8.8.8.8 e.d.) naar AdGuard, DoT/bekende DoH-resolvers blokkeren | klaar |
-| Websiteprofielen op leeftijd (SafeSearch, volwassen filter, categorieën, eigen domeinen) via AdGuard Home | klaar |
-| Filter-backends: AdGuard Home (volledig), Pi-hole v6 (groepen en eigen domeinen, experimenteel) | klaar |
-| Websiteprofielen via Unbound (voor wie geen externe DNS-filter gebruikt) | gepland |
-| SafeSearch afdwingen per groep (AdGuard Home) | klaar |
+| Groups with one or more devices (by MAC address), also selectable from DHCP reservations, leases and ARP/NDP | done |
+| Flexible bedtime schedules per day/week, one schedule for several groups | done |
+| Daily device time per group (simultaneous use counts once), per weekday, one rule for several groups | done |
+| Block a group for the rest of the day, open it for the whole day, reset the counters of today | done |
+| Block page ("time is up" / bedtime / blocked by a parent) with requests for extra time (one per period), approval in the GUI, notification through ntfy or webhook | done |
+| DNS enforcement: all port 53 traffic (also hard-coded 8.8.8.8 and the like) is sent to your DNS filter; DoT and well-known DoH resolvers are blocked | done |
+| Website profiles per age: SafeSearch, adult filter, categories, own domains | done (AdGuard Home) |
+| Filter backends: AdGuard Home (full), Pi-hole v6 (groups and own domains, experimental) | done |
+| Overview with a detail panel per group: time per day, most used apps, most visited sites, block history, recent activity (day/week/month) | done (apps and sites need the AdGuard Home query log) |
+| Website profiles through Unbound (for people without an external DNS filter) | planned |
 
-## Werking
+## Pages
 
-- De plugin registreert een pf-anchor `parentalcontrol`.
-- De daemon `parentalcontrold` (Python) bepaalt per groep of er een bedtijd actief is,
-  koppelt MAC-adressen via ARP/NDP aan IP-adressen en houdt een pf-table per groep bij.
-  Een vaste regel blokkeert verkeer van adressen in die table.
-- Bestaande verbindingen worden bij het blokkeren verbroken (`pfctl -k`).
-- Tijdtelling: elke tick telt de daemon per groep eenmaal de verstreken tijd mee als minstens
-  een apparaat meer verkeer had dan de activiteitsdrempel (bytes-delta over de pf-states,
-  `pfctl -ss -vv`). Korte pauzes tellen mee dankzij een instelbare naloop.
-  Verbruik staat in `/var/db/parentalcontrol/usage.json` (35 dagen).
+Under **Services > Parental Control**:
 
-- Budgetten: de laagste passende regel per groep en dag geldt; de teller begint om middernacht
-  opnieuw. Is budget plus extra tijd op, dan wordt de groep geblokkeerd zoals bij een bedtijd.
-- Extra tijd gaat via een wachtrij (`/var/db/parentalcontrol/queue`) naar de daemon en werkt direct.
+* **Overview**: status per group, day controls, requests, and details per group (click a group).
+* **Administration**: General, Groups, Devices, Bedtimes, Time budgets and Website profiles.
+* **Log File**: the log of the daemon (standard OPNsense log viewer).
 
-- Blokkeerpagina: voor geblokkeerde apparaten leidt pf (rdr in hetzelfde anchor) DNS (poort 53) om naar
-  Unbound op localhost en HTTP (poort 80) naar een kleine webserver in de daemon die alleen op
-  127.0.0.1/::1 luistert. Hierdoor verschijnt de pagina ook automatisch via de captive-portal-detectie
-  van Android, iOS en Windows. Al het andere verkeer wordt geweigerd (`block return`).
-  Kan pf de omleidingsregels niet laden, dan valt de daemon terug op alleen blokkeren (zie syslog).
-- Verzoeken: een kind kan als de tijd op is 15/30/60 minuten vragen, maximaal een verzoek per
-  instelbare periode (ook na afwijzen). De ouder krijgt een melding en beslist in de OPNsense-GUI
-  (Overzicht); goedkeuren gebeurt dus altijd achter de beveiligde login.
+## How it works
 
-- DNS afdwingen: op de gekozen interfaces (nooit WAN!) wordt al het DNS-verkeer van clients met pf (rdr)
-  omgeleid naar de eerste opgegeven DNS-server (bijv. AdGuard Home); die server zelf is uitgezonderd.
-  Staat de DNS-server in hetzelfde subnet als de clients, dan voegt de daemon automatisch een
-  nat-regel toe zodat antwoorden via de firewall terugkomen. AdGuard ziet omgeleide queries dan met het
-  adres van de firewall; queries van clients die gewoon AdGuard gebruiken (via DHCP) behouden hun eigen IP.
-  Controle: `pfctl -sn | grep parentalcontrol` moet `rdr-anchor` (en `nat-anchor`) tonen.
+* The plugin registers a pf anchor `parentalcontrol` (filter, rdr and nat). The daemon `parentalcontrold`
+  (Python) loads the rules and one pf table per group into it, so the firewall does not have to be
+  reloaded for every block. Existing connections are broken when an address is blocked (`pfctl -k`).
+* Devices are identified by MAC address; the daemon maps them to the current IPv4/IPv6 addresses through
+  ARP/NDP.
+* Time counting: every tick the elapsed time is added once per group if at least one device had more traffic
+  than the activity threshold (bytes delta over the pf states). Short pauses count thanks to a grace period.
+* Block page: for blocked devices pf redirects DNS and HTTP (port 80) to a small web server in the daemon
+  that only listens on 127.0.0.1/::1. This also triggers the captive portal detection of Android, iOS and
+  Windows. Everything else is rejected. If pf cannot load the redirect rules, the daemon falls back to
+  blocking only, and logs why.
+* Requests for extra time: when the time is up, a child can ask for 15/30/60 minutes (at most one request per
+  configurable period). The parent approves or rejects in the OPNsense GUI (behind the login) and is notified
+  through ntfy or a webhook.
+* DNS enforcement: on the selected interfaces (never WAN!) all DNS traffic is redirected to the first DNS
+  server you enter; that server itself is excluded. If it is in the same subnet as the clients, the daemon adds
+  a nat rule automatically so the replies come back through the firewall (the DNS filter then sees the firewall
+  address for redirected queries; clients that use it through DHCP keep their own address).
+  Devices in a group with a profile may not use their own DNS server at all (default), so the profile cannot
+  be bypassed.
 
-- Filter-backends: de backend is een keuze (Algemeen, "Filter-backend"). Wat per backend mogelijk is:
+### Filter backends
 
-  | | AdGuard Home | Pi-hole v6 |
-  |---|---|---|
-  | Eigen groep/client per plugin-groep | ja | ja |
-  | SafeSearch per groep | ja | nee (kent Pi-hole niet per client) |
-  | Filter voor volwassen inhoud | ja | via eigen blokkeerlijst in een Pi-hole-groep |
-  | Categorieën (sociaal, games, ...) | ja (diensten) | nee |
-  | Extra geblokkeerde/toegestane domeinen | ja | ja |
-  | Bestaande groepen in de backend aanwijzen | nee | ja ("Groepen in de filter-backend") |
+| | AdGuard Home | Pi-hole v6 |
+|---|---|---|
+| Own group/client per plugin group | yes | yes |
+| SafeSearch per group | yes | no (not available per client) |
+| Adult content filter | yes | through your own blocklist in a Pi-hole group |
+| Categories (social, games, ...) | yes (services) | no |
+| Extra blocked/allowed domains | yes | yes |
+| Point to existing groups in the backend | no | yes |
+| Query log statistics | yes | not yet |
 
-  De Pi-hole-koppeling is experimenteel: ze is getest tegen een nagebootste API, nog niet tegen een echte Pi-hole.
-  Een nieuwe backend toevoegen: een module met een API-klasse (`__enter__`/`__exit__`, `describe()`, `test()`) en een
-  functie `sync(api, desired)` naar het voorbeeld van `pc_pihole.py`, registreren in `pc_backends.py` en als optie in het model.
-- Websiteprofielen (AdGuard Home): een profiel (SafeSearch, volwassen filter, categorieën, extra geblokkeerde
-  en toegestane domeinen) kan aan een groep worden gekoppeld. De daemon maakt per groep een AdGuard-client
-  `PC: <groepsnaam>` met de huidige IP-adressen van de apparaten en houdt die bij. Alleen clients met dat
-  voorvoegsel en een gemarkeerd blok in de gebruikersregels worden beheerd; eigen instellingen blijven
-  onaangeroerd. Synchronisatie draait in een aparte thread; een trage of onbereikbare AdGuard houdt de
-  firewall niet op. Categorieën worden vertaald naar AdGuard-dienst-ID's en gecontroleerd tegen de
-  dienstenlijst van jouw AdGuard-versie (onbekende ID's worden overgeslagen en gemeld).
-- Apparaten in een groep met profiel mogen bij "DNS afdwingen" geen eigen DNS-server gebruiken (standaard:
-  blokkeren), zodat AdGuard het apparaat blijft herkennen en het profiel niet te omzeilen is.
-- Het AdGuard-wachtwoord staat leesbaar in de OPNsense-configuratie; gebruik een eigen gebruiker voor de plugin.
-  Het "volwassen filter" is de ouderlijk-toezichtfunctie van AdGuard, die gehashte domeinvoorvoegsels naar
-  de AdGuard-dienst stuurt.
+The plugin only manages its own items (clients and groups named `PC: <group>`, and a marked block of user
+rules). Everything you configured yourself stays untouched. The Pi-hole integration is experimental: it is
+tested against a simulated API, not yet against a real Pi-hole. To add a backend, write a module with an API
+class (`__enter__`/`__exit__`, `describe()`, `test()`) and a `sync(api, desired)` function (see `pc_pihole.py`),
+register it in `pc_backends.py` and add it as an option to the model.
 
-## Beperkingen
+## Limitations
 
-- HTTPS-sites kunnen niet netjes worden omgeleid: de browser toont een verbindingsfout.
-  Alleen http://-adressen en de automatische captive-portal-melding tonen de blokkeerpagina.
-- Standaard wordt DNS van geblokkeerde apparaten omgeleid naar Unbound op 127.0.0.1. Gebruik je een
-  externe DNS-server (bijv. AdGuard), vul dan 'DNS-server(s) voor geblokkeerde apparaten' in: DNS mag
-  dan alleen naar die server en er wordt niets omgeleid.
+* Devices with a random (private) MAC address must use a fixed address for your network.
+* A new IPv6 privacy address is only blocked at the next check (10 seconds by default).
+* HTTPS sites cannot be redirected without certificate errors: the browser shows a connection error. The block
+  page appears for http:// addresses and through the automatic captive portal check.
+* The firewall only sees network traffic, not screen time; the threshold and grace period are approximations.
+* Gambling has no category (AdGuard has no service for it): use "extra blocked domains" or a blocklist.
+* The backend password is stored in the OPNsense configuration; use a dedicated user or app password.
+  AdGuard's adult filter sends hashed domain prefixes to the AdGuard service.
+* Most used apps, most visited sites and recent queries depend on the query log of the backend (AdGuard Home
+  keeps it for a limited time; the page reads at most the most recent 5000 queries per request).
 
-- Apparaten met een willekeurig (privacy-)MAC-adres moeten dat voor jouw netwerk uitzetten.
-- Nieuwe IPv6-privacy-adressen worden pas bij de volgende controle (standaard 10 s) geblokkeerd.
-- Gokken heeft geen eigen categorie (AdGuard kent geen dienst daarvoor): gebruik 'extra geblokkeerde domeinen'
-  of een blokkeerlijst in AdGuard.
-- Profielen werken op IP-adres: wisselt een apparaat van adres, dan duurt het tot de volgende synchronisatie
-  (enkele seconden) voordat AdGuard het nieuwe adres kent.
-- De firewall ziet alleen netwerkverkeer, geen schermtijd; de drempel en naloop zijn benaderingen.
-- Bestaande bedtijden worden bij de update naar model 1.0.1 automatisch omgezet naar het nieuwe veld "groepen".
+## Install (testing)
 
-## Installeren (testen)
-
-Op een OPNsense-testmachine, als root:
+On an OPNsense test machine, as root:
 
 ```sh
-fetch https://github.com/<gebruiker>/os-parentalcontrol/archive/refs/heads/main.tar.gz
+fetch https://github.com/<user>/os-parentalcontrol/archive/refs/heads/main.tar.gz
 tar xzf main.tar.gz && cd os-parentalcontrol-main
 ./install-dev.sh
 ```
 
-Dit kopieert `src/` naar `/usr/local/`. Het is een ontwikkelmethode: een
-OPNsense-upgrade kan de bestanden verwijderen. Verwijderen: gebruik de
-bestandslijst in `src/` en draai `configctl parentalcontrol stop`.
+This copies `src/` to `/usr/local/`. It is a development method: an OPNsense upgrade may remove the files.
 
-## Pakket bouwen
+## Building a package
 
-De `Makefile` is bedoeld voor de OPNsense plugins-tree:
+The `Makefile` is meant for the OPNsense plugins tree: clone <https://github.com/opnsense/plugins>, copy this
+directory to `security/parentalcontrol` and build with the OPNsense tooling (`make package`). Publish the
+resulting `.pkg` as a release and install it with `pkg add`.
 
-1. Clone <https://github.com/opnsense/plugins>.
-2. Kopieer deze map naar `security/parentalcontrol` in die tree.
-3. Bouw met de OPNsense-tooling (zie de README van opnsense/plugins): `make package`.
-4. Het resulterende `.pkg` kun je als release op GitHub publiceren en installeren met
-   `pkg add <bestand>.pkg`.
-
-## Ontwikkelen en testen
+## Development
 
 ```sh
-python3 -m unittest discover -s tests -v     # alleen Python-standaardbibliotheek nodig
+python3 -m unittest discover -s tests -v          # Python standard library only
+cd tests/js && npm install && npm test            # browser test of the GUI pages (jsdom)
 ```
 
-De tests bootsen `pfctl`, `arp`, `ndp` en `ifconfig` na (zie `tests/helpers.py`) en dekken onder meer
-bedtijden, tijdtelling, budgetten, blokkeren, verzoeken, de blokkeerpagina, meldingen en DNS-regels.
-De GUI heeft een browser-test (`cd tests/js && npm install && npm test`, jsdom). GitHub Actions (`.github/workflows/ci.yml`) draait daarnaast `php -l`, `xmllint` en een shell-syntaxcheck.
-Tests bewijzen niet dat pf de regels op een echte OPNsense accepteert: test dat altijd op een VM.
+The tests simulate `pfctl`, `arp`, `ndp`, `ifconfig`, AdGuard Home and Pi-hole (see `tests/helpers.py`). They do
+not prove that pf accepts the rules on a real OPNsense: always test on a VM. GitHub Actions
+(`.github/workflows/ci.yml`) also runs `php -l`, `xmllint` and a shell syntax check.
 
-## Robuustheid
+## Translations
 
-- Systeemcommando's hebben een timeout; een hangende `pfctl` laat de daemon niet vastlopen.
-- De daemon draait onder `daemon(8) -r`: na een crash volgt automatisch een herstart.
-- Faalt pf bij het laden, dan valt de daemon stapsgewijs terug (zonder DNS-afdwinging, daarna zonder
-  blokkeerpagina) en logt waarom. De status blijft zichtbaar in de GUI.
-- De blokkeerpagina luistert alleen lokaal en accepteert maximaal 32 gelijktijdige verbindingen.
+* Source strings are English. In the GUI they use the standard OPNsense mechanisms (`lang._()` in Volt,
+  `gettext()` in PHP, labels and help in the form XML), so OPNsense's own translation process (gettext/POEditor)
+  can pick them up when the plugin is part of the official plugins repository.
+* Text rendered outside the GUI (the block page, notifications, backend messages) is translated by
+  `pc_i18n.py` from `src/opnsense/scripts/OPNsense/ParentalControl/lang/<locale>.po`; the locale is the OPNsense
+  system language. Dutch (`nl_NL.po`) is included and complete.
+* `tools/make_pot.py` extracts all strings into `lang/parentalcontrol.pot`; `tools/make_pot.py --merge` adds new
+  strings to every `.po` file. A test fails if the template is out of date or a translation is incomplete.
+* To add a language: copy `parentalcontrol.pot` to `<locale>.po` (for example `de_DE.po`), translate it, keep the
+  `%s`/`%d` placeholders, and run the tests.
 
-## Mapstructuur
+## Directory structure
 
 ```
-Makefile, pkg-descr          pakketdefinitie
-tests/                       unittests (stdlib) en testhulpen
-src/etc/inc/plugins.inc.d/   plugin-hooks (service, boot, firewall-anchor)
-src/opnsense/mvc/app/        model, controllers, forms, views
-src/opnsense/scripts/        daemon en service-script
-src/opnsense/service/        configd-acties
+Makefile, pkg-descr          package definition
+src/etc/inc/plugins.inc.d/   plugin hooks (service, boot, firewall anchors, syslog)
+src/opnsense/mvc/app/        model, controllers, forms, views (Overview, Administration), menu, ACL
+src/opnsense/scripts/        daemon, backends, statistics, helper scripts, translations (lang/)
+src/opnsense/service/        configd actions, syslog-ng template for the log file
+tests/, tools/               unit tests, browser test, string extraction
 ```
 
-## Licentie
+## License
 
-BSD 2-Clause, zie [LICENSE](LICENSE).
+BSD 2-Clause, see [LICENSE](LICENSE).

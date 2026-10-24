@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-"""Geeft status en verbruik van parentalcontrold als JSON (voor de GUI)."""
+"""Prints the status and usage of parentalcontrold as JSON (for the GUI)."""
 import json
 import time
 

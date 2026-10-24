@@ -1,9 +1,11 @@
 <acl>
     <page-services-parentalcontrol>
-        <name>Services: Ouderlijk toezicht</name>
+        <name>Services: Parental Control</name>
         <patterns>
             <pattern>ui/parentalcontrol/*</pattern>
             <pattern>api/parentalcontrol/*</pattern>
+            <pattern>ui/diagnostics/log/core/parentalcontrol</pattern>
+            <pattern>api/diagnostics/log/core/parentalcontrol/*</pattern>
         </patterns>
     </page-services-parentalcontrol>
 </acl>

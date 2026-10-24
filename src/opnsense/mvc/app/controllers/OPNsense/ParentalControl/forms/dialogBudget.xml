@@ -1,29 +1,29 @@
 <form>
     <field>
         <id>budget.enabled</id>
-        <label>Ingeschakeld</label>
+        <label>Enabled</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>budget.groups</id>
-        <label>Groepen</label>
+        <label>Groups</label>
         <type>select_multiple</type>
-        <help>Het budget geldt voor elke gekozen groep afzonderlijk.</help>
+        <help>The budget applies to each selected group separately.</help>
     </field>
     <field>
         <id>budget.days</id>
-        <label>Dagen</label>
+        <label>Days</label>
         <type>select_multiple</type>
     </field>
     <field>
         <id>budget.minutes</id>
-        <label>Apparaattijd per dag (minuten)</label>
+        <label>Device time per day (minutes)</label>
         <type>text</type>
-        <help>Totale tijd per groep per dag. 0 betekent geen internettijd. Zijn er meerdere passende regels voor dezelfde groep en dag, dan geldt de laagste. De teller begint elke dag om middernacht opnieuw.</help>
+        <help>Total time per group per day. 0 means no internet time. If several rules match the same group and day, the lowest applies. The counter restarts every day at midnight.</help>
     </field>
     <field>
         <id>budget.description</id>
-        <label>Omschrijving</label>
+        <label>Description</label>
         <type>text</type>
     </field>
 </form>

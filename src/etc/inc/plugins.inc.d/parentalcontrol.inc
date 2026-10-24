@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin-hooks voor ouderlijk toezicht.
+ * Plugin hooks for parental control.
  */
 
 function parentalcontrol_enabled()
@@ -15,7 +15,7 @@ function parentalcontrol_services()
     $services = array();
     if (parentalcontrol_enabled()) {
         $services[] = array(
-            'description' => gettext('Ouderlijk toezicht'),
+            'description' => gettext('Parental control'),
             'configd' => array(
                 'restart' => array('parentalcontrol restart'),
                 'start' => array('parentalcontrol start'),
@@ -26,6 +26,13 @@ function parentalcontrol_services()
         );
     }
     return $services;
+}
+
+function parentalcontrol_syslog()
+{
+    $logfacilities = array();
+    $logfacilities['parentalcontrol'] = array('facility' => array('parentalcontrold'));
+    return $logfacilities;
 }
 
 function parentalcontrol_configure()
@@ -43,8 +50,8 @@ function parentalcontrol_start()
 }
 
 /**
- * Registreert een pf-anchor (filter, rdr en nat). De daemon laadt zelf de regels en tables in dit anchor,
- * zodat de firewall niet bij elke blokkade herladen hoeft te worden.
+ * Registers a pf anchor (filter, rdr and nat). The daemon loads the rules and tables into this anchor itself,
+ * so the firewall does not have to be reloaded for every block.
  */
 function parentalcontrol_firewall($fw)
 {
@@ -53,10 +60,10 @@ function parentalcontrol_firewall($fw)
     }
     foreach (['rdr', 'nat'] as $type) {
         try {
-            // rdr: blokkeerpagina en DNS-omleiding; nat: terugkeerpad als AdGuard in hetzelfde subnet staat
+            // rdr: block page and DNS redirect; nat: return path when the DNS filter is in the same subnet as the clients
             $fw->registerAnchor('parentalcontrol', $type, 200, 'head');
         } catch (\Throwable $e) {
-            syslog(LOG_WARNING, 'parentalcontrol: ' . $type . '-anchor registreren mislukt: ' . $e->getMessage());
+            syslog(LOG_WARNING, 'parentalcontrol: registering the ' . $type . ' anchor failed: ' . $e->getMessage());
         }
     }
     $fw->registerAnchor('parentalcontrol', 'fw', 200, 'head');

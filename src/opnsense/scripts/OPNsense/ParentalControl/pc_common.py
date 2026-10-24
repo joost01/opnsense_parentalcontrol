@@ -1,12 +1,14 @@
-"""Gedeelde hulpfuncties voor parentalcontrold en de configd-scripts."""
+"""Shared helpers for parentalcontrold and the configd scripts."""
 import ipaddress
 import re
 import subprocess
 
+from pc_i18n import _
+
 
 def run(cmd, stdin=None, timeout=20):
-    """Voer een commando uit. Hangt of ontbreekt het, dan volgt een resultaat met returncode 124/127
-    in plaats van een blokkerende daemon of een exception."""
+    """Run a command. If it hangs or is missing, a result with return code 124/127 is returned
+    instead of a blocked daemon or an exception."""
     try:
         return subprocess.run(cmd, input=stdin, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -16,8 +18,8 @@ def run(cmd, stdin=None, timeout=20):
 
 
 def norm_mac(mac):
-    """Normaliseer naar aa:bb:cc:dd:ee:ff. Accepteert aa:bb:.. , aa-bb-.. , aabb.ccdd.eeff,
-    aabbccddeeff en de notatie zonder voorloopnullen die ndp/arp gebruiken."""
+    """Normalise to aa:bb:cc:dd:ee:ff. Accepts aa:bb:.. , aa-bb-.. , aabb.ccdd.eeff,
+    aabbccddeeff and the notation without leading zeros used by ndp/arp."""
     text = (mac or '').strip().lower()
     digits = None
     if re.fullmatch(r'[0-9a-f]{12}', text):
@@ -74,7 +76,7 @@ def parse_ndp(output, skip_permanent=False):
 
 
 def neighbours(skip_permanent=False):
-    """mac -> set(ip), uit ARP (IPv4) en NDP (IPv6)."""
+    """mac -> set(ip), from ARP (IPv4) and NDP (IPv6)."""
     result = {}
     for parsed in (parse_arp(run(['/usr/sbin/arp', '-an']).stdout, skip_permanent),
                    parse_ndp(run(['/usr/sbin/ndp', '-an']).stdout, skip_permanent)):
@@ -84,11 +86,11 @@ def neighbours(skip_permanent=False):
 
 
 def fmt_dur(sec):
-    """Seconden -> '1u 05m' of '12m'."""
+    """Seconds -> '1h 05m' or '12m' (the unit letters are translatable)."""
     sec = int(round(sec))
     h, m = sec // 3600, (sec % 3600) // 60
-    return '%du %02dm' % (h, m) if h else '%dm' % m
+    return (_('%dh %02dm') % (h, m)) if h else (_('%dm') % m)
 
 
 class BackendError(Exception):
-    """Communicatie- of configuratiefout met een filter-backend (AdGuard Home, Pi-hole, ...)."""
+    """Communication or configuration error with a filter backend (AdGuard Home, Pi-hole, ...)."""

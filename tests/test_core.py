@@ -18,7 +18,7 @@ def win(days, start, end):
 
 class ScheduleTests(unittest.TestCase):
     def test_same_day_window(self):
-        w = win('mon', '13:00', '15:00')           # 2026-10-12 is een maandag
+        w = win('mon', '13:00', '15:00')           # 2026-10-12 is a Monday
         self.assertTrue(d.window_active(w, datetime(2026, 10, 12, 14, 0)))
         self.assertFalse(d.window_active(w, datetime(2026, 10, 12, 15, 0)))
         self.assertFalse(d.window_active(w, datetime(2026, 10, 13, 14, 0)))
@@ -36,7 +36,7 @@ class ScheduleTests(unittest.TestCase):
 
     def test_bedtime_until(self):
         wins = [dict(win('mon', '21:00', '07:00'), enabled=True, groups={G1})]
-        self.assertEqual(d.bedtime_until(wins, G1, datetime(2026, 10, 12, 22, 0)), 'morgen 07:00')
+        self.assertEqual(d.bedtime_until(wins, G1, datetime(2026, 10, 12, 22, 0)), 'tomorrow 07:00')
         self.assertEqual(d.bedtime_until(wins, G1, datetime(2026, 10, 13, 3, 0)), '07:00')
 
     def test_daily_limit_takes_lowest(self):
@@ -57,12 +57,12 @@ class UsageTests(unittest.TestCase):
             total += t.update(False, 10, 180)
         self.assertEqual(total, 30)
         total += t.update(True, 10, 180)
-        self.assertEqual(total, 60)                    # 10 + 20 naloop
+        self.assertEqual(total, 60)                    # 10 + 20 grace
         for _ in range(20):
             total += t.update(False, 10, 180)
         self.assertFalse(t.in_session)
         total += t.update(True, 10, 180)
-        self.assertEqual(total, 70)                    # nieuwe sessie zonder oude naloop
+        self.assertEqual(total, 70)                    # new session without the old grace
 
     def test_parse_states_and_meter_count_group_once(self):
         sample = ('all tcp 192.168.1.10:51234 -> 93.184.216.34:443   ESTABLISHED:ESTABLISHED\n'
@@ -132,7 +132,31 @@ class ConfigTests(unittest.TestCase):
                     '<dns_enforce>1</dns_enforce><dns_interfaces>lan,nope,wan</dns_interfaces>',
             interfaces='<interfaces><lan><if>igb1</if></lan><wan><if>igb0</if></wan></interfaces>')))
         self.assertEqual(cfg['dns_servers'], ['192.168.1.2', 'fd00::2'])
-        self.assertEqual(cfg['dns_ifnames'], ['igb1', 'igb0'])         # onbekende id wordt genegeerd
+        self.assertEqual(cfg['dns_ifnames'], ['igb1', 'igb0'])         # unknown id is ignored
+
+
+class TranslationSafetyTests(unittest.TestCase):
+    def test_underscore_is_never_shadowed(self):
+        """A local variable named '_' would shadow the translation function _() in that scope."""
+        import ast
+        import glob
+        for path in glob.glob(os.path.join(SCRIPTS, '*.py')):
+            with open(path) as handle:
+                tree = ast.parse(handle.read())
+            if not any(isinstance(n, ast.ImportFrom) and n.module == 'pc_i18n' for n in ast.walk(tree)):
+                continue
+            for node in ast.walk(tree):
+                names = []
+                if isinstance(node, (ast.For, ast.comprehension)):
+                    names = [n for n in ast.walk(node.target) if isinstance(n, ast.Name)]
+                elif isinstance(node, ast.Assign):
+                    names = [n for t in node.targets for n in ast.walk(t) if isinstance(n, ast.Name)]
+                elif isinstance(node, ast.arguments):
+                    names = [node.vararg] if node.vararg else []
+                    names += list(node.args)
+                for name in names:
+                    ident = getattr(name, 'id', None) or getattr(name, 'arg', None)
+                    self.assertNotEqual(ident, '_', '%s shadows _() at line %d' % (os.path.basename(path), name.lineno))
 
 
 class ScriptTests(unittest.TestCase):
@@ -193,7 +217,7 @@ class ScriptTests(unittest.TestCase):
                          ' "ip-address": "10.0.0.9"}]}}\n')
         self.assertEqual(kd.kea_config_reservations(path), [('aa:bb:cc:dd:ee:09', '10.0.0.9', None)])
         with open(path, 'w') as handle:
-            handle.write('geen json')
+            handle.write('not json')
         self.assertEqual(kd.kea_config_reservations(path), [])
 
     def test_known_devices_sources_merge(self):
@@ -208,8 +232,8 @@ class ScriptTests(unittest.TestCase):
         rows = kd.collect(reserved, leased, {'a0:b1:c2:d3:e4:f5': {'192.168.1.20', '2001:db8::9'},
                                              'de:ad:be:ef:00:01': {'192.168.1.99'}})
         by_mac = {r['mac']: r for r in rows}
-        self.assertEqual(by_mac['aa:bb:cc:dd:ee:01']['sources'], ['reservering'])
-        self.assertEqual(by_mac['a0:b1:c2:d3:e4:f5']['sources'], ['lease', 'actief'])
+        self.assertEqual(by_mac['aa:bb:cc:dd:ee:01']['sources'], ['reservation'])
+        self.assertEqual(by_mac['a0:b1:c2:d3:e4:f5']['sources'], ['lease', 'active'])
         self.assertEqual(by_mac['de:ad:be:ef:00:01']['name'], '')
 
 

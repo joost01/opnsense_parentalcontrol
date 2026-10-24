@@ -1,7 +1,8 @@
-"""Kleine nagebootste AdGuard Home API voor tests (clients, diensten, gebruikersregels)."""
+"""Small fake AdGuard Home API for tests (clients, services, user rules)."""
 import base64
 import json
 import threading
+import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
@@ -11,9 +12,13 @@ class FakeAdGuard:
         self.services = services if services is not None else [
             'facebook', 'instagram', 'tiktok', 'youtube', 'netflix', 'steam', 'discord', 'whatsapp']
         self.clients = []
-        self.rules = ['||ads.example^', '! mijn eigen regel']
+        self.rules = ['||ads.example^', '! my own rule']
         self.calls = []                       # (methode, pad)
-        self.fail_next = None                 # HTTP-statuscode die het volgende verzoek krijgt
+        self.service_rules = {'youtube': ['||youtube.com^', '||googlevideo.com^', '||ytimg.com^'],
+                              'tiktok': ['||tiktok.com^']}
+        self.querylog = []                    # entries, newest first: {'time', 'client', 'question', 'reason'}
+        self.page_size = None                 # overrides the 'limit' parameter (to test paging)
+        self.fail_next = None                 # HTTP status code the next request receives
         outer = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -63,8 +68,19 @@ class FakeAdGuard:
                     outer.clients = [c for c in outer.clients if c['name'] != body['name']]
                     return self._send(200)
                 if path == '/control/blocked_services/all':
-                    return self._send(200, {'blocked_services': [{'id': s, 'name': s} for s in outer.services],
-                                            'groups': []})
+                    return self._send(200, {'blocked_services': [
+                        {'id': s, 'name': s.title(), 'rules': outer.service_rules.get(s, [])} for s in outer.services],
+                        'groups': []})
+                if path.startswith('/control/querylog'):
+                    query = urllib.parse.parse_qs(urllib.parse.urlparse(path).query)
+                    search = query.get('search', [''])[0]
+                    older = query.get('older_than', [None])[0]
+                    limit = outer.page_size or int(query.get('limit', ['500'])[0])
+                    rows = [r for r in outer.querylog if not search or r['client'] == search]
+                    if older:
+                        rows = [r for r in rows if r['time'] < older]
+                    page = rows[:limit]
+                    return self._send(200, {'oldest': page[-1]['time'] if len(page) == limit else '', 'data': page})
                 if path == '/control/filtering/status':
                     return self._send(200, {'enabled': True, 'user_rules': list(outer.rules)})
                 if path == '/control/filtering/set_rules':

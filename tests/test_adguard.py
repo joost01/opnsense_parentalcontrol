@@ -51,7 +51,7 @@ class SyncTests(unittest.TestCase):
         writes = len(self.srv.writes())
         report = ag.sync(self.api, want)
         self.assertEqual((report['added'], report['updated'], report['deleted'], report['rules']), (0, 0, 0, False))
-        self.assertEqual(len(self.srv.writes()), writes, 'geen schrijfacties bij ongewijzigde toestand')
+        self.assertEqual(len(self.srv.writes()), writes, 'no writes when the state is unchanged')
 
     def test_update_when_ips_change_and_delete_when_group_gone(self):
         ag.sync(self.api, desired(Kids=(['10.0.0.2'], profile())))
@@ -68,33 +68,33 @@ class SyncTests(unittest.TestCase):
         self.assertEqual(len(self.srv.clients), 1)
 
     def test_never_touches_foreign_clients_or_rules(self):
-        self.srv.clients.append({'name': 'Mijn laptop', 'ids': ['10.0.0.99'], 'use_global_settings': True})
+        self.srv.clients.append({'name': 'My laptop', 'ids': ['10.0.0.99'], 'use_global_settings': True})
         ag.sync(self.api, desired(Kids=(['10.0.0.2'], profile(blocked_domains=['bad.example']))))
         ag.sync(self.api, {'clients': {}, 'keep': set()})
-        self.assertEqual([c['name'] for c in self.srv.clients], ['Mijn laptop'])
-        self.assertEqual(self.srv.rules, ['||ads.example^', '! mijn eigen regel'])    # eigen regels intact
+        self.assertEqual([c['name'] for c in self.srv.clients], ['My laptop'])
+        self.assertEqual(self.srv.rules, ['||ads.example^', '! my own rule'])    # own rules intact
 
     def test_custom_domain_rules_in_managed_block(self):
         want = desired(Kids=(['10.0.0.2'], profile(blocked_domains=['Bad.Example', 'x y', '*.tracker.net'],
                                                   allowed_domains=['school.nl'])))
         ag.sync(self.api, want)
-        self.assertEqual(self.srv.rules[:2], ['||ads.example^', '! mijn eigen regel'])
+        self.assertEqual(self.srv.rules[:2], ['||ads.example^', '! my own rule'])
         block = self.srv.rules[2:]
         self.assertEqual(block[0], ag.RULES_BEGIN)
         self.assertEqual(block[-1], ag.RULES_END)
         self.assertIn("||bad.example^$client='PC: Kids'", block)
         self.assertIn("||tracker.net^$client='PC: Kids'", block)
         self.assertIn("@@||school.nl^$client='PC: Kids'", block)
-        self.assertFalse(any('x y' in line for line in block))                          # ongeldig domein genegeerd
+        self.assertFalse(any('x y' in line for line in block))                          # invalid domain ignored
 
     def test_auth_failure_and_unreachable_are_reported(self):
         with self.assertRaises(ag.AdGuardError) as caught:
             ag.sync(ag.AdGuard(self.srv.url, 'admin', 'wrong'), desired())
-        self.assertIn('inloggen mislukt', str(caught.exception))
+        self.assertIn('login failed', str(caught.exception))
         dead = ag.AdGuard('http://127.0.0.1:1', 'a', 'b', timeout=1)
         with self.assertRaises(ag.AdGuardError) as caught:
             dead.status()
-        self.assertIn('verbinding mislukt', str(caught.exception))
+        self.assertIn('connection failed', str(caught.exception))
         with self.assertRaises(ag.AdGuardError):
             ag.AdGuard('ftp://x')
 
@@ -126,16 +126,16 @@ class SyncerTests(unittest.TestCase):
         self.assertEqual(status['state'], 'ok')
         self.assertIn('v0.107.52', status['message'])
         self.syncer.configure(self.settings, desired(Kids=(['10.0.0.2', '10.0.0.3'], profile())))
-        self.assertFalse(self.syncer.sync_once(now=1003), 'minimaal interval tussen syncs')
+        self.assertFalse(self.syncer.sync_once(now=1003), 'minimum interval between syncs')
         self.assertTrue(self.syncer.sync_once(now=1011))
         self.assertEqual(self.srv.clients[0]['ids'], ['10.0.0.2', '10.0.0.3'])
-        self.assertFalse(self.syncer.sync_once(now=1100), 'niets te doen')
+        self.assertFalse(self.syncer.sync_once(now=1100), 'nothing to do')
 
     def test_error_backoff_and_recovery(self):
         self.syncer.configure(dict(self.settings, password='wrong'), desired(Kids=(['10.0.0.2'], profile())))
         self.assertTrue(self.syncer.sync_once(now=1000))
         self.assertEqual(self.syncer.get_status()['state'], 'error')
-        self.assertFalse(self.syncer.sync_once(now=1010), 'wachten na een fout')
+        self.assertFalse(self.syncer.sync_once(now=1010), 'wait after an error')
         self.syncer.configure(self.settings, desired(Kids=(['10.0.0.2'], profile())))
         self.syncer.next_try = 0
         self.assertTrue(self.syncer.sync_once(now=1100))

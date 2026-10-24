@@ -42,7 +42,7 @@ class PiHoleSyncTests(unittest.TestCase):
         rules = {(d['type'], d['domain']): d for d in self.srv.domains if d['comment'].startswith(ph.MARK)}
         self.assertEqual(set(rules), {('deny', r'(\.|^)bad\.example$'), ('allow', r'(\.|^)school\.nl$')})
         self.assertEqual(rules[('deny', r'(\.|^)bad\.example$')]['groups'], [own])
-        self.assertEqual(self.srv.logins, self.srv.logouts, 'sessie altijd netjes afgesloten')
+        self.assertEqual(self.srv.logins, self.srv.logouts, 'session always closed properly')
 
     def test_idempotent_second_sync(self):
         want = desired(Kids=(['192.168.1.20'], profile(blocked_domains=['bad.example'])))
@@ -59,8 +59,8 @@ class PiHoleSyncTests(unittest.TestCase):
         self.assertEqual([c['client'] for c in self.srv.clients], ['192.168.1.21'])
         self.run_sync({'clients': {}, 'keep': set()})
         self.assertEqual(self.srv.clients, [])
-        self.assertEqual([d['domain'] for d in self.srv.domains], ['eigen.example'])       # eigen regel intact
-        self.assertEqual([g['name'] for g in self.srv.groups], ['Default', 'Strict kids'])  # alleen eigen groep weg
+        self.assertEqual([d['domain'] for d in self.srv.domains], ['own.example'])       # own rule intact
+        self.assertEqual([g['name'] for g in self.srv.groups], ['Default', 'Strict kids'])  # only our own group is gone
 
     def test_keep_protects_clients_of_groups_without_known_ips(self):
         self.run_sync(desired(Kids=(['192.168.1.20'], profile())))
@@ -69,26 +69,26 @@ class PiHoleSyncTests(unittest.TestCase):
         self.assertIn('PC: Kids', [g['name'] for g in self.srv.groups])
 
     def test_foreign_client_is_never_modified(self):
-        self.srv.clients.append({'client': '192.168.1.20', 'comment': 'mijn laptop', 'groups': [0]})
+        self.srv.clients.append({'client': '192.168.1.20', 'comment': 'my laptop', 'groups': [0]})
         _, report = self.run_sync(desired(Kids=(['192.168.1.20'], profile())))
-        self.assertEqual(self.srv.clients[0]['comment'], 'mijn laptop')
+        self.assertEqual(self.srv.clients[0]['comment'], 'my laptop')
         self.assertEqual(self.srv.clients[0]['groups'], [0])
-        self.assertTrue(any('bestaat al in Pi-hole' in w for w in report['warnings']))
+        self.assertTrue(any('already exists in Pi-hole' in w for w in report['warnings']))
         self.run_sync({'clients': {}, 'keep': set()})
         self.assertEqual(len(self.srv.clients), 1)
 
     def test_warnings_for_unsupported_features_and_missing_groups(self):
         _, report = self.run_sync(desired(Kids=(['10.0.0.2'], profile(
-            safesearch=True, categories={'social'}, backend_groups=['Bestaat niet']))))
+            safesearch=True, categories={'social'}, backend_groups=['Does not exist']))))
         text = ' | '.join(report['warnings'])
         self.assertIn('SafeSearch', text)
-        self.assertIn('Bestaat niet', text)
+        self.assertIn('Does not exist', text)
 
     def test_auth_failure_and_session_limit(self):
         with self.assertRaises(be.BackendError) as caught:
             be.connect_and_sync(dict(self.settings, password='wrong'), desired())
-        self.assertIn('inloggen mislukt', str(caught.exception))
-        for _ in range(5):                                   # sessies lekken niet: ruim meer dan max_sessions
+        self.assertIn('login failed', str(caught.exception))
+        for _ in range(5):                                   # sessions do not leak: well over max_sessions
             self.run_sync(desired(Kids=(['10.0.0.2'], profile())))
         self.assertEqual(self.srv.sessions, set())
 

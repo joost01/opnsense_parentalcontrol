@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 """
-Geeft een JSON-lijst van apparaten die OPNsense kent:
-DHCP-reserveringen (ISC, Kea, Dnsmasq), actieve DHCP-leases en de ARP/NDP-tabel.
+Prints a JSON list of devices OPNsense knows about:
+DHCP reservations (ISC, Kea, Dnsmasq), active DHCP leases and the ARP/NDP table.
 """
 import csv
 import json
@@ -22,7 +22,7 @@ DNSMASQ_LEASES = '/var/db/dnsmasq.leases'
 
 
 def reservations(root):
-    """[(mac, ip, naam)] uit config.xml."""
+    """[(mac, ip, name)] from config.xml."""
     found = []
     for iface in root.findall('dhcpd/*'):                               # ISC dhcpd
         for sm in iface.findall('staticmap'):
@@ -38,15 +38,15 @@ def reservations(root):
 
 
 def kea_config_reservations(path):
-    """[(mac, ip, naam)] uit de Kea-configuratie die de DHCP-server werkelijk gebruikt."""
+    """[(mac, ip, name)] from the Kea configuration the DHCP server actually uses."""
     with open(path) as handle:
         text = handle.read()
-    text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)                       # Kea staat commentaar toe
+    text = re.sub(r'/\*.*?\*/', '', text, flags=re.S)                       # Kea allows comments
     text = '\n'.join(l for l in text.splitlines() if not l.lstrip().startswith(('#', '//')))
     try:
         dhcp4 = json.loads(text).get('Dhcp4', {})
     except ValueError:
-        return []                                                             # geen leesbare Kea-config: overslaan
+        return []                                                             # unreadable Kea config: skip
     found = []
     pools = [dhcp4.get('reservations', [])] + [sub.get('reservations', []) for sub in dhcp4.get('subnet4', [])]
     for pool in pools:
@@ -56,7 +56,7 @@ def kea_config_reservations(path):
 
 
 def isc_leases(text):
-    """[(mac, ip, naam)] van actieve leases; latere blokken overschrijven eerdere."""
+    """[(mac, ip, name)] of active leases; later blocks override earlier ones."""
     per_ip = {}
     for m in re.finditer(r'lease ([0-9.]+) \{(.*?)\n\}', text, re.S):
         body = m.group(2)
@@ -121,14 +121,14 @@ def collect(reserved, leases, live):
             e['sources'].append(source)
 
     for mac, ip, name in reserved:
-        add(mac, ip, name, 'reservering')
+        add(mac, ip, name, 'reservation')
     for mac, ip, name in leases:
         add(mac, ip, name, 'lease')
     for mac, ips in live.items():
         for ip in ips:
-            add(mac, ip, '', 'actief')
+            add(mac, ip, '', 'active')
         if not ips:
-            add(mac, None, '', 'actief')
+            add(mac, None, '', 'active')
     rows = [{'mac': d['mac'], 'name': d['name'], 'ips': sorted(d['ips']),
              'sources': d['sources']} for d in devices.values()]
     rows.sort(key=lambda r: (r['name'] == '', r['name'].lower(), r['mac']))
@@ -142,26 +142,26 @@ def main():
     def gather(name, func):
         try:
             sources[name] = func()
-        except Exception as err:  # een kapotte bron mag de rest niet blokkeren
+        except Exception as err:  # a broken source must not block the rest
             sources[name] = []
             errors.append('%s: %r' % (name, err))
 
-    gather('config.xml-reserveringen', lambda: reservations(ET.parse(CONFIG_XML).getroot()))
+    gather('config.xml-reservations', lambda: reservations(ET.parse(CONFIG_XML).getroot()))
     gather('kea-config', lambda: kea_config_reservations(KEA_CONFIG) if os.path.exists(KEA_CONFIG) else [])
     gather('isc-leases', lambda: read(ISC_LEASES, isc_leases))
     gather('kea-leases', lambda: read(KEA_LEASES, kea_leases))
     gather('dnsmasq-leases', lambda: read(DNSMASQ_LEASES, dnsmasq_leases))
     gather('arp/ndp', lambda: neighbours(skip_permanent=True))
-    reserved = sources['config.xml-reserveringen'] + sources['kea-config']
+    reserved = sources['config.xml-reservations'] + sources['kea-config']
     leases = sources['isc-leases'] + sources['kea-leases'] + sources['dnsmasq-leases']
     rows = collect(reserved, leases, sources['arp/ndp'])
     if debug:
         for name, data in sources.items():
             print('%-26s %d item(s)' % (name, len(data)), file=sys.stderr)
         for err in errors:
-            print('FOUT %s' % err, file=sys.stderr)
+            print('ERROR %s' % err, file=sys.stderr)
         for item in reserved:
-            print('reservering: %r -> %s' % (item, norm_mac(item[0])), file=sys.stderr)
+            print('reservation: %r -> %s' % (item, norm_mac(item[0])), file=sys.stderr)
     print(json.dumps(rows))
 
 

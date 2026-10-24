@@ -11,17 +11,25 @@ class SettingsController extends ApiMutableModelControllerBase
     protected static $internalModelName = 'parentalcontrol';
     protected static $internalModelClass = 'OPNsense\ParentalControl\ParentalControl';
 
-    private const CATEGORY_LABELS = [
-        'social' => 'Sociale media', 'messaging' => 'Chat', 'games' => 'Games',
-        'video' => 'Video', 'dating' => 'Dating'
-    ];
+    private function categoryLabel($key)
+    {
+        $labels = [
+            'social' => gettext('Social media'), 'messaging' => gettext('Chat'), 'games' => gettext('Games'),
+            'video' => gettext('Video'), 'dating' => gettext('Dating')
+        ];
+        return $labels[$key] ?? $key;
+    }
 
-    private const DAY_LABELS = [
-        'mon' => 'ma', 'tue' => 'di', 'wed' => 'wo', 'thu' => 'do',
-        'fri' => 'vr', 'sat' => 'za', 'sun' => 'zo'
-    ];
+    private function dayLabel($key)
+    {
+        $labels = [
+            'mon' => gettext('Mon'), 'tue' => gettext('Tue'), 'wed' => gettext('Wed'), 'thu' => gettext('Thu'),
+            'fri' => gettext('Fri'), 'sat' => gettext('Sat'), 'sun' => gettext('Sun')
+        ];
+        return $labels[$key] ?? $key;
+    }
 
-    /* ---------- algemeen ---------- */
+    /* ---------- general ---------- */
 
     public function getAction()
     {
@@ -50,7 +58,7 @@ class SettingsController extends ApiMutableModelControllerBase
         return $result;
     }
 
-    /* ---------- hulpfuncties ---------- */
+    /* ---------- helpers ---------- */
 
     private function groupNames()
     {
@@ -100,7 +108,7 @@ class SettingsController extends ApiMutableModelControllerBase
         return $used;
     }
 
-    /* ---------- groepen ---------- */
+    /* ---------- groups ---------- */
 
     public function searchGroupAction()
     {
@@ -129,17 +137,17 @@ class SettingsController extends ApiMutableModelControllerBase
         $mdl = $this->getModel();
         foreach ($mdl->devices->device->iterateItems() as $device) {
             if ((string)$device->group === $uuid) {
-                return ['result' => 'failed', 'message' => 'Groep bevat nog apparaten.'];
+                return ['result' => 'failed', 'message' => gettext('The group still contains devices.')];
             }
         }
         foreach ($mdl->bedtimes->bedtime->iterateItems() as $bedtime) {
             if (in_array($uuid, explode(',', (string)$bedtime->groups))) {
-                return ['result' => 'failed', 'message' => 'Groep wordt nog gebruikt in een bedtijd.'];
+                return ['result' => 'failed', 'message' => gettext('The group is still used in a bedtime.')];
             }
         }
         foreach ($mdl->budgets->budget->iterateItems() as $budget) {
             if (in_array($uuid, explode(',', (string)$budget->groups))) {
-                return ['result' => 'failed', 'message' => 'Groep wordt nog gebruikt in een tijdbudget.'];
+                return ['result' => 'failed', 'message' => gettext('The group is still used in a time budget.')];
             }
         }
         return $this->delBase('groups.group', $uuid);
@@ -150,7 +158,7 @@ class SettingsController extends ApiMutableModelControllerBase
         return $this->toggleBase('groups.group', $uuid, $enabled);
     }
 
-    /* ---------- websiteprofielen ---------- */
+    /* ---------- website profiles ---------- */
 
     public function searchProfileAction()
     {
@@ -162,7 +170,7 @@ class SettingsController extends ApiMutableModelControllerBase
         foreach ($result['rows'] as &$row) {
             $keys = array_filter(explode(',', (string)$row['categories']));
             $row['categories'] = implode(', ', array_map(function ($k) {
-                return self::CATEGORY_LABELS[$k] ?? $k;
+                return $this->categoryLabel($k);
             }, $keys));
         }
         return $result;
@@ -187,13 +195,13 @@ class SettingsController extends ApiMutableModelControllerBase
     {
         foreach ($this->getModel()->groups->group->iterateItems() as $group) {
             if ((string)$group->profile === $uuid) {
-                return ['result' => 'failed', 'message' => 'Profiel wordt nog gebruikt door een groep.'];
+                return ['result' => 'failed', 'message' => gettext('The profile is still used by a group.')];
             }
         }
         return $this->delBase('profiles.profile', $uuid);
     }
 
-    /* ---------- apparaten ---------- */
+    /* ---------- devices ---------- */
 
     public function searchDeviceAction()
     {
@@ -203,8 +211,8 @@ class SettingsController extends ApiMutableModelControllerBase
     }
 
     /**
-     * Apparaten die OPNsense kent (DHCP-reserveringen, leases, ARP/NDP),
-     * zonder de MAC-adressen die al in de plugin staan.
+     * Devices OPNsense knows about (DHCP reservations, leases, ARP/NDP),
+     * without the MAC addresses that are already in the plugin.
      */
     public function knownDevicesAction()
     {
@@ -220,7 +228,7 @@ class SettingsController extends ApiMutableModelControllerBase
     }
 
     /**
-     * Voeg meerdere bekende apparaten tegelijk toe aan een groep.
+     * Add several known devices to a group at once.
      * POST: group=<uuid>, devices[n][mac], devices[n][name]
      */
     public function addKnownDevicesAction()
@@ -232,7 +240,7 @@ class SettingsController extends ApiMutableModelControllerBase
         $group = (string)$this->request->getPost('group', 'string', '');
         $devices = $this->request->getPost('devices');
         if ($group === '' || !is_array($devices) || count($devices) == 0) {
-            $result['message'] = 'Kies een groep en minimaal een apparaat.';
+            $result['message'] = gettext('Choose a group and at least one device.');
             return $result;
         }
         $mdl = $this->getModel();
@@ -246,7 +254,7 @@ class SettingsController extends ApiMutableModelControllerBase
             $name = trim(preg_replace('/[^\p{L}0-9 _.\-]/u', '', (string)($dev['name'] ?? '')));
             $name = mb_substr($name, 0, 64);
             if ($name === '') {
-                $name = 'Apparaat ' . substr(str_replace(':', '', $mac), -4);
+                $name = gettext('Device') . ' ' . substr(str_replace(':', '', $mac), -4);
             }
             $node = $mdl->devices->device->Add();
             $node->setNodes(['enabled' => '1', 'name' => $name, 'mac' => $mac, 'group' => $group]);
@@ -293,7 +301,7 @@ class SettingsController extends ApiMutableModelControllerBase
         return $this->toggleBase('devices.device', $uuid, $enabled);
     }
 
-    /* ---------- bedtijden ---------- */
+    /* ---------- bedtimes ---------- */
 
     public function searchBedtimeAction()
     {
@@ -308,13 +316,13 @@ class SettingsController extends ApiMutableModelControllerBase
         foreach ($result['rows'] as &$row) {
             $days = array_filter(explode(',', (string)$row['days']));
             $row['days'] = implode(' ', array_map(function ($d) {
-                return self::DAY_LABELS[$d] ?? $d;
+                return $this->dayLabel($d);
             }, $days));
         }
         return $result;
     }
 
-    /* ---------- tijdbudgetten ---------- */
+    /* ---------- time budgets ---------- */
 
     public function searchBudgetAction()
     {

@@ -1,0 +1,1251 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: os-parentalcontrol\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+
+#: src/etc/inc/plugins.inc.d/parentalcontrol.inc src/opnsense/scripts/OPNsense/ParentalControl/notify_test.py
+msgid "Parental control"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/ServiceController.php
+msgid "Invalid input."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/ServiceController.php
+msgid "No statistics available."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Social media"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "Chat"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Games"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "Video"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Dating"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Mon"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Tue"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Wed"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Thu"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Fri"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Sat"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Sun"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "The group still contains devices."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "The group is still used in a bedtime."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "The group is still used in a time budget."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "The profile is still used by a group."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Choose a group and at least one device."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "Device"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBudget.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogDevice.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogGroup.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Enabled"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBudget.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Groups"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml
+msgid "This schedule applies to all selected groups."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBudget.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Days"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml
+msgid "The days on which this bedtime starts."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml
+msgid "Start (HH:MM)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml
+msgid "Internet is blocked from this time."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml
+msgid "End (HH:MM)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml
+msgid "If the end is earlier than the start (for example 21:00 to 07:00), the bedtime continues until the next morning. Start and end must not be equal."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBedtime.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBudget.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogGroup.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Description"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBudget.xml
+msgid "The budget applies to each selected group separately."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBudget.xml
+msgid "Device time per day (minutes)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogBudget.xml
+msgid "Total time per group per day. 0 means no internet time. If several rules match the same group and day, the lowest applies. The counter restarts every day at midnight."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogDevice.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogGroup.xml src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Name"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogDevice.xml
+msgid "For example \"Sam's iPad\". This name is only stored in this plugin and has no relation to names in DHCP or DNS."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogDevice.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "MAC address"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogDevice.xml
+msgid "Disable private/random MAC addresses for this network on the device, otherwise the address changes."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogDevice.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Group"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogGroup.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Website profile"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogGroup.xml
+msgid "Optional. The profile is applied through the filter backend to all devices in this group."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "For example \"6-9 years\", \"10-12 years\" or \"13-15 years\"."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Enforce SafeSearch"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "AdGuard Home only: search engines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) are put in safe mode."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Adult content filter"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "AdGuard Home only: enables the parental control filter (adult websites)."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Block categories"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "AdGuard Home only: blocks well-known services in these categories."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Groups in the filter backend"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Pi-hole only: names of existing Pi-hole groups (comma separated) to which the devices of the group are added. Attach the blocklists (for example for adult content) to those groups in Pi-hole itself."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Extra blocked domains"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Comma separated. Subdomains are blocked as well."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Always allowed domains"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/dialogProfile.xml
+msgid "Comma separated. Overrides blocks from the filter lists for this group."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Enable parental control. The firewall rules are reloaded when you apply the settings."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Check interval (seconds)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "How often the daemon checks bedtimes and blocks or releases devices (5-60)."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Activity threshold (KB per minute)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "A group counts as \"in use\" as soon as at least one device generates more traffic than this. Raise the value if idle devices still consume time."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Grace period (minutes)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Short pauses without traffic (for example reading a page) still count if traffic resumes within this time. After that the counter stops."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Block page and requests"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Show block page"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Blocked devices see an explanation (HTTP traffic and DNS are redirected to the firewall). Without this option traffic is silently dropped. HTTPS sites show a connection error in the browser."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Block page port"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "The page only listens locally (127.0.0.1 and ::1) on this port. You do not need to open anything."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "DNS filter (AdGuard Home, Pi-hole, ...)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "DNS server(s)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "IP address(es) of your DNS filter, for example AdGuard Home or Pi-hole (comma separated, at most 4; also enter the IPv6 address if it has one). Blocked devices may only use these servers for DNS. Leave empty to send DNS of blocked devices to Unbound on this firewall."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Enforce DNS"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "All DNS traffic (port 53, TCP and UDP) from clients on the selected interfaces is redirected to the first DNS server above, even when a device uses 8.8.8.8 or another server itself. The DNS server itself is excluded."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Interfaces with clients"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Select LAN-side interfaces only, never WAN. Otherwise your DNS server may become reachable from the internet."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Block encrypted DNS"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Blocks DNS-over-TLS (port 853) and HTTPS traffic to well-known public DNS resolvers from Google, Cloudflare, Quad9, OpenDNS and AdGuard (not exhaustive). The DNS server itself is excluded."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Website filter and SafeSearch"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Filter backend"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Used to apply website profiles per group. AdGuard Home supports SafeSearch, the adult content filter, categories and custom domains. Pi-hole supports groups and custom domains (SafeSearch and categories do not exist per client there). The plugin only manages its own items (prefix \"PC: \"); nothing you configured yourself is changed."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Backend URL"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Address of the web interface of your DNS filter: AdGuard Home (for example http://192.168.1.2:3000) or Pi-hole (for example https://192.168.1.3). The API uses the same port."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Backend user"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "AdGuard Home only. Pi-hole only uses a password."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Backend password"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "AdGuard Home password, or a Pi-hole app password (Settings, Web interface/API). Stored in the OPNsense configuration; preferably use a dedicated user or app password for this plugin."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Verify TLS certificate"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Only relevant for an https URL. Disable for a self-signed certificate."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Own DNS server for groups with a profile"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Devices in a group with a profile that configure another DNS server (for example 8.8.8.8): blocking makes sure the profile cannot be bypassed. Redirecting sends the queries to the DNS server, but AdGuard may no longer recognise the device and will not apply the profile. Only works together with \"Enforce DNS\"."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Allow requests for extra time"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Time between requests (minutes)"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "A group can make at most one request per period, also after a rejection."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Notifications to the parent"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "ntfy server"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "For example https://ntfy.sh or your own server (without a path)."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "ntfy topic"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Choose a hard-to-guess name and subscribe to it in the ntfy app."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "ntfy access token"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Optional, for a protected topic."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Webhook URL"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Optional: JSON POST (event, title, message, click), for example for Home Assistant."
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Link to the overview page"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/forms/general.xml
+msgid "Added to the notification, for example https://192.168.1.1/ui/parentalcontrol/overview. Approving always happens in the protected GUI."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ACL/ACL.xml
+msgid "Services: Parental Control"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/Menu/Menu.xml
+msgid "Parental Control"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/Menu/Menu.xml
+msgid "Overview"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/Menu/Menu.xml
+msgid "Administration"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/Menu/Menu.xml
+msgid "Log File"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Choose an interval between 5 and 60 seconds."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter a number (KB per minute)."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Choose 0 to 60 minutes."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Choose a port between 1024 and 65535."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter one or more IP addresses separated by commas (at most 4), or leave empty."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Select the interfaces the clients are connected to."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Choose 1 to 1440 minutes."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter a server such as https://ntfy.sh (without a path), or leave empty."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Use only letters, digits, _ and -."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Invalid token."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter a valid http(s) URL, or leave empty."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter a URL such as http://192.168.1.2:3000, or leave empty."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Use 1-64 characters: letters, digits, space, dot, dash or underscore."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "This group name already exists."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "This profile name already exists."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter group names separated by commas."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter domain names separated by commas (for example example.com, other.org)."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter a valid MAC address (aa:bb:cc:dd:ee:ff)."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "This MAC address is already in a group. A device can only be in one group."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Choose a group."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Choose at least one group."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Choose at least one day."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Use the format HH:MM (24 hours)."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Enter the number of minutes (0 to 1440)."
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "None"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "AdGuard Home"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Pi-hole (v6)"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Block (recommended with profiles)"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Redirect to the DNS server"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Chat and messaging"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Video and streaming"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Monday"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Tuesday"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Wednesday"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Thursday"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Friday"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Saturday"
+msgstr ""
+
+#: src/opnsense/mvc/app/models/OPNsense/ParentalControl/ParentalControl.xml
+msgid "Sunday"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Reservation"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Lease"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Active"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Loading..."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "No known devices found."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Test failed."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Connection successful."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Test notification"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Test notification sent."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Sending failed."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Adding failed."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Close"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "General"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Devices"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Bedtimes"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Time budgets"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Website profiles"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Save"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Send test notification"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Test filter backend connection"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Tests use the saved settings: save first."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Commands"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Add known devices"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Start"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "End"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Device time per day"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "SafeSearch"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Adult filter"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Blocked categories"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Changes only take effect after you apply them."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Apply"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "DHCP reservations, DHCP leases and devices currently in the ARP/NDP table. Devices that are already in a group are not shown. You can change the name before adding. This name is stored for this plugin only and has no relation to the name in the DHCP table."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Add to group"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "IP address"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Source"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Cancel"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Add"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Edit group"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Edit device"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Edit bedtime"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Edit time budget"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
+msgid "Edit website profile"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Recently active"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Inactive"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Bedtime (blocked)"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Time is up (blocked)"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Blocked by a parent"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Disabled"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Open all day"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "unlimited"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Status"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Today"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Budget"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Remaining"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Actions"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "No groups created yet."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Add %d minutes"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Block for today"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Open for today"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Back to normal"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Reset the counters of today"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Reset the time used and the extra time of today for this group?"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Block internet for this group for the rest of the day?"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Yes"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "No"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Waiting for a decision"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Approved"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Rejected"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Expired"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Approve"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Reject"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "No requests."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "%d min"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Blocked"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Released"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Requested %d minutes"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Request %s (%d minutes)"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "A parent added %d minutes"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Day control"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Counters reset"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Visited %s"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Blocked: %s"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "OK"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "busy"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "error"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Details for %s"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Total time in this period"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "No data in this period."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Based on the most recent queries only."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "ongoing"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Bedtime"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Time is up"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "The daemon is not running; the status shown is not current. Enable the plugin on the Administration page and click Apply."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Time used is the time during which at least one device of the group had network traffic. Simultaneous use of several devices counts once. It is an approximation of screen time. Click a group for details."
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Requests for extra time"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "When"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Requested"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Decision"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Day"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Week"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Month"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Time used per day"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Date"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Time"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Most used apps"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "App"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Queries"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Most visited sites"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Site"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Block history"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Duration"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Reason"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "Most recent activity"
+msgstr ""
+
+#: src/opnsense/mvc/app/views/OPNsense/ParentalControl/overview.volt
+msgid "What"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/backend_test.py
+msgid "no filter backend selected or no URL set (save the settings first)."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/backend_test.py src/opnsense/scripts/OPNsense/ParentalControl/notify_test.py
+msgid "could not read the configuration: %s"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/group_stats.py
+msgid "No filter backend is configured."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/group_stats.py
+msgid "The query log is only available with AdGuard Home."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/group_stats.py
+msgid "No device of this group has a known address right now."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/group_stats.py
+msgid "The query log could not be read: %s"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/notify_test.py
+msgid "This is a test notification."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "%s asks for %d minutes of extra time (used %s of %s). Decide in Parental Control."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Request sent."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Request for extra time: %s"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "tomorrow %s"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "Invalid number of minutes."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "You can only ask for extra time when your time is up."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Asking for extra time is disabled."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "A request is already open."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
+msgid "You can ask again in %d minutes."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_adguard.py
+msgid "AdGuard Home %s (%d blockable services known)"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_adguard.py
+msgid "services unknown to this AdGuard version: "
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_adguard.py src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "invalid URL: %r"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_adguard.py src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "connection failed: %s"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_adguard.py
+msgid "login failed (HTTP %d): check the username and password"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_backends.py
+msgid "unknown filter backend: %r"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_backends.py
+msgid "waiting for the first synchronisation"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_common.py
+msgid "%dh %02dm"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_common.py
+msgid "%dm"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_notify.py
+msgid "No notification channel configured (enter an ntfy server and topic, or a webhook)."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "Pi-hole %s (%d groups)"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "Pi-hole has no per-group %s: those settings are ignored; link Pi-hole groups with blocklists in the profile"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "Pi-hole group(s) do not exist: "
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "login failed: %s"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "no valid session"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "client %s already exists in Pi-hole and is left unchanged"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "login failed (HTTP %d): check the (app) password; two-factor authentication is not supported, use an app password"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "the adult filter"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_pihole.py
+msgid "categories"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "You can continue"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Internet switched off"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Device time is up"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Your request has been sent. Please wait for a parent to answer..."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Your last request was rejected."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Would you like to ask for extra time?"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Sending failed, please try again later."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "The page is being reloaded..."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid " until %s"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "It is bedtime"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Internet access for <b>%s</b> is switched off%s."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Your last request was approved."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "You can make a new request in %s."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "A parent switched off internet access for <b>%s</b> for today."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Your device time is up"
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "Used today by <b>%s</b>: %s of %s."
+msgstr ""
+
+#: src/opnsense/scripts/OPNsense/ParentalControl/pc_web.py
+msgid "%d minutes"
+msgstr ""

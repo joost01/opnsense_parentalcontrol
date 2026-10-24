@@ -1,36 +1,36 @@
 <form>
     <field>
         <id>bedtime.enabled</id>
-        <label>Ingeschakeld</label>
+        <label>Enabled</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>bedtime.groups</id>
-        <label>Groepen</label>
+        <label>Groups</label>
         <type>select_multiple</type>
-        <help>Dit schema geldt voor alle gekozen groepen.</help>
+        <help>This schedule applies to all selected groups.</help>
     </field>
     <field>
         <id>bedtime.days</id>
-        <label>Dagen</label>
+        <label>Days</label>
         <type>select_multiple</type>
-        <help>De dagen waarop deze bedtijd begint.</help>
+        <help>The days on which this bedtime starts.</help>
     </field>
     <field>
         <id>bedtime.start</id>
-        <label>Begin (UU:MM)</label>
+        <label>Start (HH:MM)</label>
         <type>text</type>
-        <help>Vanaf dit tijdstip is internet geblokkeerd.</help>
+        <help>Internet is blocked from this time.</help>
     </field>
     <field>
         <id>bedtime.end</id>
-        <label>Einde (UU:MM)</label>
+        <label>End (HH:MM)</label>
         <type>text</type>
-        <help>Is het einde eerder dan het begin (bijv. 21:00 tot 07:00), dan loopt de bedtijd door tot de volgende ochtend. Begin en einde mogen niet gelijk zijn.</help>
+        <help>If the end is earlier than the start (for example 21:00 to 07:00), the bedtime continues until the next morning. Start and end must not be equal.</help>
     </field>
     <field>
         <id>bedtime.description</id>
-        <label>Omschrijving</label>
+        <label>Description</label>
         <type>text</type>
     </field>
 </form>

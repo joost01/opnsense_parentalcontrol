@@ -1,28 +1,30 @@
 """
-AdGuard Home-koppeling voor websiteprofielen en SafeSearch.
+AdGuard Home integration for website profiles and SafeSearch.
 
 Principes:
-  * de plugin beheert uitsluitend AdGuard-clients waarvan de naam met PREFIX begint, en een
-    eigen, gemarkeerd blok in de gebruikersregels; alles wat de beheerder zelf instelde blijft
+  * the plugin only manages AdGuard clients whose name starts with PREFIX, and a marked
+    block of its own in the user rules; everything the administrator configured stays
     onaangeroerd;
-  * synchronisatie draait in een aparte thread: een trage of onbereikbare AdGuard houdt de
-    firewall-daemon nooit op.
+  * synchronisation runs in a separate thread: a slow or unreachable AdGuard never holds up
+    the firewall daemon.
 """
 import base64
 import json
 import re
 import ssl
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from pc_common import BackendError
+from pc_i18n import _
 
 PREFIX = 'PC: '
 RULES_BEGIN = '! BEGIN parentalcontrol (managed - do not edit)'
 RULES_END = '! END parentalcontrol'
 SAFE_SEARCH_PROVIDERS = ('bing', 'duckduckgo', 'ecosia', 'google', 'pixabay', 'yandex', 'youtube')
 
-# Categorie -> AdGuard-dienst-ID's. Onbekende ID's (andere AdGuard-versie) worden overgeslagen.
+# Category -> AdGuard service IDs. Unknown IDs (other AdGuard version) are skipped.
 CATEGORY_SERVICES = {
     'social': ['facebook', 'instagram', 'tiktok', 'snapchat', 'twitter', 'pinterest', 'reddit', 'tumblr',
                'vk', 'mastodon'],
@@ -43,7 +45,7 @@ class AdGuard:
     def __init__(self, url, user='', password='', verify_tls=True, timeout=6):
         url = (url or '').strip().rstrip('/')
         if not re.match(r'^https?://', url):
-            raise AdGuardError('ongeldige URL: %r' % url)
+            raise AdGuardError(_('invalid URL: %r') % url)
         self.url = url
         self.timeout = timeout
         self.headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -63,10 +65,10 @@ class AdGuard:
         except urllib.error.HTTPError as err:
             detail = err.read(200).decode('utf-8', 'replace').strip()
             if err.code in (401, 403):
-                raise AdGuardError('inloggen mislukt (HTTP %d): controleer gebruikersnaam en wachtwoord' % err.code)
+                raise AdGuardError(_('login failed (HTTP %d): check the username and password') % err.code)
             raise AdGuardError('HTTP %d op %s: %s' % (err.code, path, detail))
         except (urllib.error.URLError, OSError) as err:
-            raise AdGuardError('verbinding mislukt: %s' % getattr(err, 'reason', err))
+            raise AdGuardError(_('connection failed: %s') % getattr(err, 'reason', err))
         try:
             return json.loads(raw) if raw.strip() else None
         except ValueError:
@@ -86,7 +88,7 @@ class AdGuard:
         services = self.service_ids()
         self.clients()
         self.user_rules()
-        return 'AdGuard Home %s (%d blokkeerbare diensten bekend)' % (version, len(services))
+        return _('AdGuard Home %s (%d blockable services known)') % (version, len(services))
 
     def status(self):
         data = self._request('GET', '/control/status')
@@ -115,6 +117,19 @@ class AdGuard:
                 ids.add(ident)
         return ids
 
+    def blocked_services_all(self):
+        """The blockable services with their rules (used to recognise apps in the query log)."""
+        data = self._request('GET', '/control/blocked_services/all')
+        items = data.get('blocked_services') or data.get('services') or [] if isinstance(data, dict) else data
+        return [i for i in items or [] if isinstance(i, dict)]
+
+    def querylog(self, search, older_than=None, limit=500):
+        query = 'limit=%d&response_status=all&search=%s' % (limit, urllib.parse.quote(search, safe=''))
+        if older_than:
+            query += '&older_than=' + urllib.parse.quote(older_than, safe='')
+        data = self._request('GET', '/control/querylog?' + query)
+        return data if isinstance(data, dict) else {}
+
     def user_rules(self):
         data = self._request('GET', '/control/filtering/status')
         return list((data or {}).get('user_rules') or []) if isinstance(data, dict) else []
@@ -137,7 +152,7 @@ def clean_domains(items):
 
 
 def services_for(categories, available):
-    """-> (dienst-ID's die bestaan, overgeslagen ID's)."""
+    """-> (service IDs that exist, skipped IDs)."""
     wanted = []
     for cat in sorted(categories):
         for ident in CATEGORY_SERVICES.get(cat, []):
@@ -168,7 +183,7 @@ def build_client(name, ids, profile, services):
 
 
 def client_matches(existing, wanted):
-    """Is de bestaande AdGuard-client al gelijk aan wat we willen? (voorkomt onnodige updates)"""
+    """Does the existing AdGuard client already match what we want? (avoids needless updates)"""
     safe = existing.get('safe_search')
     current_safe = safe.get('enabled') if isinstance(safe, dict) else existing.get('safesearch_enabled')
     return (sorted(existing.get('ids') or []) == wanted['ids']
@@ -181,7 +196,7 @@ def client_matches(existing, wanted):
 
 
 def managed_rules(clients):
-    """Gebruikersregels per client (blokkeren/toestaan van domeinen) in AdGuard-syntaxis."""
+    """User rules per client (blocking/allowing domains) in AdGuard syntax."""
     lines = []
     for name in sorted(clients):
         profile = clients[name]['profile']
@@ -193,7 +208,7 @@ def managed_rules(clients):
 
 
 def replace_block(rules, new_lines):
-    """Vervang ons gemarkeerde blok in de regels; de rest blijft ongewijzigd."""
+    """Replace our marked block in the rules; the rest stays unchanged."""
     out, skipping = [], False
     for line in rules:
         if line.strip() == RULES_BEGIN:
@@ -211,8 +226,8 @@ def replace_block(rules, new_lines):
 
 def sync(api, desired):
     """
-    desired = {'clients': {naam: {'ids': set, 'profile': dict}}, 'keep': set(namen)}
-    Geeft een rapport terug; gooit AdGuardError bij communicatieproblemen.
+    desired = {'clients': {name: {'ids': set, 'profile': dict}}, 'keep': set(names)}
+    Returns a report; raises AdGuardError on communication problems.
     """
     available = api.service_ids()
     existing = {c.get('name'): c for c in api.clients() if str(c.get('name', '')).startswith(PREFIX)}
@@ -237,5 +252,5 @@ def sync(api, desired):
         api.set_user_rules(wanted)
         report['rules'] = True
     if skipped:
-        report['warnings'].append('diensten onbekend voor deze AdGuard-versie: ' + ', '.join(sorted(skipped)))
+        report['warnings'].append(_('services unknown to this AdGuard version: ') + ', '.join(sorted(skipped)))
     return report

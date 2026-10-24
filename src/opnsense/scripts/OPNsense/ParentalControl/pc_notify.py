@@ -1,6 +1,8 @@
-"""Meldingen naar de ouder: ntfy (JSON publish API) en/of een algemene webhook."""
+"""Notifications to the parent: ntfy (JSON publish API) and/or a generic webhook."""
 import json
 import urllib.request
+
+from pc_i18n import _
 
 
 def _post(url, payload, headers, timeout=8):
@@ -14,8 +16,8 @@ def _post(url, payload, headers, timeout=8):
 
 def notify(settings, title, message, click=None, event='notification'):
     """
-    settings: dict met ntfy_server, ntfy_topic, ntfy_token, webhook_url.
-    Geeft een lijst foutmeldingen terug; leeg = alles verstuurd.
+    settings: dict with ntfy_server, ntfy_topic, ntfy_token, webhook_url.
+    Returns a list of error messages; empty = everything was sent.
     """
     errors = []
     configured = False
@@ -42,5 +44,5 @@ def notify(settings, title, message, click=None, event='notification'):
         except Exception as err:
             errors.append('webhook: %s' % err)
     if not configured:
-        errors.append('Geen notificatiekanaal ingesteld (vul ntfy-server en -topic of een webhook in).')
+        errors.append(_('No notification channel configured (enter an ntfy server and topic, or a webhook).'))
     return errors

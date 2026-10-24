@@ -1,23 +1,23 @@
 <form>
     <field>
         <id>group.enabled</id>
-        <label>Ingeschakeld</label>
+        <label>Enabled</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>group.name</id>
-        <label>Naam</label>
+        <label>Name</label>
         <type>text</type>
     </field>
     <field>
         <id>group.description</id>
-        <label>Omschrijving</label>
+        <label>Description</label>
         <type>text</type>
     </field>
     <field>
         <id>group.profile</id>
-        <label>Websiteprofiel</label>
+        <label>Website profile</label>
         <type>dropdown</type>
-        <help>Optioneel. Het profiel wordt toegepast via de filter-backend op alle apparaten in deze groep.</help>
+        <help>Optional. The profile is applied through the filter backend to all devices in this group.</help>
     </field>
 </form>

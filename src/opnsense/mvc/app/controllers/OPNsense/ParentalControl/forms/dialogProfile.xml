@@ -1,49 +1,49 @@
 <form>
     <field>
         <id>profile.name</id>
-        <label>Naam</label>
+        <label>Name</label>
         <type>text</type>
-        <help>Bijvoorbeeld "6-9 jaar", "10-12 jaar" of "13-15 jaar".</help>
+        <help>For example "6-9 years", "10-12 years" or "13-15 years".</help>
     </field>
     <field>
         <id>profile.description</id>
-        <label>Omschrijving</label>
+        <label>Description</label>
         <type>text</type>
     </field>
     <field>
         <id>profile.safesearch</id>
-        <label>SafeSearch afdwingen</label>
+        <label>Enforce SafeSearch</label>
         <type>checkbox</type>
-        <help>Alleen AdGuard Home: zoekmachines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) worden in de veilige modus gezet.</help>
+        <help>AdGuard Home only: search engines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) are put in safe mode.</help>
     </field>
     <field>
         <id>profile.parental</id>
-        <label>Filter voor volwassen inhoud</label>
+        <label>Adult content filter</label>
         <type>checkbox</type>
-        <help>Alleen AdGuard Home: schakelt de ouderlijk-toezichtfilter in (volwassen websites).</help>
+        <help>AdGuard Home only: enables the parental control filter (adult websites).</help>
     </field>
     <field>
         <id>profile.categories</id>
-        <label>Categorieën blokkeren</label>
+        <label>Block categories</label>
         <type>select_multiple</type>
-        <help>Alleen AdGuard Home: blokkeert bekende diensten in deze categorieën.</help>
+        <help>AdGuard Home only: blocks well-known services in these categories.</help>
     </field>
     <field>
         <id>profile.backend_groups</id>
-        <label>Groepen in de filter-backend</label>
+        <label>Groups in the filter backend</label>
         <type>text</type>
-        <help>Alleen Pi-hole: namen van bestaande Pi-hole-groepen (komma-gescheiden) waaraan de apparaten van de groep worden toegevoegd. Koppel in Pi-hole zelf de blokkeerlijsten (bijvoorbeeld voor volwassen inhoud) aan die groepen.</help>
+        <help>Pi-hole only: names of existing Pi-hole groups (comma separated) to which the devices of the group are added. Attach the blocklists (for example for adult content) to those groups in Pi-hole itself.</help>
     </field>
     <field>
         <id>profile.blocked_domains</id>
-        <label>Extra geblokkeerde domeinen</label>
+        <label>Extra blocked domains</label>
         <type>text</type>
-        <help>Komma-gescheiden. Subdomeinen worden ook geblokkeerd.</help>
+        <help>Comma separated. Subdomains are blocked as well.</help>
     </field>
     <field>
         <id>profile.allowed_domains</id>
-        <label>Altijd toegestane domeinen</label>
+        <label>Always allowed domains</label>
         <type>text</type>
-        <help>Komma-gescheiden. Overschrijft blokkades uit de filterlijsten voor deze groep.</help>
+        <help>Comma separated. Overrides blocks from the filter lists for this group.</help>
     </field>
 </form>

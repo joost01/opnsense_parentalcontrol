@@ -2,16 +2,13 @@
 
 namespace OPNsense\ParentalControl;
 
+/**
+ * The plugin root only redirects to the overview page.
+ */
 class IndexController extends \OPNsense\Base\IndexController
 {
     public function indexAction()
     {
-        $this->view->generalForm = $this->getForm('general');
-        $this->view->formDialogGroup = $this->getForm('dialogGroup');
-        $this->view->formDialogDevice = $this->getForm('dialogDevice');
-        $this->view->formDialogBedtime = $this->getForm('dialogBedtime');
-        $this->view->formDialogProfile = $this->getForm('dialogProfile');
-        $this->view->formDialogBudget = $this->getForm('dialogBudget');
-        $this->view->pick('OPNsense/ParentalControl/index');
+        return $this->response->redirect('/ui/parentalcontrol/overview');
     }
 }

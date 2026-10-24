@@ -1,0 +1,940 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: os-parentalcontrol\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: nl_NL\n"
+
+msgid "Parental control"
+msgstr "Ouderlijk toezicht"
+
+msgid "Invalid input."
+msgstr "Ongeldige invoer."
+
+msgid "No statistics available."
+msgstr "Geen statistieken beschikbaar."
+
+msgid "Social media"
+msgstr "Sociale media"
+
+msgid "Chat"
+msgstr "Chat"
+
+msgid "Games"
+msgstr "Games"
+
+msgid "Video"
+msgstr "Video"
+
+msgid "Dating"
+msgstr "Dating"
+
+msgid "Mon"
+msgstr "Ma"
+
+msgid "Tue"
+msgstr "Di"
+
+msgid "Wed"
+msgstr "Wo"
+
+msgid "Thu"
+msgstr "Do"
+
+msgid "Fri"
+msgstr "Vr"
+
+msgid "Sat"
+msgstr "Za"
+
+msgid "Sun"
+msgstr "Zo"
+
+msgid "The group still contains devices."
+msgstr "De groep bevat nog apparaten."
+
+msgid "The group is still used in a bedtime."
+msgstr "De groep wordt nog gebruikt in een bedtijd."
+
+msgid "The group is still used in a time budget."
+msgstr "De groep wordt nog gebruikt in een tijdbudget."
+
+msgid "The profile is still used by a group."
+msgstr "Het profiel wordt nog gebruikt door een groep."
+
+msgid "Choose a group and at least one device."
+msgstr "Kies een groep en minimaal een apparaat."
+
+msgid "Device"
+msgstr "Apparaat"
+
+msgid "Enabled"
+msgstr "Ingeschakeld"
+
+msgid "Groups"
+msgstr "Groepen"
+
+msgid "This schedule applies to all selected groups."
+msgstr "Dit schema geldt voor alle gekozen groepen."
+
+msgid "Days"
+msgstr "Dagen"
+
+msgid "The days on which this bedtime starts."
+msgstr "De dagen waarop deze bedtijd begint."
+
+msgid "Start (HH:MM)"
+msgstr "Begin (UU:MM)"
+
+msgid "Internet is blocked from this time."
+msgstr "Vanaf dit tijdstip is internet geblokkeerd."
+
+msgid "End (HH:MM)"
+msgstr "Einde (UU:MM)"
+
+msgid "If the end is earlier than the start (for example 21:00 to 07:00), the bedtime continues until the next morning. Start and end must not be equal."
+msgstr "Is het einde eerder dan het begin (bijv. 21:00 tot 07:00), dan loopt de bedtijd door tot de volgende ochtend. Begin en einde mogen niet gelijk zijn."
+
+msgid "Description"
+msgstr "Omschrijving"
+
+msgid "The budget applies to each selected group separately."
+msgstr "Het budget geldt voor elke gekozen groep afzonderlijk."
+
+msgid "Device time per day (minutes)"
+msgstr "Apparaattijd per dag (minuten)"
+
+msgid "Total time per group per day. 0 means no internet time. If several rules match the same group and day, the lowest applies. The counter restarts every day at midnight."
+msgstr "Totale tijd per groep per dag. 0 betekent geen internettijd. Zijn er meerdere passende regels voor dezelfde groep en dag, dan geldt de laagste. De teller begint elke dag om middernacht opnieuw."
+
+msgid "Name"
+msgstr "Naam"
+
+msgid "For example \"Sam's iPad\". This name is only stored in this plugin and has no relation to names in DHCP or DNS."
+msgstr "Bijvoorbeeld \"iPad van Sam\". Deze naam wordt alleen in deze plugin opgeslagen en heeft geen relatie met namen in DHCP of DNS."
+
+msgid "MAC address"
+msgstr "MAC-adres"
+
+msgid "Disable private/random MAC addresses for this network on the device, otherwise the address changes."
+msgstr "Schakel privacy-/random-MAC uit voor dit netwerk op het apparaat, anders verandert het adres."
+
+msgid "Group"
+msgstr "Groep"
+
+msgid "Website profile"
+msgstr "Websiteprofiel"
+
+msgid "Optional. The profile is applied through the filter backend to all devices in this group."
+msgstr "Optioneel. Het profiel wordt toegepast via de filter-backend op alle apparaten in deze groep."
+
+msgid "For example \"6-9 years\", \"10-12 years\" or \"13-15 years\"."
+msgstr "Bijvoorbeeld \"6-9 jaar\", \"10-12 jaar\" of \"13-15 jaar\"."
+
+msgid "Enforce SafeSearch"
+msgstr "SafeSearch afdwingen"
+
+msgid "AdGuard Home only: search engines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) are put in safe mode."
+msgstr "Alleen AdGuard Home: zoekmachines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) worden in de veilige modus gezet."
+
+msgid "Adult content filter"
+msgstr "Filter voor volwassen inhoud"
+
+msgid "AdGuard Home only: enables the parental control filter (adult websites)."
+msgstr "Alleen AdGuard Home: schakelt de ouderlijk-toezichtfilter in (volwassen websites)."
+
+msgid "Block categories"
+msgstr "Categorieën blokkeren"
+
+msgid "AdGuard Home only: blocks well-known services in these categories."
+msgstr "Alleen AdGuard Home: blokkeert bekende diensten in deze categorieën."
+
+msgid "Groups in the filter backend"
+msgstr "Groepen in de filter-backend"
+
+msgid "Pi-hole only: names of existing Pi-hole groups (comma separated) to which the devices of the group are added. Attach the blocklists (for example for adult content) to those groups in Pi-hole itself."
+msgstr "Alleen Pi-hole: namen van bestaande Pi-hole-groepen (komma-gescheiden) waaraan de apparaten van de groep worden toegevoegd. Koppel in Pi-hole zelf de blokkeerlijsten (bijvoorbeeld voor volwassen inhoud) aan die groepen."
+
+msgid "Extra blocked domains"
+msgstr "Extra geblokkeerde domeinen"
+
+msgid "Comma separated. Subdomains are blocked as well."
+msgstr "Komma-gescheiden. Subdomeinen worden ook geblokkeerd."
+
+msgid "Always allowed domains"
+msgstr "Altijd toegestane domeinen"
+
+msgid "Comma separated. Overrides blocks from the filter lists for this group."
+msgstr "Komma-gescheiden. Overschrijft blokkades uit de filterlijsten voor deze groep."
+
+msgid "Enable parental control. The firewall rules are reloaded when you apply the settings."
+msgstr "Schakel het ouderlijk toezicht in. De firewall wordt hierbij herladen."
+
+msgid "Check interval (seconds)"
+msgstr "Controle-interval (seconden)"
+
+msgid "How often the daemon checks bedtimes and blocks or releases devices (5-60)."
+msgstr "Hoe vaak de daemon bedtijden controleert en apparaten blokkeert of vrijgeeft (5-60)."
+
+msgid "Activity threshold (KB per minute)"
+msgstr "Activiteitsdrempel (KB per minuut)"
+
+msgid "A group counts as \"in use\" as soon as at least one device generates more traffic than this. Raise the value if idle devices still consume time."
+msgstr "Een groep telt als \"in gebruik\" zodra minstens een apparaat meer dan dit verkeer genereert. Verhoog de waarde als apparaten die stilliggen toch tijd verbruiken."
+
+msgid "Grace period (minutes)"
+msgstr "Naloop (minuten)"
+
+msgid "Short pauses without traffic (for example reading a page) still count if traffic resumes within this time. After that the counter stops."
+msgstr "Korte pauzes zonder verkeer (bijv. een pagina lezen) tellen mee als er binnen deze tijd weer verkeer is. Daarna stopt de teller."
+
+msgid "Block page and requests"
+msgstr "Blokkeerpagina en verzoeken"
+
+msgid "Show block page"
+msgstr "Blokkeerpagina tonen"
+
+msgid "Blocked devices see an explanation (HTTP traffic and DNS are redirected to the firewall). Without this option traffic is silently dropped. HTTPS sites show a connection error in the browser."
+msgstr "Geblokkeerde apparaten krijgen uitleg te zien (HTTP-verkeer en DNS worden omgeleid naar de firewall). Zonder deze optie wordt verkeer stil genegeerd. HTTPS-sites tonen een foutmelding van de browser."
+
+msgid "Block page port"
+msgstr "Poort blokkeerpagina"
+
+msgid "The page only listens locally (127.0.0.1 and ::1) on this port. You do not need to open anything."
+msgstr "De pagina luistert alleen lokaal (127.0.0.1 en ::1) op deze poort. Je hoeft niets te openen."
+
+msgid "DNS filter (AdGuard Home, Pi-hole, ...)"
+msgstr "DNS-filter (AdGuard Home, Pi-hole, ...)"
+
+msgid "DNS server(s)"
+msgstr "DNS-server(s)"
+
+msgid "IP address(es) of your DNS filter, for example AdGuard Home or Pi-hole (comma separated, at most 4; also enter the IPv6 address if it has one). Blocked devices may only use these servers for DNS. Leave empty to send DNS of blocked devices to Unbound on this firewall."
+msgstr "IP-adres(sen) van je DNS-filter, bijvoorbeeld AdGuard Home of Pi-hole (komma-gescheiden, maximaal 4; geef ook het IPv6-adres op als het bestaat). Geblokkeerde apparaten mogen alleen deze server(s) voor DNS gebruiken. Leeg laten = DNS van geblokkeerde apparaten gaat naar Unbound op deze firewall."
+
+msgid "Enforce DNS"
+msgstr "DNS afdwingen"
+
+msgid "All DNS traffic (port 53, TCP and UDP) from clients on the selected interfaces is redirected to the first DNS server above, even when a device uses 8.8.8.8 or another server itself. The DNS server itself is excluded."
+msgstr "Al het DNS-verkeer (poort 53, TCP en UDP) van clients op de gekozen interfaces wordt omgeleid naar de eerste DNS-server hierboven, ook als een apparaat zelf 8.8.8.8 of een andere server gebruikt. De DNS-server zelf wordt uitgezonderd."
+
+msgid "Interfaces with clients"
+msgstr "Interfaces met clients"
+
+msgid "Select LAN-side interfaces only, never WAN. Otherwise your DNS server may become reachable from the internet."
+msgstr "Kies uitsluitend interfaces aan de LAN-kant, nooit WAN. Anders kan je DNS-server van buitenaf bereikbaar worden."
+
+msgid "Block encrypted DNS"
+msgstr "Versleutelde DNS blokkeren"
+
+msgid "Blocks DNS-over-TLS (port 853) and HTTPS traffic to well-known public DNS resolvers from Google, Cloudflare, Quad9, OpenDNS and AdGuard (not exhaustive). The DNS server itself is excluded."
+msgstr "Blokkeert DNS-over-TLS (poort 853) en HTTPS-verkeer naar bekende openbare DNS-resolvers van Google, Cloudflare, Quad9, OpenDNS en AdGuard (niet uitputtend). De DNS-server zelf wordt uitgezonderd."
+
+msgid "Website filter and SafeSearch"
+msgstr "Websitefilter en SafeSearch"
+
+msgid "Filter backend"
+msgstr "Filter-backend"
+
+msgid "Used to apply website profiles per group. AdGuard Home supports SafeSearch, the adult content filter, categories and custom domains. Pi-hole supports groups and custom domains (SafeSearch and categories do not exist per client there). The plugin only manages its own items (prefix \"PC: \"); nothing you configured yourself is changed."
+msgstr "Hiermee worden websiteprofielen per groep toegepast. AdGuard Home ondersteunt SafeSearch, filter voor volwassen inhoud, categorieën en eigen domeinen. Pi-hole ondersteunt groepen en eigen domeinen (SafeSearch en categorieën bestaan daar niet per client). De plugin beheert alleen eigen items (met het voorvoegsel \"PC: \"); niets van wat je zelf instelde wordt aangepast."
+
+msgid "Backend URL"
+msgstr "Backend-URL"
+
+msgid "Address of the web interface of your DNS filter: AdGuard Home (for example http://192.168.1.2:3000) or Pi-hole (for example https://192.168.1.3). The API uses the same port."
+msgstr "Het adres van de webinterface van je DNS-filter: AdGuard Home (bijv. http://192.168.1.2:3000) of Pi-hole (bijv. https://192.168.1.3). De API gebruikt dezelfde poort."
+
+msgid "Backend user"
+msgstr "Backend-gebruiker"
+
+msgid "AdGuard Home only. Pi-hole only uses a password."
+msgstr "Alleen voor AdGuard Home. Pi-hole gebruikt alleen een wachtwoord."
+
+msgid "Backend password"
+msgstr "Backend-wachtwoord"
+
+msgid "AdGuard Home password, or a Pi-hole app password (Settings, Web interface/API). Stored in the OPNsense configuration; preferably use a dedicated user or app password for this plugin."
+msgstr "Wachtwoord van AdGuard Home, of een app-wachtwoord van Pi-hole (Instellingen, Webinterface/API). Wordt in de OPNsense-configuratie opgeslagen; gebruik bij voorkeur een eigen gebruiker of app-wachtwoord voor deze plugin."
+
+msgid "Verify TLS certificate"
+msgstr "TLS-certificaat controleren"
+
+msgid "Only relevant for an https URL. Disable for a self-signed certificate."
+msgstr "Alleen relevant bij een https-URL. Schakel uit bij een zelfondertekend certificaat."
+
+msgid "Own DNS server for groups with a profile"
+msgstr "Eigen DNS-server bij groepen met profiel"
+
+msgid "Devices in a group with a profile that configure another DNS server (for example 8.8.8.8): blocking makes sure the profile cannot be bypassed. Redirecting sends the queries to the DNS server, but AdGuard may no longer recognise the device and will not apply the profile. Only works together with \"Enforce DNS\"."
+msgstr "Apparaten in een groep met een profiel die een andere DNS-server instellen (bijv. 8.8.8.8): blokkeren zorgt dat het profiel niet te omzeilen is. Omleiden stuurt de vragen naar de DNS-server, maar AdGuard herkent het apparaat dan mogelijk niet meer en past het profiel niet toe. Werkt alleen met \"DNS afdwingen\"."
+
+msgid "Allow requests for extra time"
+msgstr "Verzoeken om extra tijd toestaan"
+
+msgid "Time between requests (minutes)"
+msgstr "Tijd tussen verzoeken (minuten)"
+
+msgid "A group can make at most one request per period, also after a rejection."
+msgstr "Een groep kan hooguit een verzoek per periode doen. Ook na afwijzen."
+
+msgid "Notifications to the parent"
+msgstr "Meldingen aan de ouder"
+
+msgid "ntfy server"
+msgstr "ntfy-server"
+
+msgid "For example https://ntfy.sh or your own server (without a path)."
+msgstr "Bijvoorbeeld https://ntfy.sh of je eigen server (zonder pad)."
+
+msgid "ntfy topic"
+msgstr "ntfy-topic"
+
+msgid "Choose a hard-to-guess name and subscribe to it in the ntfy app."
+msgstr "Kies een moeilijk te raden naam en abonneer je erop in de ntfy-app."
+
+msgid "ntfy access token"
+msgstr "ntfy-toegangstoken"
+
+msgid "Optional, for a protected topic."
+msgstr "Optioneel, voor een beveiligd topic."
+
+msgid "Webhook URL"
+msgstr "Webhook-URL"
+
+msgid "Optional: JSON POST (event, title, message, click), for example for Home Assistant."
+msgstr "Optioneel: JSON-POST (event, title, message, click), bijvoorbeeld voor Home Assistant."
+
+msgid "Link to the overview page"
+msgstr "Link naar de overzichtspagina"
+
+msgid "Added to the notification, for example https://192.168.1.1/ui/parentalcontrol/overview. Approving always happens in the protected GUI."
+msgstr "Wordt in de melding gezet, bijvoorbeeld https://192.168.1.1/ui/parentalcontrol/overview. Goedkeuren gebeurt altijd in de beveiligde GUI."
+
+msgid "Services: Parental Control"
+msgstr "Services: Ouderlijk toezicht"
+
+msgid "Parental Control"
+msgstr "Ouderlijk toezicht"
+
+msgid "Overview"
+msgstr "Overzicht"
+
+msgid "Administration"
+msgstr "Beheer"
+
+msgid "Log File"
+msgstr "Logbestand"
+
+msgid "Choose an interval between 5 and 60 seconds."
+msgstr "Kies een interval tussen 5 en 60 seconden."
+
+msgid "Enter a number (KB per minute)."
+msgstr "Vul een getal in (KB per minuut)."
+
+msgid "Choose 0 to 60 minutes."
+msgstr "Kies 0 tot 60 minuten."
+
+msgid "Choose a port between 1024 and 65535."
+msgstr "Kies een poort tussen 1024 en 65535."
+
+msgid "Enter one or more IP addresses separated by commas (at most 4), or leave empty."
+msgstr "Vul een of meer IP-adressen in, gescheiden door komma's (maximaal 4), of laat leeg."
+
+msgid "Select the interfaces the clients are connected to."
+msgstr "Kies de interfaces waarop de clients zitten."
+
+msgid "Choose 1 to 1440 minutes."
+msgstr "Kies 1 tot 1440 minuten."
+
+msgid "Enter a server such as https://ntfy.sh (without a path), or leave empty."
+msgstr "Vul een server in zoals https://ntfy.sh (zonder pad), of laat leeg."
+
+msgid "Use only letters, digits, _ and -."
+msgstr "Gebruik alleen letters, cijfers, _ en -."
+
+msgid "Invalid token."
+msgstr "Ongeldig token."
+
+msgid "Enter a valid http(s) URL, or leave empty."
+msgstr "Vul een geldige http(s)-URL in, of laat leeg."
+
+msgid "Enter a URL such as http://192.168.1.2:3000, or leave empty."
+msgstr "Vul een URL in zoals http://192.168.1.2:3000, of laat leeg."
+
+msgid "Use 1-64 characters: letters, digits, space, dot, dash or underscore."
+msgstr "Gebruik 1-64 tekens: letters, cijfers, spatie, punt, streepje of underscore."
+
+msgid "This group name already exists."
+msgstr "Deze groepsnaam bestaat al."
+
+msgid "This profile name already exists."
+msgstr "Deze profielnaam bestaat al."
+
+msgid "Enter group names separated by commas."
+msgstr "Vul namen van groepen in, gescheiden door komma's."
+
+msgid "Enter domain names separated by commas (for example example.com, other.org)."
+msgstr "Vul domeinnamen in, gescheiden door komma's (bijvoorbeeld voorbeeld.nl, ander.com)."
+
+msgid "Enter a valid MAC address (aa:bb:cc:dd:ee:ff)."
+msgstr "Vul een geldig MAC-adres in (aa:bb:cc:dd:ee:ff)."
+
+msgid "This MAC address is already in a group. A device can only be in one group."
+msgstr "Dit MAC-adres zit al in een groep. Een apparaat kan maar in een groep zitten."
+
+msgid "Choose a group."
+msgstr "Kies een groep."
+
+msgid "Choose at least one group."
+msgstr "Kies minimaal een groep."
+
+msgid "Choose at least one day."
+msgstr "Kies minimaal een dag."
+
+msgid "Use the format HH:MM (24 hours)."
+msgstr "Gebruik het formaat UU:MM (24 uur)."
+
+msgid "Enter the number of minutes (0 to 1440)."
+msgstr "Vul het aantal minuten in (0 tot 1440)."
+
+msgid "None"
+msgstr "Geen"
+
+msgid "AdGuard Home"
+msgstr "AdGuard Home"
+
+msgid "Pi-hole (v6)"
+msgstr "Pi-hole (v6)"
+
+msgid "Block (recommended with profiles)"
+msgstr "Blokkeren (aanbevolen bij profielen)"
+
+msgid "Redirect to the DNS server"
+msgstr "Omleiden naar de DNS-server"
+
+msgid "Chat and messaging"
+msgstr "Chat en berichten"
+
+msgid "Video and streaming"
+msgstr "Video en streaming"
+
+msgid "Monday"
+msgstr "Maandag"
+
+msgid "Tuesday"
+msgstr "Dinsdag"
+
+msgid "Wednesday"
+msgstr "Woensdag"
+
+msgid "Thursday"
+msgstr "Donderdag"
+
+msgid "Friday"
+msgstr "Vrijdag"
+
+msgid "Saturday"
+msgstr "Zaterdag"
+
+msgid "Sunday"
+msgstr "Zondag"
+
+msgid "Reservation"
+msgstr "Reservering"
+
+msgid "Lease"
+msgstr "Lease"
+
+msgid "Active"
+msgstr "Actief"
+
+msgid "Loading..."
+msgstr "Laden..."
+
+msgid "No known devices found."
+msgstr "Geen bekende apparaten gevonden."
+
+msgid "Test failed."
+msgstr "Test mislukt."
+
+msgid "Connection successful."
+msgstr "Verbinding gelukt."
+
+msgid "Test notification"
+msgstr "Testmelding"
+
+msgid "Test notification sent."
+msgstr "Testmelding verstuurd."
+
+msgid "Sending failed."
+msgstr "Versturen mislukt."
+
+msgid "Adding failed."
+msgstr "Toevoegen mislukt."
+
+msgid "Close"
+msgstr "Sluiten"
+
+msgid "General"
+msgstr "Algemeen"
+
+msgid "Devices"
+msgstr "Apparaten"
+
+msgid "Bedtimes"
+msgstr "Bedtijden"
+
+msgid "Time budgets"
+msgstr "Tijdbudgetten"
+
+msgid "Website profiles"
+msgstr "Websiteprofielen"
+
+msgid "Save"
+msgstr "Opslaan"
+
+msgid "Send test notification"
+msgstr "Testmelding versturen"
+
+msgid "Test filter backend connection"
+msgstr "Verbinding met filter-backend testen"
+
+msgid "Tests use the saved settings: save first."
+msgstr "Testen gebruikt de opgeslagen instellingen: sla eerst op."
+
+msgid "Commands"
+msgstr "Acties"
+
+msgid "Add known devices"
+msgstr "Bekende apparaten toevoegen"
+
+msgid "Start"
+msgstr "Begin"
+
+msgid "End"
+msgstr "Einde"
+
+msgid "Device time per day"
+msgstr "Apparaattijd per dag"
+
+msgid "SafeSearch"
+msgstr "SafeSearch"
+
+msgid "Adult filter"
+msgstr "Volwassen filter"
+
+msgid "Blocked categories"
+msgstr "Geblokkeerde categorieën"
+
+msgid "Changes only take effect after you apply them."
+msgstr "Wijzigingen worden pas actief nadat je ze toepast."
+
+msgid "Apply"
+msgstr "Toepassen"
+
+msgid "DHCP reservations, DHCP leases and devices currently in the ARP/NDP table. Devices that are already in a group are not shown. You can change the name before adding. This name is stored for this plugin only and has no relation to the name in the DHCP table."
+msgstr "DHCP-reserveringen, DHCP-leases en apparaten die nu in de ARP/NDP-tabel staan. Apparaten die al in een groep zitten, worden niet getoond. Je kunt de naam aanpassen voordat je toevoegt. Deze naam wordt alleen voor deze plugin opgeslagen en heeft geen relatie met de naam in de DHCP-tabel."
+
+msgid "Add to group"
+msgstr "Toevoegen aan groep"
+
+msgid "IP address"
+msgstr "IP-adres"
+
+msgid "Source"
+msgstr "Bron"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Add"
+msgstr "Toevoegen"
+
+msgid "Edit group"
+msgstr "Groep bewerken"
+
+msgid "Edit device"
+msgstr "Apparaat bewerken"
+
+msgid "Edit bedtime"
+msgstr "Bedtijd bewerken"
+
+msgid "Edit time budget"
+msgstr "Tijdbudget bewerken"
+
+msgid "Edit website profile"
+msgstr "Websiteprofiel bewerken"
+
+msgid "Recently active"
+msgstr "Recent actief"
+
+msgid "Inactive"
+msgstr "Inactief"
+
+msgid "Bedtime (blocked)"
+msgstr "Bedtijd (geblokkeerd)"
+
+msgid "Time is up (blocked)"
+msgstr "Tijd op (geblokkeerd)"
+
+msgid "Blocked by a parent"
+msgstr "Geblokkeerd door een ouder"
+
+msgid "Disabled"
+msgstr "Uitgeschakeld"
+
+msgid "Open all day"
+msgstr "Hele dag open"
+
+msgid "unlimited"
+msgstr "onbeperkt"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Today"
+msgstr "Vandaag"
+
+msgid "Budget"
+msgstr "Budget"
+
+msgid "Remaining"
+msgstr "Resterend"
+
+msgid "Actions"
+msgstr "Acties"
+
+msgid "No groups created yet."
+msgstr "Nog geen groepen aangemaakt."
+
+msgid "Add %d minutes"
+msgstr "%d minuten toevoegen"
+
+msgid "Block for today"
+msgstr "Vandaag blokkeren"
+
+msgid "Open for today"
+msgstr "Vandaag openen"
+
+msgid "Back to normal"
+msgstr "Terug naar normaal"
+
+msgid "Reset the counters of today"
+msgstr "Tellers van vandaag resetten"
+
+msgid "Reset the time used and the extra time of today for this group?"
+msgstr "De verbruikte tijd en de extra tijd van vandaag voor deze groep resetten?"
+
+msgid "Block internet for this group for the rest of the day?"
+msgstr "Internet voor deze groep de rest van de dag blokkeren?"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nee"
+
+msgid "Waiting for a decision"
+msgstr "Wacht op beslissing"
+
+msgid "Approved"
+msgstr "Goedgekeurd"
+
+msgid "Rejected"
+msgstr "Afgewezen"
+
+msgid "Expired"
+msgstr "Verlopen"
+
+msgid "Approve"
+msgstr "Goedkeuren"
+
+msgid "Reject"
+msgstr "Afwijzen"
+
+msgid "No requests."
+msgstr "Geen verzoeken."
+
+msgid "%d min"
+msgstr "%d min"
+
+msgid "Blocked"
+msgstr "Geblokkeerd"
+
+msgid "Released"
+msgstr "Vrijgegeven"
+
+msgid "Requested %d minutes"
+msgstr "%d minuten gevraagd"
+
+msgid "Request %s (%d minutes)"
+msgstr "Verzoek %s (%d minuten)"
+
+msgid "A parent added %d minutes"
+msgstr "Een ouder voegde %d minuten toe"
+
+msgid "Day control"
+msgstr "Dagbediening"
+
+msgid "Counters reset"
+msgstr "Tellers gereset"
+
+msgid "Visited %s"
+msgstr "%s bezocht"
+
+msgid "Blocked: %s"
+msgstr "Geblokkeerd: %s"
+
+msgid "OK"
+msgstr "In orde"
+
+msgid "busy"
+msgstr "bezig"
+
+msgid "error"
+msgstr "fout"
+
+msgid "Details for %s"
+msgstr "Details voor %s"
+
+msgid "Total time in this period"
+msgstr "Totale tijd in deze periode"
+
+msgid "No data in this period."
+msgstr "Geen gegevens in deze periode."
+
+msgid "Based on the most recent queries only."
+msgstr "Alleen gebaseerd op de meest recente verzoeken."
+
+msgid "ongoing"
+msgstr "lopend"
+
+msgid "Bedtime"
+msgstr "Bedtijd"
+
+msgid "Time is up"
+msgstr "Tijd op"
+
+msgid "The daemon is not running; the status shown is not current. Enable the plugin on the Administration page and click Apply."
+msgstr "De daemon draait niet; de getoonde status is niet actueel. Schakel de plugin in op de pagina Beheer en klik op Toepassen."
+
+msgid "Time used is the time during which at least one device of the group had network traffic. Simultaneous use of several devices counts once. It is an approximation of screen time. Click a group for details."
+msgstr "Verbruikte tijd is de tijd waarin minstens één apparaat van de groep netwerkverkeer had. Gelijktijdig gebruik van meerdere apparaten telt één keer. Het is een benadering van schermtijd. Klik op een groep voor details."
+
+msgid "Requests for extra time"
+msgstr "Verzoeken om extra tijd"
+
+msgid "When"
+msgstr "Wanneer"
+
+msgid "Requested"
+msgstr "Gevraagd"
+
+msgid "Decision"
+msgstr "Beslissing"
+
+msgid "Day"
+msgstr "Dag"
+
+msgid "Week"
+msgstr "Week"
+
+msgid "Month"
+msgstr "Maand"
+
+msgid "Time used per day"
+msgstr "Verbruikte tijd per dag"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Time"
+msgstr "Tijd"
+
+msgid "Most used apps"
+msgstr "Meest gebruikte apps"
+
+msgid "App"
+msgstr "App"
+
+msgid "Queries"
+msgstr "Aanvragen"
+
+msgid "Most visited sites"
+msgstr "Best bezochte sites"
+
+msgid "Site"
+msgstr "Site"
+
+msgid "Block history"
+msgstr "Blokkeergeschiedenis"
+
+msgid "Duration"
+msgstr "Duur"
+
+msgid "Reason"
+msgstr "Reden"
+
+msgid "Most recent activity"
+msgstr "Meest recente activiteit"
+
+msgid "What"
+msgstr "Wat"
+
+msgid "no filter backend selected or no URL set (save the settings first)."
+msgstr "geen filter-backend gekozen of geen URL ingesteld (sla de instellingen eerst op)."
+
+msgid "could not read the configuration: %s"
+msgstr "configuratie lezen mislukt: %s"
+
+msgid "No filter backend is configured."
+msgstr "Er is geen filter-backend ingesteld."
+
+msgid "The query log is only available with AdGuard Home."
+msgstr "Het querylogboek is alleen beschikbaar met AdGuard Home."
+
+msgid "No device of this group has a known address right now."
+msgstr "Geen enkel apparaat van deze groep heeft nu een bekend adres."
+
+msgid "The query log could not be read: %s"
+msgstr "Het querylogboek kon niet worden gelezen: %s"
+
+msgid "This is a test notification."
+msgstr "Dit is een testmelding."
+
+msgid "%s asks for %d minutes of extra time (used %s of %s). Decide in Parental Control."
+msgstr "%s vraagt %d minuten extra tijd (verbruikt %s van %s). Beslis in Ouderlijk toezicht."
+
+msgid "Request sent."
+msgstr "Verzoek verstuurd."
+
+msgid "Request for extra time: %s"
+msgstr "Verzoek extra tijd: %s"
+
+msgid "tomorrow %s"
+msgstr "morgen %s"
+
+msgid "Invalid number of minutes."
+msgstr "Ongeldig aantal minuten."
+
+msgid "You can only ask for extra time when your time is up."
+msgstr "Je kunt alleen extra tijd vragen als je tijd op is."
+
+msgid "Asking for extra time is disabled."
+msgstr "Extra tijd vragen is uitgeschakeld."
+
+msgid "A request is already open."
+msgstr "Er staat al een verzoek open."
+
+msgid "You can ask again in %d minutes."
+msgstr "Je kunt over %d minuten opnieuw vragen."
+
+msgid "AdGuard Home %s (%d blockable services known)"
+msgstr "AdGuard Home %s (%d blokkeerbare diensten bekend)"
+
+msgid "services unknown to this AdGuard version: "
+msgstr "diensten onbekend voor deze AdGuard-versie: "
+
+msgid "invalid URL: %r"
+msgstr "ongeldige URL: %r"
+
+msgid "connection failed: %s"
+msgstr "verbinding mislukt: %s"
+
+msgid "login failed (HTTP %d): check the username and password"
+msgstr "inloggen mislukt (HTTP %d): controleer gebruikersnaam en wachtwoord"
+
+msgid "unknown filter backend: %r"
+msgstr "onbekende filter-backend: %r"
+
+msgid "waiting for the first synchronisation"
+msgstr "wachten op eerste synchronisatie"
+
+msgid "%dh %02dm"
+msgstr "%du %02dm"
+
+msgid "%dm"
+msgstr "%dm"
+
+msgid "No notification channel configured (enter an ntfy server and topic, or a webhook)."
+msgstr "Geen notificatiekanaal ingesteld (vul een ntfy-server en -topic of een webhook in)."
+
+msgid "Pi-hole %s (%d groups)"
+msgstr "Pi-hole %s (%d groepen)"
+
+msgid "Pi-hole has no per-group %s: those settings are ignored; link Pi-hole groups with blocklists in the profile"
+msgstr "Pi-hole kent per groep geen %s: die instellingen worden genegeerd; koppel in het profiel Pi-hole-groepen met blokkeerlijsten"
+
+msgid "Pi-hole group(s) do not exist: "
+msgstr "Pi-hole-groep(en) bestaan niet: "
+
+msgid "login failed: %s"
+msgstr "inloggen mislukt: %s"
+
+msgid "no valid session"
+msgstr "geen geldige sessie"
+
+msgid "client %s already exists in Pi-hole and is left unchanged"
+msgstr "client %s bestaat al in Pi-hole en wordt niet aangepast"
+
+msgid "login failed (HTTP %d): check the (app) password; two-factor authentication is not supported, use an app password"
+msgstr "inloggen mislukt (HTTP %d): controleer het (app-)wachtwoord; tweestapsverificatie wordt niet ondersteund, gebruik een app-wachtwoord"
+
+msgid "the adult filter"
+msgstr "het volwassenfilter"
+
+msgid "categories"
+msgstr "categorieën"
+
+msgid "You can continue"
+msgstr "Je kunt weer verder"
+
+msgid "Internet switched off"
+msgstr "Internet uitgeschakeld"
+
+msgid "Device time is up"
+msgstr "Apparaattijd op"
+
+msgid "Your request has been sent. Please wait for a parent to answer..."
+msgstr "Je verzoek is verstuurd. Wacht tot een ouder antwoordt..."
+
+msgid "Your last request was rejected."
+msgstr "Je laatste verzoek is afgewezen."
+
+msgid "Would you like to ask for extra time?"
+msgstr "Wil je extra tijd vragen?"
+
+msgid "Sending failed, please try again later."
+msgstr "Versturen mislukt, probeer het later opnieuw."
+
+msgid "The page is being reloaded..."
+msgstr "De pagina wordt opnieuw geladen..."
+
+msgid " until %s"
+msgstr " tot %s"
+
+msgid "It is bedtime"
+msgstr "Het is bedtijd"
+
+msgid "Internet access for <b>%s</b> is switched off%s."
+msgstr "Internet voor <b>%s</b> staat uit%s."
+
+msgid "Your last request was approved."
+msgstr "Je laatste verzoek was goedgekeurd."
+
+msgid "You can make a new request in %s."
+msgstr "Je kunt over %s opnieuw een verzoek doen."
+
+msgid "A parent switched off internet access for <b>%s</b> for today."
+msgstr "Een ouder heeft internet voor <b>%s</b> voor vandaag uitgezet."
+
+msgid "Your device time is up"
+msgstr "Je apparaattijd is op"
+
+msgid "Used today by <b>%s</b>: %s of %s."
+msgstr "Vandaag gebruikt door <b>%s</b>: %s van %s."
+
+msgid "%d minutes"
+msgstr "%d minuten"

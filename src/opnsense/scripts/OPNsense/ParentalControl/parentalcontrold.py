@@ -1,19 +1,22 @@
 #!/usr/local/bin/python3
 """
-parentalcontrold - ouderlijk toezicht voor OPNsense.
+parentalcontrold - parental control for OPNsense.
 
-  * bedtijden: per groep een pf-table in het anchor 'parentalcontrol'; een vaste
-    regel blokkeert verkeer van adressen in die table
-  * tijdtelling: per tick wordt per groep EEN keer de verstreken tijd opgeteld als
-    minstens een apparaat van de groep actief was (gelijktijdig gebruik telt dus
-    niet dubbel). Activiteit = bytes-delta over de pf-states van de apparaten.
-  * dagbudgetten: is het budget (plus extra tijd) van een groep op, dan wordt de groep
-    op dezelfde manier geblokkeerd als bij een bedtijd
-  * extra tijd: de GUI zet een commando in een wachtrij (QUEUE_DIR); de daemon verwerkt
-    die direct en telt de minuten bij de extra tijd van vandaag
-  * blokkeerpagina: geblokkeerde apparaten krijgen DNS en HTTP (poort 80) omgeleid naar een
-    lokale webserver (pc_web) met uitleg en, als de tijd op is, de mogelijkheid om extra tijd
-    te vragen (maximaal een verzoek per cooldown-periode). De ouder beslist in de GUI.
+  * bedtimes: per group a pf table in the anchor 'parentalcontrol'; a fixed
+    rule blocks traffic from addresses in that table
+  * time counting: on every tick the elapsed time is added ONCE per group if
+    at least one device of the group was active (simultaneous use therefore
+    does not count twice). Activity = bytes delta over the pf states of the devices.
+  * daily budgets: when the budget (plus extra time) of a group is used up, the group
+    is blocked in the same way as during a bedtime
+  * extra time: the GUI puts a command in a queue (QUEUE_DIR); the daemon processes
+    it immediately and adds the minutes to the extra time of today
+  * day controls: a parent can block a group for the rest of the day, open it for the whole day
+    or reset the counters of today (queue command 'group_cmd')
+  * event log: blocks, releases, requests and manual actions are appended to EVENTS_FILE
+  * block page: blocked devices get DNS and HTTP (port 80) redirected to a
+    local web server (pc_web) with an explanation and, when the time is up, the option to ask
+    for extra time (at most one request per cooldown period). The parent decides in the GUI.
 """
 import json
 import os
@@ -33,6 +36,7 @@ import pc_adguard  # noqa: E402
 import pc_backends  # noqa: E402
 import pc_web  # noqa: E402
 from pc_common import fmt_dur, norm_ip, norm_mac, neighbours, run  # noqa: E402
+from pc_i18n import _  # noqa: E402
 from pc_notify import notify  # noqa: E402
 
 CONFIG_XML = '/conf/config.xml'
@@ -40,16 +44,20 @@ USAGE_FILE = '/var/db/parentalcontrol/usage.json'
 STATUS_FILE = '/var/run/parentalcontrol/status.json'
 QUEUE_DIR = '/var/db/parentalcontrol/queue'
 REQUESTS_FILE = '/var/db/parentalcontrol/requests.json'
-REQUEST_OPTIONS = (15, 30, 60)   # minuten die een kind kan vragen
-REQUEST_EXPIRY = 3600            # onbeantwoorde verzoeken verlopen na een uur
-# Bekende openbare DNS-resolvers (voor het blokkeren van DoH/DoT); niet uitputtend.
+EVENTS_FILE = '/var/db/parentalcontrol/events.jsonl'
+EVENTS_KEEP_SECONDS = 35 * 86400
+EVENTS_MAX_LINES = 5000
+GROUP_COMMANDS = ('block_day', 'open_day', 'normal_day', 'reset_counters')
+REQUEST_OPTIONS = (15, 30, 60)   # minutes a child can ask for
+REQUEST_EXPIRY = 3600            # unanswered requests expire after an hour
+# Well-known public DNS resolvers (for blocking DoH/DoT); not exhaustive.
 DOH_IPS = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '9.9.9.9', '149.112.112.112',
            '208.67.222.222', '208.67.220.220', '94.140.14.14', '94.140.15.15',
            '2001:4860:4860::8888', '2001:4860:4860::8844', '2606:4700:4700::1111',
            '2606:4700:4700::1001', '2620:fe::fe', '2620:fe::9', '2620:119:35::35',
            '2620:119:53::53', '2a10:50c0::ad1:ff', '2a10:50c0::ad2:ff']
-PLAN_TTL = 300                   # seconden dat de DNS-plan (interfaces/subnetten) gecached blijft
-WEEKDAYS_NL = ['maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag', 'zondag']
+PLAN_TTL = 300                   # seconds the DNS plan (interfaces/subnets) stays cached
+WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']   # msgids, translated when displayed
 ANCHOR = 'parentalcontrol'
 PFCTL = '/sbin/pfctl'
 DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']  # datetime.weekday() volgorde
@@ -69,7 +77,7 @@ def atomic_write(path, data):
     os.replace(tmp, path)
 
 
-# ---------------------------------------------------------------- bedtijden
+# ---------------------------------------------------------------- bedtimes
 
 def parse_hhmm(value):
     try:
@@ -81,9 +89,9 @@ def parse_hhmm(value):
 
 def window_active(win, now):
     """
-    win: {'days': set, 'start': minuten, 'end': minuten}
-    Een bedtijd hoort bij de dag waarop hij begint. Is end < start, dan loopt hij
-    door tot de volgende ochtend. start == end wordt genegeerd.
+    win: {'days': set, 'start': minutes, 'end': minutes}
+    A bedtime belongs to the day on which it starts. If end < start, it continues
+    until the next morning. start == end is ignored.
     """
     s, e = win['start'], win['end']
     if s is None or e is None or s == e:
@@ -97,22 +105,22 @@ def window_active(win, now):
 
 
 def bedtime_until(bedtimes, uuid, now):
-    """Tekst als 'ma 07:00' voor het eerstvolgende einde van de bedtijd (max 48 uur vooruit)."""
+    """Text such as 'Mon 07:00' for the next end of the bedtime (at most 48 hours ahead)."""
     wins = [w for w in bedtimes if w['enabled'] and uuid in w['groups']]
     t = now.replace(second=0, microsecond=0)
-    for _ in range(48 * 60):
+    for _step in range(48 * 60):
         t += timedelta(minutes=1)
         if not any(window_active(w, t) for w in wins):
             if t.date() == now.date():
                 return t.strftime('%H:%M')
             if t.date() == now.date() + timedelta(days=1):
-                return 'morgen %s' % t.strftime('%H:%M')
-            return '%s %s' % (WEEKDAYS_NL[t.weekday()], t.strftime('%H:%M'))
+                return _('tomorrow %s') % t.strftime('%H:%M')
+            return '%s %s' % (_(WEEKDAYS[t.weekday()]), t.strftime('%H:%M'))
     return None
 
 
 def daily_limit(budgets, uuid, now):
-    """Laagste passende dagbudget in seconden voor deze groep, of None (onbeperkt)."""
+    """Lowest matching daily budget in seconds for this group, or None (unlimited)."""
     day = DAYS[now.weekday()]
     limits = [b['minutes'] * 60 for b in budgets
               if b['enabled'] and uuid in b['groups'] and day in b['days'] and b['minutes'] is not None]
@@ -133,7 +141,7 @@ def table_show(name):
 
 
 def parse_ifconfig(text):
-    """-> {interface: [ip_network, ...]} (zonder link-local adressen)."""
+    """-> {interface: [ip_network, ...]} (without link-local addresses)."""
     nets, cur = {}, None
     for line in text.splitlines():
         m = re.match(r'^(\S+): flags=', line)
@@ -163,7 +171,7 @@ def parse_ifconfig(text):
 
 
 def registered_anchors():
-    """Welke soorten anchors 'parentalcontrol' staan in de actieve hoofdregels: {'rdr','nat','fw'}."""
+    """Which kinds of 'parentalcontrol' anchors are in the active main rules: {'rdr','nat','fw'}."""
     found = set()
     translation = run([PFCTL, '-sn']).stdout
     if 'rdr-anchor "%s"' % ANCHOR in translation:
@@ -176,7 +184,7 @@ def registered_anchors():
 
 
 def build_dns_lines(plan):
-    """pf-regels voor DNS-afdwinging -> (tabellen, nat, rdr, filter)."""
+    """pf rules for DNS enforcement -> (tables, nat, rdr, filter)."""
     servers = plan['servers']
     s4 = [x for x in servers if ':' not in x]
     s6 = [x for x in servers if ':' in x]
@@ -191,8 +199,8 @@ def build_dns_lines(plan):
                    (ifname, 'inet6' if family == 6 else 'inet', net, ifname))
     rdr.append('no rdr on %s proto { tcp udp } from any to <pc_dns_servers> port 53' % ifs)
     if group_block:
-        # apparaten met een profiel: eigen DNS-server wordt geblokkeerd in plaats van omgeleid,
-        # zodat AdGuard het apparaat blijft herkennen en het profiel niet te omzeilen is
+        # devices with a profile: their own DNS server is blocked instead of redirected,
+        # so the DNS filter keeps recognising the device and the profile cannot be bypassed
         rdr.append('no rdr on %s proto { tcp udp } from <pc_pdev> to any port 53' % ifs)
         filt.append('block return in quick on %s proto { tcp udp } from <pc_pdev> to ! <pc_dns_servers> port 53'
                     % ifs)
@@ -217,11 +225,11 @@ def build_dns_lines(plan):
 
 def build_ruleset(groups, page_port=None, dns_servers=(), plan=None):
     """
-    Met page_port: HTTP (poort 80) van geblokkeerde apparaten wordt omgeleid naar de
-    blokkeerpagina en de rest geweigerd ('return': snelle foutmelding). DNS van geblokkeerde
-    apparaten: met dns_servers alleen naar die servers (bijv. AdGuard), anders omgeleid naar
-    Unbound op deze firewall. Zonder page_port wordt alles stil genegeerd ('drop').
-    plan: DNS-afdwinging voor alle clients op de gekozen interfaces (zie Daemon.dns_plan).
+    With page_port: HTTP (port 80) from blocked devices is redirected to the
+    block page and the rest is rejected ('return': fast error). DNS of blocked
+    devices: with dns_servers only to those servers (e.g. AdGuard), otherwise redirected to
+    Unbound on this firewall. Without page_port everything is silently dropped ('drop').
+    plan: DNS enforcement for all clients on the selected interfaces (see Daemon.dns_plan).
     """
     tables = ['table <%s> persist' % g['table'] for g in groups]
     nat, rdr, filt, passes = [], [], [], []
@@ -251,11 +259,11 @@ def build_ruleset(groups, page_port=None, dns_servers=(), plan=None):
 # ---------------------------------------------------------------- verkeer meten
 
 def extract_ips(line):
-    """Haal alle IP-adressen uit de kopregel van een pf-state."""
+    """Extract all IP addresses from the header line of a pf state."""
     ips = set()
     for tok in re.split(r'[\s()]+', line):
-        tok = re.sub(r'\[\d+\]$', '', tok)          # IPv6: adres[poort]
-        if tok.count(':') == 1 and '.' in tok:       # IPv4: adres:poort
+        tok = re.sub(r'\[\d+\]$', '', tok)          # IPv6: address[port]
+        if tok.count(':') == 1 and '.' in tok:       # IPv4: address:port
             tok = tok.split(':')[0]
         ip = norm_ip(tok) if tok and (tok.count(':') >= 2 or tok.replace('.', '').isdigit()) else None
         if ip:
@@ -264,7 +272,7 @@ def extract_ips(line):
 
 
 def parse_states(output):
-    """Parse 'pfctl -ss -vv' naar [{'ips', 'bytes', 'age', 'key'}]."""
+    """Parse 'pfctl -ss -vv' into [{'ips', 'bytes', 'age', 'key'}]."""
     states, cur = [], None
     for line in output.splitlines():
         if not line.strip():
@@ -291,7 +299,7 @@ def parse_states(output):
 
 
 class TrafficMeter:
-    """Berekent per groep het aantal bytes sinds de vorige meting."""
+    """Computes the number of bytes per group since the previous measurement."""
 
     def __init__(self):
         self.seen = {}
@@ -309,7 +317,7 @@ class TrafficMeter:
             prev = self.seen.get(st['key'])
             if prev is None:
                 # nieuwe state: telt volledig mee, tenzij hij al lang bestond
-                # (bijv. bij het starten van de daemon): dan alleen basislijn
+                # (e.g. when the daemon starts): then only a baseline
                 delta = total if st['age'] <= 2 * interval + 5 else 0
             else:
                 delta = max(0, total - prev)
@@ -321,9 +329,9 @@ class TrafficMeter:
 
 class GroupTimer:
     """
-    Telt actieve tijd van een groep. Inactieve tijd direct na activiteit
-    ('naloop') telt pas mee als er binnen de naloop opnieuw activiteit is;
-    daarna wordt hij weggegooid. Zo telt een sessie niet te lang door.
+    Counts active time of a group. Inactive time right after activity
+    (the 'grace period') only counts if activity resumes within the grace period;
+    afterwards it is discarded. This way a session does not count for too long.
     """
 
     def __init__(self):
@@ -350,18 +358,20 @@ class GroupTimer:
 
 
 class UsageStore:
-    """Verbruik en extra tijd per dag per groep (seconden)."""
+    """Usage and extra time per day per group (seconds)."""
 
     def __init__(self, path):
         self.path = path
         self.days = {}
         self.extra = {}
+        self.overrides = {}     # day -> {uuid: 'block' | 'open'}
         self.dirty = False
         try:
             with open(path) as handle:
                 data = json.load(handle)
             self.days = data.get('days', {})
             self.extra = data.get('extra', {})
+            self.overrides = data.get('overrides', {})
         except (OSError, ValueError):
             pass
 
@@ -381,19 +391,38 @@ class UsageStore:
     def get_extra(self, day, uuid):
         return self.extra.get(day, {}).get(uuid, 0.0)
 
+    def get_override(self, day, uuid):
+        return self.overrides.get(day, {}).get(uuid)
+
+    def set_override(self, day, uuid, mode):
+        """mode: 'block', 'open' or None (back to normal). Overrides end at midnight."""
+        entry = self.overrides.setdefault(day, {})
+        if mode:
+            entry[uuid] = mode
+        else:
+            entry.pop(uuid, None)
+        self.dirty = True
+
+    def reset(self, day, uuid):
+        """Reset the counters of today: time used and extra time."""
+        self.days.setdefault(day, {})[uuid] = 0.0
+        self.extra.setdefault(day, {})[uuid] = 0.0
+        self.dirty = True
+
     def save(self):
         cutoff = (date.today() - timedelta(days=USAGE_KEEP_DAYS)).isoformat()
         self.days = {k: v for k, v in self.days.items() if k >= cutoff}
         self.extra = {k: v for k, v in self.extra.items() if k >= cutoff}
+        self.overrides = {k: v for k, v in self.overrides.items() if k >= cutoff}
         try:
-            atomic_write(self.path, {'days': self.days, 'extra': self.extra})
+            atomic_write(self.path, {'days': self.days, 'extra': self.extra, 'overrides': self.overrides})
             self.dirty = False
         except OSError as err:
-            log('verbruik opslaan mislukt: %s' % err, syslog.LOG_ERR)
+            log('saving usage failed: %s' % err, syslog.LOG_ERR)
 
 
 class RequestStore:
-    """Verzoeken om extra tijd (pending/approved/denied/expired)."""
+    """Requests for extra time (pending/approved/denied/expired)."""
 
     def __init__(self, path):
         self.path = path
@@ -409,7 +438,7 @@ class RequestStore:
         try:
             atomic_write(self.path, {'requests': self.items})
         except OSError as err:
-            log('verzoeken opslaan mislukt: %s' % err, syslog.LOG_ERR)
+            log('saving requests failed: %s' % err, syslog.LOG_ERR)
 
     def add(self, uuid, name, minutes):
         req = {'id': secrets.token_hex(6), 'group': uuid, 'name': name, 'minutes': minutes,
@@ -434,15 +463,56 @@ class RequestStore:
         self.save()
         return True
 
-    def expire(self, ts):
+    def expire(self, ts, on_expired=None):
         changed = False
         for req in self.items:
             if req['status'] == 'pending' and ts - req['created'] > REQUEST_EXPIRY:
                 req['status'] = 'expired'
                 req['resolved'] = ts
                 changed = True
+                if on_expired:
+                    on_expired(req)
         if changed:
             self.save()
+
+
+class EventLog:
+    """Append-only JSON-lines log of what happened to a group (for the overview page)."""
+
+    def __init__(self, path):
+        self.path = path
+        self.prune()
+
+    def add(self, kind, group, **detail):
+        record = dict(detail, ts=round(time.time(), 1), group=group, kind=kind)
+        try:
+            os.makedirs(os.path.dirname(self.path), exist_ok=True)
+            with open(self.path, 'a') as handle:
+                handle.write(json.dumps(record) + '\n')
+        except OSError as err:
+            log('writing the event log failed: %s' % err, syslog.LOG_ERR)
+
+    def prune(self):
+        try:
+            with open(self.path) as handle:
+                lines = handle.read().splitlines()
+        except OSError:
+            return
+        cutoff = time.time() - EVENTS_KEEP_SECONDS
+        keep = []
+        for line in lines[-EVENTS_MAX_LINES:]:
+            try:
+                if json.loads(line).get('ts', 0) >= cutoff:
+                    keep.append(line)
+            except ValueError:
+                continue
+        if len(keep) != len(lines):
+            try:
+                with open(self.path + '.tmp', 'w') as handle:
+                    handle.write('\n'.join(keep) + ('\n' if keep else ''))
+                os.replace(self.path + '.tmp', self.path)
+            except OSError as err:
+                log('pruning the event log failed: %s' % err, syslog.LOG_ERR)
 
 
 # ---------------------------------------------------------------- config
@@ -456,7 +526,7 @@ EMPTY_CFG = {'enabled': False, 'interval': 10, 'threshold_kb': 60, 'grace_min': 
 
 
 def backend_settings(cfg):
-    """Verbindingsinstellingen voor de gekozen filter-backend, of None als er geen is ingesteld."""
+    """Connection settings for the selected filter backend, or None if none is configured."""
     if cfg['filter_backend'] not in pc_backends.BACKENDS or not cfg['backend_url']:
         return None
     return {'backend': cfg['filter_backend'], 'url': cfg['backend_url'], 'user': cfg['backend_user'],
@@ -497,7 +567,7 @@ def parse_config(root):
     def general(field, legacy=None):
         value = node.findtext('general/' + field)
         if value is None and legacy:
-            value = node.findtext('general/' + legacy)      # instellingen van vóór model 1.0.7
+            value = node.findtext('general/' + legacy)      # settings from before model 1.0.7
         return value
 
     cfg['backend_url'] = (general('backend_url', 'adguard_url') or '').strip()
@@ -567,24 +637,25 @@ def parse_config(root):
 class Daemon:
     def __init__(self):
         self.running = True
-        self.lock = threading.RLock()   # beschermt gedeelde staat tussen tick en webserver
+        self.lock = threading.RLock()   # protects shared state between tick and web server
         self.cfg = None
         self.cfg_mtime = None
         self.loaded_rules = None
-        self.page_failed = False         # blokkeerpagina-regels konden niet geladen worden
-        self.dns_failed = False          # DNS-afdwinging kon niet geladen worden
+        self.page_failed = False         # block page rules could not be loaded
+        self.dns_failed = False          # DNS enforcement could not be loaded
         self.plan_cache = (0.0, None)    # (tijdstip, plan)
         self.last = {}        # tabelnaam -> set(ip) zoals nu in pf
-        self.blocking = {}    # group uuid -> reden (voor logging)
+        self.blocking = {}    # group uuid -> reason (for logging)
         self.traffic = TrafficMeter()
         self.timers = {}
-        self.states = {}      # group uuid -> status voor de GUI
+        self.states = {}      # group uuid -> status for the GUI
         self.limits = {}
-        self.web_ips = {}     # ip -> {'uuid', 'name', 'reason'} voor de blokkeerpagina
+        self.web_ips = {}     # ip -> {'uuid', 'name', 'reason'} for the block page
         self.web_servers = []
         self.web_port = None
         self.usage = UsageStore(USAGE_FILE)
         self.requests = RequestStore(REQUESTS_FILE)
+        self.events = EventLog(EVENTS_FILE)
         self.syncer = pc_backends.Syncer(lambda msg: log(msg))
         self.loaded_plan = None
         self.last_mono = None
@@ -603,9 +674,9 @@ class Daemon:
             self.dns_failed = False
             self.plan_cache = (0.0, None)
             self._anch_cache = (0.0, set())
-            log('configuratie geladen')
+            log('configuration loaded')
         except (OSError, ET.ParseError) as err:
-            log('config lezen mislukt: %s' % err, syslog.LOG_ERR)
+            log('reading the configuration failed: %s' % err, syslog.LOG_ERR)
             if self.cfg is None:
                 self.cfg = dict(EMPTY_CFG)
 
@@ -621,10 +692,10 @@ class Daemon:
         if want:
             self.web_servers = pc_web.start(self, want, log)
             if not self.web_servers:
-                log('blokkeerpagina-server kon niet starten', syslog.LOG_ERR)
+                log('the block page server could not be started', syslog.LOG_ERR)
 
     def dns_plan(self):
-        """Bepaal (gecached) of en hoe DNS-afdwinging moet worden toegepast, of None."""
+        """Determine (cached) whether and how DNS enforcement is applied, or None."""
         cfg = self.cfg
         if not (cfg['enabled'] and cfg['dns_enforce'] and cfg['dns_servers'] and cfg['dns_ifnames']):
             return None
@@ -634,8 +705,8 @@ class Daemon:
         plan = None
         anchors = registered_anchors()
         if 'rdr' not in anchors or 'fw' not in anchors:
-            log('DNS-afdwinging uitgeschakeld: het anchor "%s" staat niet in de firewallregels '
-                '(klik op Toepassen of controleer /tmp/rules.debug)' % ANCHOR, syslog.LOG_ERR)
+            log('DNS enforcement disabled: the anchor "%s" is not in the firewall rules '
+                '(click Apply or check /tmp/rules.debug)' % ANCHOR, syslog.LOG_ERR)
         else:
             nets = parse_ifconfig(run(['/sbin/ifconfig', '-a']).stdout)
             nat = []
@@ -648,15 +719,15 @@ class Daemon:
                             if entry not in nat:
                                 nat.append(entry)
             if nat and 'nat' not in anchors:
-                log('DNS-afdwinging uitgeschakeld: de DNS-server staat in hetzelfde subnet als clients '
-                    'maar het nat-anchor is niet geregistreerd', syslog.LOG_ERR)
+                log('DNS enforcement disabled: the DNS server is in the same subnet as the clients '
+                    'but the nat anchor is not registered', syslog.LOG_ERR)
             else:
                 plan = {'servers': list(cfg['dns_servers']), 'ifs': list(cfg['dns_ifnames']), 'nat': nat,
                         'block_encrypted': cfg['dns_block_encrypted'],
                         'group_dns_block': cfg['dns_group_mode'] == 'block'}
                 if nat:
-                    log('DNS-server staat in hetzelfde subnet als clients: omgeleide queries worden '
-                        'via de firewall genat (AdGuard ziet dan het firewall-adres)')
+                    log('DNS server is in the same subnet as the clients: redirected queries are '
+                        'NATed through the firewall (the DNS filter then sees the firewall address)')
         self.plan_cache = (time.monotonic(), plan)
         return plan
 
@@ -664,7 +735,7 @@ class Daemon:
         cfg = self.cfg
         want_page = bool(cfg['blockpage']) and not self.page_failed
         if want_page and 'rdr' not in self.plan_registered():
-            log('blokkeerpagina uitgeschakeld: rdr-anchor staat niet in de firewallregels', syslog.LOG_ERR)
+            log('block page disabled: the rdr anchor is not in the firewall rules', syslog.LOG_ERR)
             self.page_failed = True
             want_page = False
         plan = None if self.dns_failed else self.dns_plan()
@@ -675,31 +746,31 @@ class Daemon:
             return True
         res = pfctl(['-f', '-'], rules)
         if res.returncode != 0 and plan:
-            log('anchor met DNS-afdwinging laden mislukt (%s); terugval zonder DNS-afdwinging' %
+            log('loading the anchor with DNS enforcement failed (%s); falling back to no DNS enforcement' %
                 res.stderr.strip(), syslog.LOG_ERR)
             self.dns_failed = True
             plan = None
             rules = build_ruleset(groups, port, cfg['dns_servers'], None)
             res = pfctl(['-f', '-'], rules)
         if res.returncode != 0 and port:
-            log('anchor met blokkeerpagina laden mislukt (%s); terugval op alleen blokkeren' %
+            log('loading the anchor with the block page failed (%s); falling back to blocking only' %
                 res.stderr.strip(), syslog.LOG_ERR)
             self.page_failed = True
             rules = build_ruleset(groups, None, cfg['dns_servers'], plan)
             res = pfctl(['-f', '-'], rules)
         if res.returncode != 0:
-            log('anchor laden mislukt: %s' % res.stderr.strip(), syslog.LOG_ERR)
+            log('loading the anchor failed: %s' % res.stderr.strip(), syslog.LOG_ERR)
             return False
         self.loaded_rules = rules
         self.loaded_plan = plan
-        # Tables met 'persist' behouden hun inhoud bij herladen; lees die terug.
+        # Tables with 'persist' keep their contents on reload; read them back.
         self.last = {g['table']: table_show(g['table']) for g in groups}
         if plan and plan.get('group_dns_block'):
             self.last['pc_pdev'] = table_show('pc_pdev')
         return True
 
     def plan_registered(self):
-        """Geregistreerde anchors, gecached samen met het DNS-plan (max PLAN_TTL seconden)."""
+        """Registered anchors, cached together with the DNS plan (at most PLAN_TTL seconds)."""
         cached_at, anchors = getattr(self, '_anch_cache', (0.0, set()))
         if cached_at and time.monotonic() - cached_at < PLAN_TTL:
             return anchors
@@ -715,24 +786,30 @@ class Daemon:
         groups = [g for g in cfg['groups'].values() if g['enabled']] if cfg['enabled'] else []
         self.sync_web()
         if not self.ensure_anchor(groups):
-            # laat de GUI zien dat de daemon draait, ook al kan pf niet bijgewerkt worden
-            self.write_status(groups, datetime.now(), {})
+            # let the GUI show that the daemon is running even though pf could not be updated
+            self.write_status(groups, datetime.now(), {}, {})
             return
         now = datetime.now()
         day = now.date().isoformat()
         ts = time.time()
         self.process_queue(cfg, day)
-        self.requests.expire(ts)
+        self.requests.expire(ts, lambda req: self.events.add(
+            'request_resolved', req['group'], minutes=req['minutes'], status='expired'))
         mono = time.monotonic()
         dt = 0.0 if self.last_mono is None else min(mono - self.last_mono, 2.0 * cfg['interval'])
         self.last_mono = mono
 
-        # Reden van blokkeren per groep: 'bedtime', 'exhausted' (tijd op) of None
+        # Reason for blocking per group: 'manual', 'bedtime', 'exhausted' (time is up) or None
         limits, reasons = {}, {}
         for g in groups:
             uuid = g['uuid']
             limits[uuid] = daily_limit(cfg['budgets'], uuid, now)
-            if any(window_active(w, now) for w in cfg['bedtimes']
+            override = self.usage.get_override(day, uuid)
+            if override == 'block':
+                reasons[uuid] = 'manual'
+            elif override == 'open':
+                reasons[uuid] = None
+            elif any(window_active(w, now) for w in cfg['bedtimes']
                    if w['enabled'] and uuid in w['groups']):
                 reasons[uuid] = 'bedtime'
             elif (limits[uuid] is not None and
@@ -762,12 +839,12 @@ class Daemon:
 
         if groups:
             self.measure(groups, group_ips, reasons, dt, now)
-        self.write_status(groups, now, limits)
+        self.write_status(groups, now, limits, group_ips)
         if self.usage.dirty and mono - self.last_save >= USAGE_SAVE_INTERVAL:
             self.usage.save()
             self.last_save = mono
 
-    # ---- commando's uit de GUI
+    # ---- commands from the GUI
 
     def process_queue(self, cfg, day):
         try:
@@ -791,20 +868,41 @@ class Daemon:
                 if uuid in cfg['groups'] and isinstance(minutes, int) and 0 < minutes <= 720:
                     self.usage.add_extra(day, uuid, minutes * 60)
                     self.usage.save()
-                    log('groep "%s": %d minuten extra tijd toegevoegd' % (cfg['groups'][uuid]['name'], minutes))
+                    log('group "%s": %d minutes of extra time added' % (cfg['groups'][uuid]['name'], minutes))
+                    continue
+            elif action == 'group_cmd':
+                uuid, command = cmd.get('group'), cmd.get('cmd')
+                if uuid in cfg['groups'] and command in GROUP_COMMANDS:
+                    self.group_command(cfg['groups'][uuid], command, day)
                     continue
             elif action == 'resolve_request':
                 req = self.requests.get(str(cmd.get('id', '')))
                 if req and req['status'] == 'pending' and req['group'] in cfg['groups']:
                     approve = bool(cmd.get('approve'))
                     self.requests.resolve(req['id'], approve, time.time())
+                    self.events.add('request_resolved', req['group'], minutes=req['minutes'],
+                                    status='approved' if approve else 'rejected')
                     if approve:
                         self.usage.add_extra(day, req['group'], req['minutes'] * 60)
                         self.usage.save()
-                    log('groep "%s": verzoek om %d minuten %s' %
-                        (req['name'], req['minutes'], 'goedgekeurd' if approve else 'afgewezen'))
+                    log('group "%s": request for %d minutes %s' %
+                        (req['name'], req['minutes'], 'approved' if approve else 'rejected'))
                     continue
-            log('ongeldig commando genegeerd: %s' % name, syslog.LOG_WARNING)
+            log('invalid command ignored: %s' % name, syslog.LOG_WARNING)
+
+    def group_command(self, group, command, day):
+        """Apply a manual day control from the GUI to one group."""
+        uuid = group['uuid']
+        if command == 'reset_counters':
+            self.usage.reset(day, uuid)
+            self.timers[uuid] = GroupTimer()
+            self.events.add('reset', uuid)
+        else:
+            mode = {'block_day': 'block', 'open_day': 'open', 'normal_day': None}[command]
+            self.usage.set_override(day, uuid, mode)
+            self.events.add('override', uuid, mode=mode or 'normal')
+        self.usage.save()
+        log('group "%s": %s' % (group['name'], command))
 
     def queue_pending(self):
         try:
@@ -812,7 +910,7 @@ class Daemon:
         except OSError:
             return False
 
-    # ---- blokkeerpagina (aangeroepen vanuit de webserver-threads)
+    # ---- block page (called from the web server threads)
 
     def page_info(self, ip):
         with self.lock:
@@ -848,31 +946,32 @@ class Daemon:
     def create_request(self, ip, minutes):
         with self.lock:
             if minutes not in REQUEST_OPTIONS:
-                return {'ok': False, 'message': 'Ongeldig aantal minuten.'}
+                return {'ok': False, 'message': _('Invalid number of minutes.')}
             info = self.page_info(ip)
             if not info['blocked'] or info['reason'] != 'exhausted':
-                return {'ok': False, 'message': 'Je kunt alleen extra tijd vragen als je tijd op is.'}
+                return {'ok': False, 'message': _('You can only ask for extra time when your time is up.')}
             if not info['request_enabled']:
-                return {'ok': False, 'message': 'Extra tijd vragen is uitgeschakeld.'}
+                return {'ok': False, 'message': _('Asking for extra time is disabled.')}
             if info['req_state'] == 'pending':
-                return {'ok': False, 'message': 'Er staat al een verzoek open.'}
+                return {'ok': False, 'message': _('A request is already open.')}
             if info['cooldown_left'] > 0:
-                return {'ok': False, 'message': 'Je kunt over %d minuten opnieuw vragen.' %
+                return {'ok': False, 'message': _('You can ask again in %d minutes.') %
                         -(-info['cooldown_left'] // 60)}
             req = self.requests.add(info['uuid'], info['group_name'], minutes)
-            log('groep "%s": verzoek om %d minuten extra tijd' % (req['name'], minutes))
+            self.events.add('request', info['uuid'], minutes=minutes)
+            log('group "%s": request for %d minutes of extra time' % (req['name'], minutes))
             threading.Thread(target=self._notify_request, args=(req, info, dict(self.cfg['notify'])),
                              daemon=True).start()
-            return {'ok': True, 'message': 'Verzoek verstuurd.'}
+            return {'ok': True, 'message': _('Request sent.')}
 
     def _notify_request(self, req, info, notify_cfg):
         total = fmt_dur((info['limit'] or 0) + info['extra'])
-        message = '%s vraagt %d minuten extra tijd (verbruikt %s van %s). Beslis in Ouderlijk toezicht.' % (
+        message = _('%s asks for %d minutes of extra time (used %s of %s). Decide in Parental Control.') % (
             req['name'], req['minutes'], fmt_dur(info['used']), total)
-        errors = notify(notify_cfg, 'Verzoek extra tijd: %s' % req['name'], message,
+        errors = notify(notify_cfg, _('Request for extra time: %s') % req['name'], message,
                         click=notify_cfg.get('gui_url') or None, event='extra_time_request')
         for err in errors:
-            log('melding mislukt: %s' % err, syslog.LOG_WARNING)
+            log('notification failed: %s' % err, syslog.LOG_WARNING)
 
     # ---- meten, status, pf
 
@@ -895,7 +994,7 @@ class Daemon:
                 self.usage.add(day, uuid, secs)
             self.states[uuid] = reasons[uuid] or timer.state(active)
 
-    def write_status(self, groups, now, limits):
+    def write_status(self, groups, now, limits, group_ips):
         day = now.date().isoformat()
         cutoff = (now.date() - timedelta(days=8)).isoformat()
         status = {
@@ -909,6 +1008,8 @@ class Daemon:
                     'used_today': self.usage.get(day, g['uuid']),
                     'limit': limits.get(g['uuid']),
                     'extra': self.usage.get_extra(day, g['uuid']),
+                    'override': self.usage.get_override(day, g['uuid']),
+                    'ips': sorted(group_ips.get(g['uuid'], ())),
                 } for g in groups
             },
             'history': {k: v for k, v in self.usage.days.items() if k >= cutoff},
@@ -917,10 +1018,10 @@ class Daemon:
         try:
             atomic_write(STATUS_FILE, status)
         except OSError as err:
-            log('status schrijven mislukt: %s' % err, syslog.LOG_ERR)
+            log('writing the status failed: %s' % err, syslog.LOG_ERR)
 
     def set_table(self, table, want, kill=True):
-        """Maak de pf-table gelijk aan 'want'. Geeft False terug als pf dat weigert."""
+        """Make the pf table equal to 'want'. Returns False if pf refuses."""
         have = self.last.get(table, set())
         if want == have:
             return True
@@ -929,18 +1030,18 @@ class Daemon:
         else:
             res = pfctl(['-t', table, '-T', 'flush'])
         if res.returncode != 0:
-            log('table %s bijwerken mislukt: %s' % (table, res.stderr.strip()), syslog.LOG_ERR)
+            log('updating table %s failed: %s' % (table, res.stderr.strip()), syslog.LOG_ERR)
             return False
         if kill:
-            # Nieuwe adressen: bestaande verbindingen verbreken. Verwijderde adressen:
-            # states opruimen (o.a. de omleiding naar de blokkeerpagina).
+            # New addresses: break existing connections. Removed addresses:
+            # clean up states (including the redirect to the block page).
             for ip in sorted(want - have) + sorted(have - want):
                 run([PFCTL, '-k', ip])
         self.last[table] = want
         return True
 
     def update_pdev(self, groups, group_ips):
-        """Tabel met alle apparaten van groepen met een profiel (voor het blokkeren van eigen DNS)."""
+        """Table with all devices of groups with a profile (for blocking their own DNS)."""
         plan = self.loaded_plan
         if not (plan and plan.get('group_dns_block')):
             return
@@ -951,7 +1052,7 @@ class Daemon:
         self.set_table('pc_pdev', ips, kill=False)
 
     def configure_backend(self, groups, group_ips):
-        """Geef de gewenste profielen door aan de filter-backend (AdGuard) in de achtergrondthread."""
+        """Pass the desired profiles to the filter backend in the background thread."""
         cfg = self.cfg
         settings = backend_settings(cfg)
         if not (cfg['enabled'] and settings):
@@ -967,7 +1068,7 @@ class Daemon:
             if ips:
                 clients[name] = {'ids': set(ips), 'profile': profile}
             else:
-                keep.add(name)           # geen bekende adressen: bestaande client ongemoeid laten
+                keep.add(name)           # no known addresses: leave the existing client untouched
         self.syncer.configure(settings, {'clients': clients, 'keep': keep})
 
     def apply(self, group, want, reason):
@@ -975,16 +1076,20 @@ class Daemon:
         if not self.set_table(table, want):
             return
         if self.blocking.get(group['uuid']) != reason:
+            previous = self.blocking.get(group['uuid'])
             self.blocking[group['uuid']] = reason
             if reason:
-                log('groep "%s": geblokkeerd (%s), %d adres(sen)' %
-                    (group['name'], 'bedtijd' if reason == 'bedtime' else 'tijd op', len(want)))
+                label = {'bedtime': 'bedtime', 'manual': 'blocked by a parent'}.get(reason, 'time is up')
+                log('group "%s": blocked (%s), %d address(es)' % (group['name'], label, len(want)))
+                self.events.add('blocked', group['uuid'], reason=reason)
             else:
-                log('groep "%s": vrijgegeven' % group['name'])
+                log('group "%s": released' % group['name'])
+                if previous is not None:
+                    self.events.add('released', group['uuid'])
 
-    # ---- levenscyclus
+    # ---- lifecycle
 
-    def stop(self, *_):
+    def stop(self, *unused):
         self.running = False
 
     def loop(self):
@@ -993,7 +1098,7 @@ class Daemon:
             try:
                 with self.lock:
                     self.tick()
-            except Exception as err:  # daemon mag nooit omvallen op een tick
+            except Exception as err:  # the daemon must never fall over on a tick
                 log('fout in tick: %r' % err, syslog.LOG_ERR)
             deadline = time.monotonic() + (self.cfg['interval'] if self.cfg else 10)
             while self.running and time.monotonic() < deadline:
@@ -1003,9 +1108,9 @@ class Daemon:
         self.syncer.stop()
         pc_web.stop(self.web_servers)
         self.usage.save()
-        # Blokkades blijven bewust staan bij stoppen (geen gat bij herstart);
-        # 'service.sh cleanup' maakt het anchor leeg.
-        log('parentalcontrold gestopt')
+        # Blocks deliberately stay in place when stopping (no gap on restart);
+        # 'service.sh cleanup' flushes the anchor.
+        log('parentalcontrold stopped')
 
 
 def main():
@@ -1013,7 +1118,7 @@ def main():
     daemon = Daemon()
     signal.signal(signal.SIGTERM, daemon.stop)
     signal.signal(signal.SIGINT, daemon.stop)
-    log('parentalcontrold gestart')
+    log('parentalcontrold started')
     daemon.loop()
 
 

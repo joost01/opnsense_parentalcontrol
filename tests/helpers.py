@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 SCRIPTS = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'src', 'opnsense', 'scripts',
                                         'OPNsense', 'ParentalControl'))
+ROOT_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, SCRIPTS)
 
 

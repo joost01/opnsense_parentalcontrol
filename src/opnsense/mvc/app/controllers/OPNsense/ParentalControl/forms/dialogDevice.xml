@@ -1,24 +1,24 @@
 <form>
     <field>
         <id>device.enabled</id>
-        <label>Ingeschakeld</label>
+        <label>Enabled</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>device.name</id>
-        <label>Naam</label>
+        <label>Name</label>
         <type>text</type>
-        <help>Bijvoorbeeld "iPad van Sam".</help>
+        <help>For example "Sam's iPad". This name is only stored in this plugin and has no relation to names in DHCP or DNS.</help>
     </field>
     <field>
         <id>device.mac</id>
-        <label>MAC-adres</label>
+        <label>MAC address</label>
         <type>text</type>
-        <help>Schakel privacy-/random-MAC uit voor dit netwerk op het apparaat, anders verandert het adres.</help>
+        <help>Disable private/random MAC addresses for this network on the device, otherwise the address changes.</help>
     </field>
     <field>
         <id>device.group</id>
-        <label>Groep</label>
+        <label>Group</label>
         <type>dropdown</type>
     </field>
 </form>

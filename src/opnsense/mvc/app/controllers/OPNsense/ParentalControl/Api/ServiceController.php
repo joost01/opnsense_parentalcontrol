@@ -16,7 +16,7 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
-     * Verbruikte tijd per groep (vandaag en de afgelopen dagen) en live status.
+     * Time used per group (today and the past days) and live status.
      */
     public function usageAction()
     {
@@ -44,6 +44,7 @@ class ServiceController extends ApiControllerBase
                 'state' => $info['state'] ?? 'unknown',
                 'limit' => isset($info['limit']) ? (int)round($info['limit']) : null,
                 'extra' => (int)round($info['extra'] ?? 0),
+                'override' => $info['override'] ?? null,
                 'history' => $history,
             ];
         }
@@ -59,7 +60,7 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
-     * Extra tijd toevoegen aan de dagelijkse tijd van een groep (vandaag).
+     * Add extra time to the daily time of a group (today).
      * POST: group=<uuid>, minutes=1..720
      */
     public function addTimeAction()
@@ -76,14 +77,14 @@ class ServiceController extends ApiControllerBase
             }
         }
         if (!$known || $minutes < 1 || $minutes > 720) {
-            return ['status' => 'failed', 'message' => 'Ongeldige invoer.'];
+            return ['status' => 'failed', 'message' => gettext('Invalid input.')];
         }
         $response = trim((new Backend())->configdpRun('parentalcontrol addtime', [$uuid, (string)$minutes]));
         return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
     }
 
     /**
-     * Verzoeken om extra tijd (openstaande eerst).
+     * Requests for extra time (open requests first).
      */
     public function requestsAction()
     {
@@ -92,7 +93,7 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
-     * Verzoek goedkeuren of afwijzen. POST: id=<hex>, decision=approve|deny
+     * Approve or reject a request. POST: id=<hex>, decision=approve|deny
      */
     public function resolveRequestAction()
     {
@@ -102,14 +103,14 @@ class ServiceController extends ApiControllerBase
         $id = (string)$this->request->getPost('id', 'string', '');
         $decision = (string)$this->request->getPost('decision', 'string', '');
         if (!preg_match('/^[0-9a-f]{6,32}$/', $id) || !in_array($decision, ['approve', 'deny'], true)) {
-            return ['status' => 'failed', 'message' => 'Ongeldige invoer.'];
+            return ['status' => 'failed', 'message' => gettext('Invalid input.')];
         }
         $response = trim((new Backend())->configdpRun('parentalcontrol resolve', [$id, $decision]));
         return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
     }
 
     /**
-     * Testmelding versturen met de opgeslagen instellingen.
+     * Send a test notification with the saved settings.
      */
     public function testNotificationAction()
     {
@@ -121,7 +122,7 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
-     * Test de verbinding met de filter-backend (AdGuard Home) met de opgeslagen instellingen.
+     * Test the connection to the filter backend with the saved settings.
      */
     public function testBackendAction()
     {
@@ -130,6 +131,53 @@ class ServiceController extends ApiControllerBase
         }
         $response = trim((new Backend())->configdRun('parentalcontrol backendtest'));
         return ['status' => strpos($response, 'OK') === 0 ? 'ok' : 'failed', 'message' => $response];
+    }
+
+    /**
+     * Day controls for one group. POST: group=<uuid>, command=block_day|open_day|normal_day|reset_counters
+     */
+    public function groupCommandAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $uuid = (string)$this->request->getPost('group', 'string', '');
+        $command = (string)$this->request->getPost('command', 'string', '');
+        $commands = ['block_day', 'open_day', 'normal_day', 'reset_counters'];
+        if (!$this->groupExists($uuid) || !in_array($command, $commands, true)) {
+            return ['status' => 'failed', 'message' => gettext('Invalid input.')];
+        }
+        $response = trim((new Backend())->configdpRun('parentalcontrol groupcmd', [$uuid, $command]));
+        return ['status' => $response === 'OK' ? 'ok' : 'failed', 'message' => $response];
+    }
+
+    /**
+     * Statistics for one group. Parameters: group=<uuid>, period=day|week|month
+     */
+    public function statsAction()
+    {
+        $uuid = (string)$this->request->get('group', 'string', '');
+        $period = (string)$this->request->get('period', 'string', 'day');
+        if (!$this->groupExists($uuid) || !in_array($period, ['day', 'week', 'month'], true)) {
+            return ['status' => 'failed', 'message' => gettext('Invalid input.')];
+        }
+        $raw = (new Backend())->configdpRun('parentalcontrol groupstats', [$uuid, $period]);
+        $data = json_decode(trim($raw), true);
+        if (!is_array($data) || isset($data['error'])) {
+            return ['status' => 'failed', 'message' => gettext('No statistics available.')];
+        }
+        $data['status'] = 'ok';
+        return $data;
+    }
+
+    private function groupExists($uuid)
+    {
+        foreach ((new ParentalControl())->groups->group->iterateItems() as $id => $group) {
+            if ($id === $uuid) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function startAction()
@@ -149,8 +197,8 @@ class ServiceController extends ApiControllerBase
     }
 
     /**
-     * Instellingen toepassen: firewall herladen (zodat het anchor geregistreerd
-     * wordt) en de daemon herstarten of stoppen.
+     * Apply the settings: reload the firewall (so the anchor is registered)
+     * and restart or stop the daemon.
      */
     public function reconfigureAction()
     {

@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
-"""Zet een 'extra tijd'-commando in de wachtrij van parentalcontrold.
+"""Queues an "extra time" command for parentalcontrold.
 
-Gebruik: addtime.py <groep-uuid> <minuten>
+Usage: addtime.py <group-uuid> <minutes>
 """
 import json
 import os
@@ -14,15 +14,15 @@ QUEUE_DIR = '/var/db/parentalcontrol/queue'
 
 def main():
     if len(sys.argv) != 3 or not re.fullmatch(r'[0-9a-fA-F-]{36}', sys.argv[1]):
-        print('ERROR: ongeldige groep')
+        print('ERROR: invalid group')
         return 1
     try:
         minutes = int(sys.argv[2])
     except ValueError:
-        print('ERROR: ongeldig aantal minuten')
+        print('ERROR: invalid number of minutes')
         return 1
     if not 0 < minutes <= 720:
-        print('ERROR: minuten moet tussen 1 en 720 liggen')
+        print('ERROR: minutes must be between 1 and 720')
         return 1
     os.makedirs(QUEUE_DIR, mode=0o700, exist_ok=True)
     name = '%d-%d.json' % (time.time_ns(), os.getpid())

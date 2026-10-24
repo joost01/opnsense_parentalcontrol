@@ -1,4 +1,4 @@
-"""Scenario-tests: tikken, budgetten, blokkeren, extra tijd, verzoeken, blokkeerpagina, meldingen."""
+"""Scenario tests: ticks, budgets, blocking, extra time, requests, block page, notifications."""
 import json
 import os
 import socket
@@ -56,7 +56,7 @@ class BudgetFlowTests(unittest.TestCase):
     def test_concurrent_devices_count_once_then_block_and_unblock(self):
         s = Scenario()
         s.step(4)                                        # 1 basislijn + 3 ticks actief
-        self.assertAlmostEqual(s.d.usage.get(s.day, G1), 30, delta=0.01)    # twee apparaten = 1x tijd
+        self.assertAlmostEqual(s.d.usage.get(s.day, G1), 30, delta=0.01)    # two devices = counted once
         s.step(3)                                        # budget (60s) is op
         self.assertEqual(s.d.usage.get(s.day, G1), 60)
         s.step(1)
@@ -65,7 +65,7 @@ class BudgetFlowTests(unittest.TestCase):
         self.assertEqual(s.d.states[G1], 'exhausted')
         used = s.d.usage.get(s.day, G1)
         s.step(3)
-        self.assertEqual(s.d.usage.get(s.day, G1), used, 'geen tijd tellen tijdens blokkade')
+        self.assertEqual(s.d.usage.get(s.day, G1), used, 'no time counted while blocked')
 
         self.assertEqual(s.queue('addtime.py', G1, '15'), 'OK')
         self.assertTrue(s.d.queue_pending())
@@ -99,7 +99,7 @@ class BudgetFlowTests(unittest.TestCase):
             handle.write('{not json')
         s.step(2)
         self.assertEqual(s.d.usage.extra, {})
-        self.assertEqual(len([m for m in s.ctx.logs if 'ongeldig commando' in m]), 2)
+        self.assertEqual(len([m for m in s.ctx.logs if 'invalid command' in m]), 2)
         self.assertEqual(os.listdir(s.ctx.mod.QUEUE_DIR), [])
 
 
@@ -162,7 +162,7 @@ class RequestFlowTests(unittest.TestCase):
 
         answer = json.loads(self.get('/__pc/request', 'POST', b'minutes=30')[1])
         self.assertTrue(answer['ok'])
-        self.assertIn('Je verzoek is verstuurd', self.get('/x')[1])
+        self.assertIn('Your request has been sent', self.get('/x')[1])
         self.assertNotEqual(json.loads(self.get('/__pc/status')[1])['key'], key)
         self.assertFalse(json.loads(self.get('/__pc/request', 'POST', b'minutes=30')[1])['ok'])  # al open
         self.assertFalse(json.loads(self.get('/__pc/request', 'POST', b'minutes=999')[1])['ok'])
@@ -172,7 +172,7 @@ class RequestFlowTests(unittest.TestCase):
             time.sleep(0.1)
         ntfy = next(r for r in CaptureHandler.received if r[0] == '/')
         self.assertEqual((ntfy[1], ntfy[2]['topic']), ('Bearer tok', 't'))
-        self.assertIn('30 minuten', ntfy[2]['message'])
+        self.assertIn('30 minutes', ntfy[2]['message'])
         self.assertEqual(ntfy[2]['click'], 'https://fw.example/ui/parentalcontrol')
         self.assertTrue(any(r[0] == '/hook' and r[2]['event'] == 'extra_time_request'
                             for r in CaptureHandler.received))
@@ -204,7 +204,7 @@ class RequestFlowTests(unittest.TestCase):
         self.assertFalse(info['can_request'])
         self.assertEqual(info['req_state'], 'denied')
         self.assertTrue(800 < info['cooldown_left'] <= 900)
-        self.assertIn('afgewezen', self.get('/x')[1])
+        self.assertIn('rejected', self.get('/x')[1])
         s.d.requests.items[0]['created'] -= 1000                     # cooldown voorbij
         self.assertTrue(s.d.page_info('127.0.0.1')['can_request'])
 
@@ -224,3 +224,89 @@ class RequestFlowTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DayControlTests(unittest.TestCase):
+    def setUp(self):
+        self.s = Scenario()
+        self.s.step(2)
+
+    def command(self, name, group=G1):
+        self.assertEqual(self.s.queue('group_cmd.py', group, name), 'OK')
+        self.s.step(1)
+
+    def events(self):
+        with open(self.s.ctx.mod.EVENTS_FILE) as handle:
+            return [json.loads(line) for line in handle]
+
+    def test_block_day_blocks_regardless_of_budget_and_normal_releases(self):
+        s = self.s
+        self.command('block_day')
+        self.assertEqual(s.d.states[G1], 'manual')
+        self.assertEqual(s.fake.tables[T1], {'192.168.1.20', '192.168.1.21'})
+        info = s.d.page_info('192.168.1.20')
+        self.assertEqual(info['reason'], 'manual')
+        self.assertFalse(info['can_request'])
+        self.assertIn('A parent switched off', s.ctx.mod.pc_web.render_page(info))
+        self.command('normal_day')
+        self.assertNotEqual(s.d.states[G1], 'manual')
+        self.assertEqual(s.d.usage.get_override(s.day, G1), None)
+
+    def test_open_day_overrides_exhausted_budget(self):
+        s = self.s
+        s.step(8)                                       # budget of 1 minute is used up
+        self.assertEqual(s.d.states[G1], 'exhausted')
+        self.command('open_day')
+        self.assertEqual(s.fake.tables[T1], set())
+        self.assertEqual(s.d.usage.get_override(s.day, G1), 'open')
+        self.assertEqual(s.d.states[G1], 'active')      # traffic keeps being counted
+
+    def test_reset_counters_clears_usage_and_extra_time(self):
+        s = self.s
+        s.queue('addtime.py', G1, '15')
+        s.step(8)
+        self.assertGreater(s.d.usage.get(s.day, G1), 0)
+        self.assertEqual(s.d.usage.get_extra(s.day, G1), 900)
+        self.command('reset_counters')
+        self.assertLess(s.d.usage.get(s.day, G1), 15)
+        self.assertEqual(s.d.usage.get_extra(s.day, G1), 0)
+
+    def test_overrides_are_per_group_and_expire_with_the_day(self):
+        s = self.s
+        self.command('block_day')
+        self.assertIsNone(s.d.usage.get_override(s.day, G2))
+        self.assertIsNone(s.d.usage.get_override('2000-01-01', G1))
+        s.d.usage.save()
+        again = s.ctx.mod.UsageStore(s.ctx.mod.USAGE_FILE)
+        self.assertEqual(again.get_override(s.day, G1), 'block')
+
+    def test_invalid_group_commands_are_rejected(self):
+        for args in (['x', 'block_day'], [G1, 'explode'], [G1]):
+            self.assertTrue(self.s.queue('group_cmd.py', *args).startswith('ERROR'), args)
+
+    def test_events_are_recorded_and_status_exposes_override_and_ips(self):
+        s = self.s
+        self.command('block_day')
+        self.command('normal_day')
+        self.command('reset_counters')
+        kinds = [(e['kind'], e.get('mode') or e.get('reason')) for e in self.events() if e['group'] == G1]
+        self.assertIn(('override', 'block'), kinds)
+        self.assertIn(('blocked', 'manual'), kinds)
+        self.assertIn(('released', None), kinds)
+        self.assertIn(('reset', None), kinds)
+        s.d.usage.set_override(s.day, G1, 'open')
+        s.step(1)
+        with open(s.ctx.mod.STATUS_FILE) as handle:
+            group = json.load(handle)['groups'][G1]
+        self.assertEqual(group['override'], 'open')
+        self.assertEqual(group['ips'], ['192.168.1.20', '192.168.1.21'])
+
+    def test_event_log_is_pruned(self):
+        s = self.s
+        path = s.ctx.mod.EVENTS_FILE
+        with open(path, 'w') as handle:
+            handle.write(json.dumps({'ts': 1.0, 'group': G1, 'kind': 'old'}) + '\n')
+            handle.write(json.dumps({'ts': 9999999999.0, 'group': G1, 'kind': 'future'}) + '\n')
+        s.ctx.mod.EventLog(path)
+        with open(path) as handle:
+            self.assertEqual([json.loads(l)['kind'] for l in handle], ['future'])

@@ -1,8 +1,8 @@
 #!/bin/sh
-# Start/stop wrapper voor parentalcontrold
+# Start/stop wrapper for parentalcontrold
 
-PIDFILE=/var/run/parentalcontrold.pid          # pid van de daemon zelf
-SUPERVISOR=/var/run/parentalcontrold.supervisor.pid  # pid van daemon(8), herstart de daemon bij een crash
+PIDFILE=/var/run/parentalcontrold.pid          # pid of the daemon itself
+SUPERVISOR=/var/run/parentalcontrold.supervisor.pid  # pid of daemon(8), restarts the daemon after a crash
 SCRIPT=/usr/local/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
 ANCHOR=parentalcontrol
 
@@ -13,11 +13,11 @@ running() {
 case "$1" in
 start)
     running && exit 0
-    # -r/-R: herstart de daemon na 5 seconden als hij onverwacht stopt
+    # -r/-R: restart the daemon after 5 seconds if it stops unexpectedly
     /usr/sbin/daemon -r -R 5 -f -P "$SUPERVISOR" -p "$PIDFILE" /usr/local/bin/python3 "$SCRIPT"
     ;;
 stop)
-    # eerst de supervisor stoppen, anders start die de daemon direct opnieuw
+    # stop the supervisor first, otherwise it restarts the daemon immediately
     if [ -f "$SUPERVISOR" ]; then
         kill "$(cat "$SUPERVISOR")" 2>/dev/null
     fi

@@ -1,159 +1,159 @@
 <form>
     <field>
         <id>general.enabled</id>
-        <label>Ingeschakeld</label>
+        <label>Enabled</label>
         <type>checkbox</type>
-        <help>Schakel het ouderlijk toezicht in. De firewall wordt hierbij herladen.</help>
+        <help>Enable parental control. The firewall rules are reloaded when you apply the settings.</help>
     </field>
     <field>
         <id>general.tick_interval</id>
-        <label>Controle-interval (seconden)</label>
+        <label>Check interval (seconds)</label>
         <type>text</type>
-        <help>Hoe vaak de daemon bedtijden controleert en apparaten blokkeert of vrijgeeft (5-60).</help>
+        <help>How often the daemon checks bedtimes and blocks or releases devices (5-60).</help>
     </field>
     <field>
         <id>general.activity_threshold</id>
-        <label>Activiteitsdrempel (KB per minuut)</label>
+        <label>Activity threshold (KB per minute)</label>
         <type>text</type>
-        <help>Een groep telt als "in gebruik" zodra minstens een apparaat meer dan dit verkeer genereert. Verhoog de waarde als apparaten die stilliggen toch tijd verbruiken.</help>
+        <help>A group counts as "in use" as soon as at least one device generates more traffic than this. Raise the value if idle devices still consume time.</help>
     </field>
     <field>
         <id>general.idle_grace</id>
-        <label>Naloop (minuten)</label>
+        <label>Grace period (minutes)</label>
         <type>text</type>
-        <help>Korte pauzes zonder verkeer (bijv. een pagina lezen) tellen mee als er binnen deze tijd weer verkeer is. Daarna stopt de teller.</help>
+        <help>Short pauses without traffic (for example reading a page) still count if traffic resumes within this time. After that the counter stops.</help>
     </field>
     <field>
         <id>general.header_blockpage</id>
-        <label>Blokkeerpagina en verzoeken</label>
+        <label>Block page and requests</label>
         <type>header</type>
     </field>
     <field>
         <id>general.blockpage</id>
-        <label>Blokkeerpagina tonen</label>
+        <label>Show block page</label>
         <type>checkbox</type>
-        <help>Geblokkeerde apparaten krijgen uitleg te zien (HTTP-verkeer en DNS worden omgeleid naar de firewall). Zonder deze optie wordt verkeer stil genegeerd. HTTPS-sites tonen een foutmelding van de browser.</help>
+        <help>Blocked devices see an explanation (HTTP traffic and DNS are redirected to the firewall). Without this option traffic is silently dropped. HTTPS sites show a connection error in the browser.</help>
     </field>
     <field>
         <id>general.page_port</id>
-        <label>Poort blokkeerpagina</label>
+        <label>Block page port</label>
         <type>text</type>
-        <help>De pagina luistert alleen lokaal (127.0.0.1 en ::1) op deze poort. Je hoeft niets te openen.</help>
+        <help>The page only listens locally (127.0.0.1 and ::1) on this port. You do not need to open anything.</help>
     </field>
     <field>
         <id>general.header_dns</id>
-        <label>DNS-filter (AdGuard Home, Pi-hole, ...)</label>
+        <label>DNS filter (AdGuard Home, Pi-hole, ...)</label>
         <type>header</type>
     </field>
     <field>
         <id>general.dns_servers</id>
-        <label>DNS-server(s)</label>
+        <label>DNS server(s)</label>
         <type>text</type>
-        <help>IP-adres(sen) van je DNS-filter, bijvoorbeeld AdGuard Home of Pi-hole (komma-gescheiden, maximaal 4; geef ook het IPv6-adres op als het bestaat). Geblokkeerde apparaten mogen alleen deze server(s) voor DNS gebruiken. Leeg laten = DNS van geblokkeerde apparaten gaat naar Unbound op deze firewall.</help>
+        <help>IP address(es) of your DNS filter, for example AdGuard Home or Pi-hole (comma separated, at most 4; also enter the IPv6 address if it has one). Blocked devices may only use these servers for DNS. Leave empty to send DNS of blocked devices to Unbound on this firewall.</help>
     </field>
     <field>
         <id>general.dns_enforce</id>
-        <label>DNS afdwingen</label>
+        <label>Enforce DNS</label>
         <type>checkbox</type>
-        <help>Al het DNS-verkeer (poort 53, TCP en UDP) van clients op de gekozen interfaces wordt omgeleid naar de eerste DNS-server hierboven, ook als een apparaat zelf 8.8.8.8 of een andere server gebruikt. De DNS-server zelf wordt uitgezonderd.</help>
+        <help>All DNS traffic (port 53, TCP and UDP) from clients on the selected interfaces is redirected to the first DNS server above, even when a device uses 8.8.8.8 or another server itself. The DNS server itself is excluded.</help>
     </field>
     <field>
         <id>general.dns_interfaces</id>
-        <label>Interfaces met clients</label>
+        <label>Interfaces with clients</label>
         <type>select_multiple</type>
-        <help>Kies uitsluitend interfaces aan de LAN-kant, nooit WAN. Anders kan je DNS-server van buitenaf bereikbaar worden.</help>
+        <help>Select LAN-side interfaces only, never WAN. Otherwise your DNS server may become reachable from the internet.</help>
     </field>
     <field>
         <id>general.dns_block_encrypted</id>
-        <label>Versleutelde DNS blokkeren</label>
+        <label>Block encrypted DNS</label>
         <type>checkbox</type>
-        <help>Blokkeert DNS-over-TLS (poort 853) en HTTPS-verkeer naar bekende openbare DNS-resolvers van Google, Cloudflare, Quad9, OpenDNS en AdGuard (niet uitputtend). De DNS-server zelf wordt uitgezonderd.</help>
+        <help>Blocks DNS-over-TLS (port 853) and HTTPS traffic to well-known public DNS resolvers from Google, Cloudflare, Quad9, OpenDNS and AdGuard (not exhaustive). The DNS server itself is excluded.</help>
     </field>
     <field>
         <id>general.header_filter</id>
-        <label>Websitefilter en SafeSearch</label>
+        <label>Website filter and SafeSearch</label>
         <type>header</type>
     </field>
     <field>
         <id>general.filter_backend</id>
-        <label>Filter-backend</label>
+        <label>Filter backend</label>
         <type>dropdown</type>
-        <help>Hiermee worden websiteprofielen per groep toegepast. AdGuard Home ondersteunt SafeSearch, filter voor volwassen inhoud, categorieën en eigen domeinen. Pi-hole ondersteunt groepen en eigen domeinen (SafeSearch en categorieën bestaan daar niet per client). De plugin beheert alleen eigen items (met het voorvoegsel "PC: "); niets van wat je zelf instelde wordt aangepast.</help>
+        <help>Used to apply website profiles per group. AdGuard Home supports SafeSearch, the adult content filter, categories and custom domains. Pi-hole supports groups and custom domains (SafeSearch and categories do not exist per client there). The plugin only manages its own items (prefix "PC: "); nothing you configured yourself is changed.</help>
     </field>
     <field>
         <id>general.backend_url</id>
-        <label>Backend-URL</label>
+        <label>Backend URL</label>
         <type>text</type>
-        <help>Het adres van de webinterface van je DNS-filter: AdGuard Home (bijv. http://192.168.1.2:3000) of Pi-hole (bijv. https://192.168.1.3). De API gebruikt dezelfde poort.</help>
+        <help>Address of the web interface of your DNS filter: AdGuard Home (for example http://192.168.1.2:3000) or Pi-hole (for example https://192.168.1.3). The API uses the same port.</help>
     </field>
     <field>
         <id>general.backend_user</id>
-        <label>Backend-gebruiker</label>
+        <label>Backend user</label>
         <type>text</type>
-        <help>Alleen voor AdGuard Home. Pi-hole gebruikt alleen een wachtwoord.</help>
+        <help>AdGuard Home only. Pi-hole only uses a password.</help>
     </field>
     <field>
         <id>general.backend_password</id>
-        <label>Backend-wachtwoord</label>
+        <label>Backend password</label>
         <type>password</type>
-        <help>Wachtwoord van AdGuard Home, of een app-wachtwoord van Pi-hole (Instellingen, Webinterface/API). Wordt in de OPNsense-configuratie opgeslagen; gebruik bij voorkeur een eigen gebruiker of app-wachtwoord voor deze plugin.</help>
+        <help>AdGuard Home password, or a Pi-hole app password (Settings, Web interface/API). Stored in the OPNsense configuration; preferably use a dedicated user or app password for this plugin.</help>
     </field>
     <field>
         <id>general.backend_verify_tls</id>
-        <label>TLS-certificaat controleren</label>
+        <label>Verify TLS certificate</label>
         <type>checkbox</type>
-        <help>Alleen relevant bij een https-URL. Schakel uit bij een zelfondertekend certificaat.</help>
+        <help>Only relevant for an https URL. Disable for a self-signed certificate.</help>
     </field>
     <field>
         <id>general.dns_group_mode</id>
-        <label>Eigen DNS-server bij groepen met profiel</label>
+        <label>Own DNS server for groups with a profile</label>
         <type>dropdown</type>
-        <help>Apparaten in een groep met een profiel die een andere DNS-server instellen (bijv. 8.8.8.8): blokkeren zorgt dat het profiel niet te omzeilen is. Omleiden stuurt de vragen naar de DNS-server, maar AdGuard herkent het apparaat dan mogelijk niet meer en past het profiel niet toe. Werkt alleen met "DNS afdwingen".</help>
+        <help>Devices in a group with a profile that configure another DNS server (for example 8.8.8.8): blocking makes sure the profile cannot be bypassed. Redirecting sends the queries to the DNS server, but AdGuard may no longer recognise the device and will not apply the profile. Only works together with "Enforce DNS".</help>
     </field>
     <field>
         <id>general.request_enabled</id>
-        <label>Verzoeken om extra tijd toestaan</label>
+        <label>Allow requests for extra time</label>
         <type>checkbox</type>
     </field>
     <field>
         <id>general.request_cooldown</id>
-        <label>Tijd tussen verzoeken (minuten)</label>
+        <label>Time between requests (minutes)</label>
         <type>text</type>
-        <help>Een groep kan hooguit een verzoek per periode doen. Ook na afwijzen.</help>
+        <help>A group can make at most one request per period, also after a rejection.</help>
     </field>
     <field>
         <id>general.header_notify</id>
-        <label>Meldingen aan de ouder</label>
+        <label>Notifications to the parent</label>
         <type>header</type>
     </field>
     <field>
         <id>general.ntfy_server</id>
-        <label>ntfy-server</label>
+        <label>ntfy server</label>
         <type>text</type>
-        <help>Bijvoorbeeld https://ntfy.sh of je eigen server (zonder pad).</help>
+        <help>For example https://ntfy.sh or your own server (without a path).</help>
     </field>
     <field>
         <id>general.ntfy_topic</id>
-        <label>ntfy-topic</label>
+        <label>ntfy topic</label>
         <type>text</type>
-        <help>Kies een moeilijk te raden naam en abonneer je erop in de ntfy-app.</help>
+        <help>Choose a hard-to-guess name and subscribe to it in the ntfy app.</help>
     </field>
     <field>
         <id>general.ntfy_token</id>
-        <label>ntfy-toegangstoken</label>
+        <label>ntfy access token</label>
         <type>password</type>
-        <help>Optioneel, voor een beveiligd topic.</help>
+        <help>Optional, for a protected topic.</help>
     </field>
     <field>
         <id>general.webhook_url</id>
-        <label>Webhook-URL</label>
+        <label>Webhook URL</label>
         <type>text</type>
-        <help>Optioneel: JSON-POST (event, title, message, click), bijvoorbeeld voor Home Assistant.</help>
+        <help>Optional: JSON POST (event, title, message, click), for example for Home Assistant.</help>
     </field>
     <field>
         <id>general.gui_url</id>
-        <label>Link naar deze pagina</label>
+        <label>Link to the overview page</label>
         <type>text</type>
-        <help>Wordt in de melding gezet, bijvoorbeeld https://192.168.1.1/ui/parentalcontrol. Goedkeuren gebeurt altijd in de beveiligde GUI.</help>
+        <help>Added to the notification, for example https://192.168.1.1/ui/parentalcontrol/overview. Approving always happens in the protected GUI.</help>
     </field>
 </form>
