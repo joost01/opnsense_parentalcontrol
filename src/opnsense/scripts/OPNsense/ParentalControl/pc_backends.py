@@ -9,6 +9,7 @@ import time
 
 import pc_adguard
 import pc_pihole
+import pc_unbound
 from pc_common import BackendError
 from pc_i18n import _
 
@@ -16,7 +17,9 @@ MIN_SYNC_INTERVAL = 10       # seconden tussen twee synchronisaties
 FULL_SYNC_INTERVAL = 300     # full check, also without changes
 RETRY_INTERVAL = 30          # wait time after an error
 
-BACKENDS = ('adguard', 'pihole')
+BACKENDS = ('adguard', 'pihole', 'unbound')
+NO_URL_NEEDED = ('unbound',)                       # backends that run on this firewall
+EMPTY_DESIRED = {'clients': {}, 'keep': set()}     # removes everything the plugin created
 
 
 def open_backend(settings):
@@ -28,6 +31,8 @@ def open_backend(settings):
     if kind == 'pihole':
         api = pc_pihole.PiHole(settings.get('url'), settings.get('password', ''), settings.get('verify_tls', True))
         return api, pc_pihole.sync
+    if kind == 'unbound':
+        return pc_unbound.UnboundLocal(), pc_unbound.sync
     raise BackendError(_('unknown filter backend: %r') % (kind,))
 
 
@@ -36,6 +41,11 @@ def connect_and_sync(settings, desired):
     with api:
         label = api.describe()
         return label, sync_fn(api, desired)
+
+
+def cleanup(settings):
+    """Remove everything the plugin created in the backend; returns the report."""
+    return connect_and_sync(settings, EMPTY_DESIRED)[1]
 
 
 def test_connection(settings):

@@ -49,7 +49,7 @@ def extract():
             with open(path) as handle:
                 tree = ast.parse(handle.read())
             for node in ast.walk(tree):
-                if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == '_'
+                if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id in ('_', 'tr')
                         and node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)):
                     add(node.args[0].value, path)
             for name in ('WEEKDAYS',):    # msgids stored in constants and translated when displayed

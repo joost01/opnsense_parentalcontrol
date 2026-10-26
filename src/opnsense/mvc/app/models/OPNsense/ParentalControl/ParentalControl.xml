@@ -95,6 +95,7 @@
                     <none>None</none>
                     <adguard>AdGuard Home</adguard>
                     <pihole>Pi-hole (v6)</pihole>
+                    <unbound>Unbound (this firewall)</unbound>
                 </OptionValues>
             </filter_backend>
             <backend_url type="TextField">

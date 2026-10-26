@@ -1,0 +1,7 @@
+echo "restarting configd..."
+if /usr/local/etc/rc.d/configd status > /dev/null; then
+    /usr/local/etc/rc.d/configd restart
+fi
+# register the log file with syslog-ng
+/usr/local/sbin/configctl template reload OPNsense/Syslog > /dev/null 2>&1 || true
+/usr/local/sbin/configctl syslog restart > /dev/null 2>&1 || true

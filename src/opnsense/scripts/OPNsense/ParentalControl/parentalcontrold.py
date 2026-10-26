@@ -104,8 +104,9 @@ def window_active(win, now):
     return (today and minute >= s) or (yesterday and minute < e)
 
 
-def bedtime_until(bedtimes, uuid, now):
+def bedtime_until(bedtimes, uuid, now, tr=None):
     """Text such as 'Mon 07:00' for the next end of the bedtime (at most 48 hours ahead)."""
+    tr = tr or _
     wins = [w for w in bedtimes if w['enabled'] and uuid in w['groups']]
     t = now.replace(second=0, microsecond=0)
     for _step in range(48 * 60):
@@ -114,8 +115,8 @@ def bedtime_until(bedtimes, uuid, now):
             if t.date() == now.date():
                 return t.strftime('%H:%M')
             if t.date() == now.date() + timedelta(days=1):
-                return _('tomorrow %s') % t.strftime('%H:%M')
-            return '%s %s' % (_(WEEKDAYS[t.weekday()]), t.strftime('%H:%M'))
+                return tr('tomorrow %s') % t.strftime('%H:%M')
+            return '%s %s' % (tr(WEEKDAYS[t.weekday()]), t.strftime('%H:%M'))
     return None
 
 
@@ -527,7 +528,9 @@ EMPTY_CFG = {'enabled': False, 'interval': 10, 'threshold_kb': 60, 'grace_min': 
 
 def backend_settings(cfg):
     """Connection settings for the selected filter backend, or None if none is configured."""
-    if cfg['filter_backend'] not in pc_backends.BACKENDS or not cfg['backend_url']:
+    if cfg['filter_backend'] not in pc_backends.BACKENDS:
+        return None
+    if not cfg['backend_url'] and cfg['filter_backend'] not in pc_backends.NO_URL_NEEDED:
         return None
     return {'backend': cfg['filter_backend'], 'url': cfg['backend_url'], 'user': cfg['backend_user'],
             'password': cfg['backend_password'], 'verify_tls': cfg['backend_verify_tls']}
@@ -912,7 +915,9 @@ class Daemon:
 
     # ---- block page (called from the web server threads)
 
-    def page_info(self, ip):
+    def page_info(self, ip, tr=None):
+        """State of the block page for one client; tr translates the texts that are built here."""
+        tr = tr or _
         with self.lock:
             entry = self.web_ips.get(ip)
             if not entry:
@@ -930,7 +935,7 @@ class Daemon:
                 'request_enabled': cfg['request_enabled'], 'minutes_options': REQUEST_OPTIONS,
             }
             if reason == 'bedtime':
-                info['until'] = bedtime_until(cfg['bedtimes'], uuid, now)
+                info['until'] = bedtime_until(cfg['bedtimes'], uuid, now, tr)
             last = self.requests.latest(uuid)
             if last:
                 cooldown = cfg['request_cooldown'] * 60
@@ -943,26 +948,27 @@ class Daemon:
                                    info['req_state'] != 'pending' and info['cooldown_left'] <= 0)
             return info
 
-    def create_request(self, ip, minutes):
+    def create_request(self, ip, minutes, tr=None):
+        tr = tr or _
         with self.lock:
             if minutes not in REQUEST_OPTIONS:
-                return {'ok': False, 'message': _('Invalid number of minutes.')}
-            info = self.page_info(ip)
+                return {'ok': False, 'message': tr('Invalid number of minutes.')}
+            info = self.page_info(ip, tr)
             if not info['blocked'] or info['reason'] != 'exhausted':
-                return {'ok': False, 'message': _('You can only ask for extra time when your time is up.')}
+                return {'ok': False, 'message': tr('You can only ask for extra time when your time is up.')}
             if not info['request_enabled']:
-                return {'ok': False, 'message': _('Asking for extra time is disabled.')}
+                return {'ok': False, 'message': tr('Asking for extra time is disabled.')}
             if info['req_state'] == 'pending':
-                return {'ok': False, 'message': _('A request is already open.')}
+                return {'ok': False, 'message': tr('A request is already open.')}
             if info['cooldown_left'] > 0:
-                return {'ok': False, 'message': _('You can ask again in %d minutes.') %
+                return {'ok': False, 'message': tr('You can ask again in %d minutes.') %
                         -(-info['cooldown_left'] // 60)}
             req = self.requests.add(info['uuid'], info['group_name'], minutes)
             self.events.add('request', info['uuid'], minutes=minutes)
             log('group "%s": request for %d minutes of extra time' % (req['name'], minutes))
             threading.Thread(target=self._notify_request, args=(req, info, dict(self.cfg['notify'])),
                              daemon=True).start()
-            return {'ok': True, 'message': _('Request sent.')}
+            return {'ok': True, 'message': tr('Request sent.')}
 
     def _notify_request(self, req, info, notify_cfg):
         total = fmt_dur((info['limit'] or 0) + info['extra'])

@@ -1,0 +1,2 @@
+# stop the daemon, release all blocks and remove what the plugin created in the filter backend
+/usr/local/sbin/configctl parentalcontrol uninstall > /dev/null 2>&1 || true

@@ -85,11 +85,12 @@ def neighbours(skip_permanent=False):
     return result
 
 
-def fmt_dur(sec):
+def fmt_dur(sec, tr=None):
     """Seconds -> '1h 05m' or '12m' (the unit letters are translatable)."""
     sec = int(round(sec))
     h, m = sec // 3600, (sec % 3600) // 60
-    return (_('%dh %02dm') % (h, m)) if h else (_('%dm') % m)
+    tr = tr or _
+    return (tr('%dh %02dm') % (h, m)) if h else (tr('%dm') % m)
 
 
 class BackendError(Exception):

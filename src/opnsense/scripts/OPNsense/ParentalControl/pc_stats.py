@@ -11,6 +11,7 @@ PERIODS = {'day': 1, 'week': 7, 'month': 30}
 BLOCKED_REASONS = ('FilteredBlackList', 'FilteredSafeBrowsing', 'FilteredParental', 'FilteredInvalid',
                    'FilteredBlockedService')
 TWO_LEVEL_SUFFIXES = {'co.uk', 'org.uk', 'ac.uk', 'com.au', 'net.au', 'co.nz', 'co.jp', 'com.br', 'co.za', 'com.tr'}
+PIHOLE_BLOCKED_PREFIXES = ('GRAVITY', 'REGEX', 'DENYLIST', 'EXTERNAL_BLOCKED')
 MAX_ENTRIES = 5000
 QUERY_BUDGET_SECONDS = 12
 
@@ -140,3 +141,28 @@ def aggregate(entries, mapping, top=10):
     top_sites = sorted(sites.items(), key=lambda kv: -kv[1]['count'])[:top]
     return ([{'name': n, 'count': c} for n, c in top_apps],
             [{'domain': d, 'count': v['count'], 'blocked': v['blocked']} for d, v in top_sites])
+
+
+def fetch_queries_pihole(api, ips, since, until=None, budget=QUERY_BUDGET_SECONDS, max_entries=MAX_ENTRIES):
+    """Same as fetch_queries, for the Pi-hole v6 query log; returns (entries, truncated)."""
+    entries, truncated, deadline = [], False, time.monotonic() + budget
+    until = until or time.time()
+    for ip in ips:
+        cursor = None
+        while True:
+            if time.monotonic() > deadline or len(entries) >= max_entries:
+                truncated = True
+                break
+            page = api.queries(ip, since, until, cursor)
+            rows = page.get('queries') or []
+            for row in rows:
+                entries.append({'ts': float(row['time']), 'domain': str(row['domain']).rstrip('.').lower(),
+                                'blocked': str(row.get('status', '')).startswith(PIHOLE_BLOCKED_PREFIXES)})
+            new_cursor = page.get('cursor')
+            if not rows or not new_cursor or new_cursor == cursor:
+                break
+            cursor = new_cursor
+    entries.sort(key=lambda e: -e['ts'])
+    if len(entries) > max_entries:
+        entries, truncated = entries[:max_entries], True
+    return entries, truncated

@@ -192,6 +192,35 @@ class RequestFlowTests(unittest.TestCase):
         self.assertEqual((caught.exception.code, caught.exception.headers['Location']),
                          (302, 'http://example.com/abc?x=1'))
 
+    def test_page_language_follows_the_browser(self):
+        def page(path='/x', accept=None):
+            return self.get(path, headers={'Accept-Language': accept} if accept else None)[1]
+        self.assertIn('Your device time is up', page())                                   # system language (English)
+        dutch = page(accept='nl-NL,nl;q=0.9,en;q=0.8')
+        self.assertIn('Je apparaattijd is op', dutch)
+        self.assertIn('15 minuten', dutch)
+        self.assertIn('<html lang="nl">', dutch)
+        self.assertIn('Your device time is up', page(accept='en-US,en;q=0.9'))
+        self.assertIn('Je apparaattijd is op', page('/x?pc_lang=nl', accept='en'))      # the switcher wins
+        self.assertIn('Your device time is up', page('/x?pc_lang=en', accept='nl'))
+        self.assertIn('Your device time is up', page('/x?pc_lang=xx', accept='en'))      # unknown code is ignored
+        self.assertIn('<b>Nederlands</b>', dutch)
+        self.assertIn('href="?pc_lang=en"', dutch)
+        self.assertIn('var LANG="nl_NL"', dutch)
+
+    def test_request_answers_use_the_language_of_the_page(self):
+        form = {'Content-Type': 'application/x-www-form-urlencoded'}
+        first = json.loads(self.get('/__pc/request', 'POST', b'minutes=15&lang=nl', headers=form)[1])
+        self.assertTrue(first['ok'])
+        self.assertEqual(first['message'], 'Verzoek verstuurd.')
+        again = json.loads(self.get('/__pc/request', 'POST', b'minutes=15&lang=nl', headers=form)[1])
+        self.assertEqual(again['message'], 'Er staat al een verzoek open.')
+        english = json.loads(self.get('/__pc/request', 'POST', b'minutes=15&lang=en', headers=form)[1])
+        self.assertEqual(english['message'], 'A request is already open.')
+        by_header = json.loads(self.get('/__pc/request', 'POST', b'minutes=15',
+                                        headers=dict(form, **{'Accept-Language': 'nl'}))[1])
+        self.assertEqual(by_header['message'], 'Er staat al een verzoek open.')
+
     def test_cooldown_and_denial(self):
         s = self.s
         self.assertTrue(json.loads(self.get('/__pc/request', 'POST', b'minutes=15')[1])['ok'])

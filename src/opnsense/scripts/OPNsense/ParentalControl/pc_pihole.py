@@ -112,6 +112,15 @@ class PiHole:
     def domains(self):
         return self._list('/domains', 'domains')
 
+    def queries(self, client_ip, since, until, cursor=None, length=500):
+        """Query log page of one client: {'queries': [...], 'cursor': ...} (newest first)."""
+        query = 'client_ip=%s&from=%d&until=%d&length=%d' % (
+            urllib.parse.quote(client_ip, safe=''), int(since), int(until), length)
+        if cursor:
+            query += '&cursor=' + urllib.parse.quote(str(cursor), safe='')
+        data = self._request('GET', '/queries?' + query)
+        return data if isinstance(data, dict) else {}
+
     def add_group(self, name, comment):
         self._request('POST', '/groups', {'name': name, 'comment': comment, 'enabled': True})
 

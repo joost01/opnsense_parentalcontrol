@@ -27,7 +27,10 @@
             dayControl: "{{ lang._('Day control') }}", countersReset: "{{ lang._('Counters reset') }}", visited: "{{ lang._('Visited %s') }}", blockedQuery: "{{ lang._('Blocked: %s') }}",
             backend: "{{ lang._('Filter backend') }}", okLabel: "{{ lang._('OK') }}", pendingLabel: "{{ lang._('busy') }}", errorLabel: "{{ lang._('error') }}",
             details: "{{ lang._('Details for %s') }}", total: "{{ lang._('Total time in this period') }}", noData: "{{ lang._('No data in this period.') }}",
-            truncated: "{{ lang._('Based on the most recent queries only.') }}", ongoing: "{{ lang._('ongoing') }}"
+            truncated: "{{ lang._('Based on the most recent queries only.') }}", ongoing: "{{ lang._('ongoing') }}",
+            emergency: "{{ lang._('Emergency stop') }}", close: "{{ lang._('Close') }}",
+            confirmEmergency: "{{ lang._('This disables parental control, releases all blocked devices and stops the daemon. Your settings are kept. Continue?') }}",
+            stopped: "{{ lang._('Parental control was stopped. Enable it again on the Administration page.') }}"
         };
         const reasonLabels = {bedtime: "{{ lang._('Bedtime') }}", exhausted: "{{ lang._('Time is up') }}", manual: "{{ lang._('Blocked by a parent') }}"};
         const overrideLabels = {block: T.blockDay, open: T.openDayCmd, normal: T.normalDay};
@@ -223,6 +226,15 @@
             });
         }
 
+        $("#emergencyAct").click(function () {
+            stdDialogConfirm(T.emergency, T.confirmEmergency, T.yes, T.no, function () {
+                ajaxCall(svc + "emergency", {}, function () {
+                    stdDialogInform(T.emergency, T.stopped, T.close);
+                    setTimeout(refresh, 1500);
+                });
+            });
+        });
+
         function refresh() {
             loadUsage();
             loadRequests();
@@ -235,6 +247,8 @@
 
 <div class="content-box">
     <div class="col-md-12" style="padding-top: 1em;">
+        <button id="emergencyAct" type="button" class="btn btn-danger btn-sm pull-right" style="margin-bottom: 0.5em;">
+            <span class="fa fa-stop-circle fa-fw"></span> {{ lang._('Emergency stop') }}</button>
         <div id="usage_warning" class="alert alert-warning hidden">
             {{ lang._('The daemon is not running; the status shown is not current. Enable the plugin on the Administration page and click Apply.') }}
         </div>

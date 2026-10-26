@@ -7,7 +7,9 @@
             pick: "{{ lang._('Choose a group and at least one device.') }}", backend: "{{ lang._('Filter backend') }}",
             testFailed: "{{ lang._('Test failed.') }}", connectionOk: "{{ lang._('Connection successful.') }}",
             testNotification: "{{ lang._('Test notification') }}", notificationSent: "{{ lang._('Test notification sent.') }}",
-            sendFailed: "{{ lang._('Sending failed.') }}", addFailed: "{{ lang._('Adding failed.') }}", close: "{{ lang._('Close') }}"
+            sendFailed: "{{ lang._('Sending failed.') }}", addFailed: "{{ lang._('Adding failed.') }}", close: "{{ lang._('Close') }}",
+            cleanup: "{{ lang._('Remove items from filter backend') }}", yes: "{{ lang._('Yes') }}", no: "{{ lang._('No') }}", removed: "{{ lang._('Items removed.') }}",
+            confirmCleanup: "{{ lang._('Remove all items this plugin created in the filter backend (clients, groups and rules)? Items you created yourself are not touched.') }}"
         };
 
         mapDataToFormUI({"frm_general_settings": base + "get"}).done(function () {
@@ -47,6 +49,14 @@
         $(document).on("click", "#testBackendAct", function () {
             ajaxCall("/api/parentalcontrol/service/test_backend", {}, function (data) {
                 stdDialogInform(T.backend, data.message || (data.status === "ok" ? T.connectionOk : T.testFailed), T.close);
+            });
+        });
+
+        $(document).on("click", "#cleanupBackendAct", function () {
+            stdDialogConfirm(T.cleanup, T.confirmCleanup, T.yes, T.no, function () {
+                ajaxCall("/api/parentalcontrol/service/cleanup_backend", {}, function (data) {
+                    stdDialogInform(T.cleanup, data.status === "ok" ? T.removed : (data.message || T.testFailed), T.close);
+                });
             });
         });
 
@@ -136,6 +146,7 @@
             </button>
             <button class="btn btn-default" id="testNotifyAct" type="button">{{ lang._('Send test notification') }}</button>
             <button class="btn btn-default" id="testBackendAct" type="button">{{ lang._('Test filter backend connection') }}</button>
+            <button class="btn btn-default" id="cleanupBackendAct" type="button">{{ lang._('Remove items from filter backend') }}</button>
             <span class="text-muted">{{ lang._('Tests use the saved settings: save first.') }}</span>
         </div>
     </div>

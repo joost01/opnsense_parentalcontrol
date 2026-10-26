@@ -86,6 +86,39 @@ class TranslationTests(unittest.TestCase):
         self.assertEqual(pc_common.fmt_dur(3900), '1u 05m')
 
 
+class NegotiationTests(unittest.TestCase):
+    def test_accept_language_negotiation(self):
+        n = i18n.negotiate
+        self.assertEqual(n('nl-NL,nl;q=0.9,en;q=0.8', 'en_US'), 'nl_NL')
+        self.assertEqual(n('en-GB,en;q=0.9', 'nl_NL'), 'en_US')           # English is always available
+        self.assertEqual(n('de;q=0.9,nl;q=0.8', 'en_US'), 'nl_NL')        # first match by preference
+        self.assertEqual(n('nl;q=0.4,en;q=0.9', 'nl_NL'), 'en_US')        # q values decide, not the order
+        self.assertEqual(n('nl;q=0,en;q=0.5', 'nl_NL'), 'en_US')          # q=0 means "not acceptable"
+        self.assertEqual(n('de,fr;q=0.5', 'nl_NL'), 'nl_NL')              # no match: the system language
+        self.assertEqual(n('*', 'nl_NL'), 'nl_NL')
+        self.assertEqual(n('', 'nl_NL'), 'nl_NL')
+        self.assertEqual(n('nl;q=abc', 'en_US'), 'nl_NL')                 # no number: default quality 1
+        self.assertEqual(n('nl;q=1.2.3,en;q=0.5', 'nl_NL'), 'en_US')      # an unparsable number is not acceptable
+
+    def test_match_locale_and_language_choices(self):
+        self.assertEqual(i18n.match_locale('NL'), 'nl_NL')
+        self.assertEqual(i18n.match_locale('nl-BE'), 'nl_NL')
+        self.assertEqual(i18n.match_locale('en'), 'en_US')
+        self.assertIsNone(i18n.match_locale('xx'))
+        names = dict(i18n.language_choices())
+        self.assertEqual((names['en_US'], names['nl_NL']), ('English', 'Nederlands'))
+
+    def test_dynamic_texts_follow_the_request_language(self):
+        d = load('pcd_i18n_test', 'parentalcontrold.py')
+        from datetime import datetime
+        wins = [{'enabled': True, 'groups': {'g'}, 'days': {'mon'}, 'start': 1260, 'end': 420}]
+        self.assertEqual(d.bedtime_until(wins, 'g', datetime(2026, 10, 12, 22, 0), i18n.translator('nl_NL')), 'morgen 07:00')
+        self.assertEqual(d.bedtime_until(wins, 'g', datetime(2026, 10, 12, 22, 0), i18n.translator('en_US')), 'tomorrow 07:00')
+        pc_common = load('pc_common_lang_test', 'pc_common.py')
+        self.assertEqual(pc_common.fmt_dur(3900, i18n.translator('nl_NL')), '1u 05m')
+        self.assertEqual(pc_common.fmt_dur(3900, i18n.translator('en_US')), '1h 05m')
+
+
 class CatalogCompletenessTests(unittest.TestCase):
     """Every translatable string in the code must be in the template and in each translation."""
 

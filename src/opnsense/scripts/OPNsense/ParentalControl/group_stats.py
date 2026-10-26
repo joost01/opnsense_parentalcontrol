@@ -10,6 +10,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import pc_catalog  # noqa: E402
 import pc_stats  # noqa: E402
 from parentalcontrold import CONFIG_XML, EVENTS_FILE, STATUS_FILE, USAGE_FILE, backend_settings, parse_config  # noqa: E402
 from pc_backends import open_backend  # noqa: E402
@@ -37,8 +38,8 @@ def query_part(uuid, since):
     if not settings:
         result['queries_note'] = _('No filter backend is configured.')
         return result
-    if settings['backend'] != 'adguard':
-        result['queries_note'] = _('The query log is only available with AdGuard Home.')
+    if settings['backend'] not in ('adguard', 'pihole'):
+        result['queries_note'] = _('The query log is only available with AdGuard Home or Pi-hole.')
         return result
     ips = load(STATUS_FILE, {}).get('groups', {}).get(uuid, {}).get('ips', [])
     if not ips:
@@ -47,8 +48,12 @@ def query_part(uuid, since):
     try:
         api, _sync = open_backend(settings)
         with api:
-            entries, truncated = pc_stats.fetch_queries(api, ips, since)
-            mapping = pc_stats.service_domains(api.blocked_services_all())
+            if settings['backend'] == 'adguard':
+                entries, truncated = pc_stats.fetch_queries(api, ips, since)
+                mapping = pc_stats.service_domains(api.blocked_services_all()) or pc_catalog.domain_to_app()
+            else:
+                entries, truncated = pc_stats.fetch_queries_pihole(api, ips, since)
+                mapping = pc_catalog.domain_to_app()
         result['apps'], result['sites'] = pc_stats.aggregate(entries, mapping)
         result.update(queries_available=True, truncated=truncated, queries=entries[:50])
     except (BackendError, KeyError, ValueError) as err:

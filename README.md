@@ -17,15 +17,15 @@ time, DNS enforcement and website profiles with SafeSearch.
 | Block page ("time is up" / bedtime / blocked by a parent) with requests for extra time (one per period), approval in the GUI, notification through ntfy or webhook | done |
 | DNS enforcement: all port 53 traffic (also hard-coded 8.8.8.8 and the like) is sent to your DNS filter; DoT and well-known DoH resolvers are blocked | done |
 | Website profiles per age: SafeSearch, adult filter, categories, own domains | done (AdGuard Home) |
-| Filter backends: AdGuard Home (full), Pi-hole v6 (groups and own domains, experimental) | done |
+| Filter backends: AdGuard Home (full), Unbound on this firewall (SafeSearch, categories, own domains; no external DNS filter needed), Pi-hole v6 (groups and own domains, experimental) | done |
 | Overview with a detail panel per group: time per day, most used apps, most visited sites, block history, recent activity (day/week/month) | done (apps and sites need the AdGuard Home query log) |
-| Website profiles through Unbound (for people without an external DNS filter) | planned |
+| Emergency stop (GUI and `configctl parentalcontrol emergency`), clean-up of backend items when disabling, and before removal of the package | done |
 
 ## Pages
 
 Under **Services > Parental Control**:
 
-* **Overview**: status per group, day controls, requests, and details per group (click a group).
+* **Overview**: status per group, day controls, requests, details per group (click a group) and the **Emergency stop**.
 * **Administration**: General, Groups, Devices, Bedtimes, Time budgets and Website profiles.
 * **Log File**: the log of the daemon (standard OPNsense log viewer).
 
@@ -54,15 +54,22 @@ Under **Services > Parental Control**:
 
 ### Filter backends
 
-| | AdGuard Home | Pi-hole v6 |
-|---|---|---|
-| Own group/client per plugin group | yes | yes |
-| SafeSearch per group | yes | no (not available per client) |
-| Adult content filter | yes | through your own blocklist in a Pi-hole group |
-| Categories (social, games, ...) | yes (services) | no |
-| Extra blocked/allowed domains | yes | yes |
-| Point to existing groups in the backend | no | yes |
-| Query log statistics | yes | not yet |
+| | AdGuard Home | Unbound (this firewall) | Pi-hole v6 |
+|---|---|---|---|
+| Own group/client per plugin group | yes | yes (a view per group) | yes |
+| SafeSearch per group | yes | yes (CNAME rewrites) | no (not available per client) |
+| Adult content filter | yes | no (add a blocklist to Unbound) | through your own blocklist in a Pi-hole group |
+| Categories (social, games, ...) | yes (services) | yes (built-in domain lists) | no |
+| Extra blocked/allowed domains | yes | yes | yes |
+| Point to existing groups in the backend | no | no | yes |
+| Query log statistics | yes | no | yes (experimental) |
+| External server needed | yes | no | yes |
+
+Unbound: the plugin writes `/usr/local/etc/unbound.opnsense.d/parentalcontrol.conf` (a `view` per group, selected
+by the device addresses), validates the complete configuration with `configctl unbound check` and only then
+restarts Unbound. If validation fails the previous file is restored, so a mistake cannot break DNS. Clients must
+use this firewall as their DNS server; with DNS enforcement enter the firewall address of the LAN as DNS server.
+Unbound restarts briefly whenever the device addresses of a group change (at most once per ten seconds).
 
 The plugin only manages its own items (clients and groups named `PC: <group>`, and a marked block of user
 rules). Everything you configured yourself stays untouched. The Pi-hole integration is experimental: it is
@@ -70,12 +77,22 @@ tested against a simulated API, not yet against a real Pi-hole. To add a backend
 class (`__enter__`/`__exit__`, `describe()`, `test()`) and a `sync(api, desired)` function (see `pc_pihole.py`),
 register it in `pc_backends.py` and add it as an option to the model.
 
+## Emergency stop and clean-up
+
+* **Emergency stop** (Overview page, or `configctl parentalcontrol emergency` from a shell): disables the plugin,
+  releases every block and stops the daemon. Settings are kept; enable the plugin again on the Administration page.
+* **Remove items from filter backend** (Administration, General): removes everything the plugin created in the
+  backend (clients, groups, rules, the Unbound file). Your own items are not touched. This also happens when you
+  disable the plugin and apply, and before the package is removed (`+PRE_DEINSTALL`).
+
 ## Limitations
 
 * Devices with a random (private) MAC address must use a fixed address for your network.
 * A new IPv6 privacy address is only blocked at the next check (10 seconds by default).
 * HTTPS sites cannot be redirected without certificate errors: the browser shows a connection error. The block
   page appears for http:// addresses and through the automatic captive portal check.
+* Most used apps and the app names use the AdGuard service list, or the small built-in catalogue (`pc_catalog.py`) for
+  Pi-hole. Unbound has no query log.
 * The firewall only sees network traffic, not screen time; the threshold and grace period are approximations.
 * Gambling has no category (AdGuard has no service for it): use "extra blocked domains" or a blocklist.
 * The backend password is stored in the OPNsense configuration; use a dedicated user or app password.
@@ -117,6 +134,9 @@ not prove that pf accepts the rules on a real OPNsense: always test on a VM. Git
 * Source strings are English. In the GUI they use the standard OPNsense mechanisms (`lang._()` in Volt,
   `gettext()` in PHP, labels and help in the form XML), so OPNsense's own translation process (gettext/POEditor)
   can pick them up when the plugin is part of the official plugins repository.
+* The block page uses the language of the child's browser (`Accept-Language`), then the OPNsense system language,
+  then English. A small language switcher under the message (`?pc_lang=xx`) lets anyone change it. Every language that
+  has a `.po` file is offered automatically, so adding a translation also adds a block page language.
 * Text rendered outside the GUI (the block page, notifications, backend messages) is translated by
   `pc_i18n.py` from `src/opnsense/scripts/OPNsense/ParentalControl/lang/<locale>.po`; the locale is the OPNsense
   system language. Dutch (`nl_NL.po`) is included and complete.

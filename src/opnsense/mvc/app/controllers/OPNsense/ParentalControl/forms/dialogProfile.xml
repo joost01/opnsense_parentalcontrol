@@ -14,7 +14,7 @@
         <id>profile.safesearch</id>
         <label>Enforce SafeSearch</label>
         <type>checkbox</type>
-        <help>AdGuard Home only: search engines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) are put in safe mode.</help>
+        <help>AdGuard Home and Unbound: search engines (Google, Bing, DuckDuckGo, YouTube and others) are put in safe mode.</help>
     </field>
     <field>
         <id>profile.parental</id>
@@ -26,7 +26,7 @@
         <id>profile.categories</id>
         <label>Block categories</label>
         <type>select_multiple</type>
-        <help>AdGuard Home only: blocks well-known services in these categories.</help>
+        <help>AdGuard Home and Unbound: blocks well-known services in these categories.</help>
     </field>
     <field>
         <id>profile.backend_groups</id>

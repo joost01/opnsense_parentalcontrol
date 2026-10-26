@@ -61,6 +61,91 @@ def detect_locale():
 def set_locale(locale):
     """Force a locale (used by tests); None restores detection from the system configuration."""
     _state.update({'forced': locale, 'checked': 0.0})
+    _catalogs.clear()
+
+
+_catalogs = {}   # locale -> (time loaded, catalog)
+
+LANGUAGE_NAMES = {'en': 'English', 'nl': 'Nederlands', 'de': 'Deutsch', 'fr': 'Fran\u00e7ais', 'es': 'Espa\u00f1ol',
+                  'it': 'Italiano', 'pt': 'Portugu\u00eas', 'pl': 'Polski', 'tr': 'T\u00fcrk\u00e7e', 'da': 'Dansk',
+                  'sv': 'Svenska', 'nb': 'Norsk', 'fi': 'Suomi', 'cs': '\u010ce\u0161tina', 'ro': 'Rom\u00e2n\u0103'}
+
+
+def primary(locale):
+    """'nl_NL' / 'nl-NL' / 'NL' -> 'nl'."""
+    return (locale or '').replace('-', '_').split('_')[0].lower()
+
+
+def available_locales():
+    """English (the source language) plus every locale that has a PO file."""
+    found = []
+    try:
+        found = sorted(f[:-3] for f in os.listdir(LANG_DIR) if f.endswith('.po'))
+    except OSError:
+        pass
+    return ['en_US'] + [loc for loc in found if primary(loc) != 'en']
+
+
+def match_locale(code):
+    """The available locale for a language code such as 'nl', 'nl-NL' or 'nl_NL'; None if there is none."""
+    wanted = primary(code)
+    for locale in available_locales():
+        if primary(locale) == wanted:
+            return locale
+    return None
+
+
+def negotiate(header, default='en_US'):
+    """Pick the best available locale for an Accept-Language header; 'default' if nothing matches."""
+    choices = []
+    for position, part in enumerate((header or '').split(',')):
+        tag, _sep, params = part.strip().partition(';')
+        quality = 1.0
+        match = re.search(r'q\s*=\s*([0-9.]+)', params)
+        if match:
+            try:
+                quality = float(match.group(1))
+            except ValueError:
+                quality = 0.0
+        if tag and tag != '*' and quality > 0:
+            choices.append((-quality, position, tag))
+    for _q, _pos, tag in sorted(choices):
+        locale = match_locale(tag)
+        if locale:
+            return locale
+    return default
+
+
+def catalog_for(locale):
+    now = time.monotonic()
+    cached = _catalogs.get(locale)
+    if cached and now - cached[0] < CACHE_SECONDS:
+        return cached[1]
+    catalog = {}
+    for name in (locale, primary(locale)):
+        path = os.path.join(LANG_DIR, name + '.po')
+        if os.path.exists(path):
+            with open(path, encoding='utf-8') as handle:
+                catalog = parse_po(handle.read())
+            break
+    _catalogs[locale] = (now, catalog)
+    return catalog
+
+
+def translator(locale):
+    """A translate function for one locale (used per request by the block page)."""
+    catalog = catalog_for(locale)
+    return lambda msgid: catalog.get(msgid, msgid)
+
+
+def language_choices():
+    """[(locale, native name)] of every available language, for a language switcher."""
+    return [(loc, LANGUAGE_NAMES.get(primary(loc), primary(loc).upper())) for loc in available_locales()]
+
+
+def system_locale():
+    _load()
+    return _state['locale'] or 'en_US'
 
 
 def _load():
@@ -68,15 +153,8 @@ def _load():
     if _state['checked'] and now - _state['checked'] < CACHE_SECONDS:
         return _state['catalog']
     locale = _state['forced'] or detect_locale()
-    catalog = {}
-    for name in (locale, locale.split('_')[0]):
-        path = os.path.join(LANG_DIR, name + '.po')
-        if os.path.exists(path):
-            with open(path, encoding='utf-8') as handle:
-                catalog = parse_po(handle.read())
-            break
-    _state.update({'checked': now, 'locale': locale, 'catalog': catalog})
-    return catalog
+    _state.update({'checked': now, 'locale': locale, 'catalog': catalog_for(locale)})
+    return _state['catalog']
 
 
 def _(msgid):

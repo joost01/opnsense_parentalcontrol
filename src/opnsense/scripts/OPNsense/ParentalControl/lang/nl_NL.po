@@ -135,8 +135,8 @@ msgstr "Bijvoorbeeld \"6-9 jaar\", \"10-12 jaar\" of \"13-15 jaar\"."
 msgid "Enforce SafeSearch"
 msgstr "SafeSearch afdwingen"
 
-msgid "AdGuard Home only: search engines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) are put in safe mode."
-msgstr "Alleen AdGuard Home: zoekmachines (Google, Bing, DuckDuckGo, YouTube, Yandex, Ecosia, Pixabay) worden in de veilige modus gezet."
+msgid "AdGuard Home and Unbound: search engines (Google, Bing, DuckDuckGo, YouTube and others) are put in safe mode."
+msgstr "AdGuard Home en Unbound: zoekmachines (Google, Bing, DuckDuckGo, YouTube en andere) worden in de veilige modus gezet."
 
 msgid "Adult content filter"
 msgstr "Filter voor volwassen inhoud"
@@ -147,8 +147,8 @@ msgstr "Alleen AdGuard Home: schakelt de ouderlijk-toezichtfilter in (volwassen 
 msgid "Block categories"
 msgstr "Categorieën blokkeren"
 
-msgid "AdGuard Home only: blocks well-known services in these categories."
-msgstr "Alleen AdGuard Home: blokkeert bekende diensten in deze categorieën."
+msgid "AdGuard Home and Unbound: blocks well-known services in these categories."
+msgstr "AdGuard Home en Unbound: blokkeert bekende diensten in deze categorieën."
 
 msgid "Groups in the filter backend"
 msgstr "Groepen in de filter-backend"
@@ -237,14 +237,14 @@ msgstr "Websitefilter en SafeSearch"
 msgid "Filter backend"
 msgstr "Filter-backend"
 
-msgid "Used to apply website profiles per group. AdGuard Home supports SafeSearch, the adult content filter, categories and custom domains. Pi-hole supports groups and custom domains (SafeSearch and categories do not exist per client there). The plugin only manages its own items (prefix \"PC: \"); nothing you configured yourself is changed."
-msgstr "Hiermee worden websiteprofielen per groep toegepast. AdGuard Home ondersteunt SafeSearch, filter voor volwassen inhoud, categorieën en eigen domeinen. Pi-hole ondersteunt groepen en eigen domeinen (SafeSearch en categorieën bestaan daar niet per client). De plugin beheert alleen eigen items (met het voorvoegsel \"PC: \"); niets van wat je zelf instelde wordt aangepast."
+msgid "Used to apply website profiles per group. AdGuard Home supports SafeSearch, the adult content filter, categories and custom domains. Unbound (this firewall) supports SafeSearch, categories and custom domains without an external DNS filter. Pi-hole supports groups and custom domains. The plugin only manages its own items; nothing you configured yourself is changed."
+msgstr "Wordt gebruikt om websiteprofielen per groep toe te passen. AdGuard Home ondersteunt SafeSearch, het filter voor volwassen inhoud, categorieën en eigen domeinen. Unbound (deze firewall) ondersteunt SafeSearch, categorieën en eigen domeinen zonder extern DNS-filter. Pi-hole ondersteunt groepen en eigen domeinen. De plugin beheert alleen eigen items; niets wat je zelf instelde wordt aangepast."
 
 msgid "Backend URL"
 msgstr "Backend-URL"
 
-msgid "Address of the web interface of your DNS filter: AdGuard Home (for example http://192.168.1.2:3000) or Pi-hole (for example https://192.168.1.3). The API uses the same port."
-msgstr "Het adres van de webinterface van je DNS-filter: AdGuard Home (bijv. http://192.168.1.2:3000) of Pi-hole (bijv. https://192.168.1.3). De API gebruikt dezelfde poort."
+msgid "Address of the web interface of your DNS filter: AdGuard Home (for example http://192.168.1.2:3000) or Pi-hole (for example https://192.168.1.3). The API uses the same port. Not needed for Unbound."
+msgstr "Adres van de webinterface van je DNS-filter: AdGuard Home (bijv. http://192.168.1.2:3000) of Pi-hole (bijv. https://192.168.1.3). De API gebruikt dezelfde poort. Niet nodig voor Unbound."
 
 msgid "Backend user"
 msgstr "Backend-gebruiker"
@@ -408,6 +408,9 @@ msgstr "AdGuard Home"
 msgid "Pi-hole (v6)"
 msgstr "Pi-hole (v6)"
 
+msgid "Unbound (this firewall)"
+msgstr "Unbound (deze firewall)"
+
 msgid "Block (recommended with profiles)"
 msgstr "Blokkeren (aanbevolen bij profielen)"
 
@@ -476,6 +479,21 @@ msgstr "Toevoegen mislukt."
 
 msgid "Close"
 msgstr "Sluiten"
+
+msgid "Remove items from filter backend"
+msgstr "Items uit filter-backend verwijderen"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "No"
+msgstr "Nee"
+
+msgid "Items removed."
+msgstr "Items verwijderd."
+
+msgid "Remove all items this plugin created in the filter backend (clients, groups and rules)? Items you created yourself are not touched."
+msgstr "Alle items die deze plugin in de filter-backend heeft gemaakt (clients, groepen en regels) verwijderen? Items die je zelf hebt gemaakt blijven ongemoeid."
 
 msgid "General"
 msgstr "Algemeen"
@@ -630,12 +648,6 @@ msgstr "De verbruikte tijd en de extra tijd van vandaag voor deze groep resetten
 msgid "Block internet for this group for the rest of the day?"
 msgstr "Internet voor deze groep de rest van de dag blokkeren?"
 
-msgid "Yes"
-msgstr "Ja"
-
-msgid "No"
-msgstr "Nee"
-
 msgid "Waiting for a decision"
 msgstr "Wacht op beslissing"
 
@@ -711,6 +723,15 @@ msgstr "Alleen gebaseerd op de meest recente verzoeken."
 msgid "ongoing"
 msgstr "lopend"
 
+msgid "Emergency stop"
+msgstr "Noodstop"
+
+msgid "This disables parental control, releases all blocked devices and stops the daemon. Your settings are kept. Continue?"
+msgstr "Dit schakelt het ouderlijk toezicht uit, geeft alle geblokkeerde apparaten vrij en stopt de daemon. Je instellingen blijven bewaard. Doorgaan?"
+
+msgid "Parental control was stopped. Enable it again on the Administration page."
+msgstr "Het ouderlijk toezicht is gestopt. Schakel het op de pagina Beheer weer in."
+
 msgid "Bedtime"
 msgstr "Bedtijd"
 
@@ -783,17 +804,29 @@ msgstr "Meest recente activiteit"
 msgid "What"
 msgstr "Wat"
 
-msgid "no filter backend selected or no URL set (save the settings first)."
-msgstr "geen filter-backend gekozen of geen URL ingesteld (sla de instellingen eerst op)."
+msgid "no filter backend is configured, nothing to remove"
+msgstr "er is geen filter-backend ingesteld, er valt niets te verwijderen"
+
+msgid "removed %d client(s); rules %s"
+msgstr "%d client(s) verwijderd; regels %s"
 
 msgid "could not read the configuration: %s"
 msgstr "configuratie lezen mislukt: %s"
 
+msgid "updated"
+msgstr "bijgewerkt"
+
+msgid "unchanged"
+msgstr "ongewijzigd"
+
+msgid "no filter backend selected or no URL set (save the settings first)."
+msgstr "geen filter-backend gekozen of geen URL ingesteld (sla de instellingen eerst op)."
+
 msgid "No filter backend is configured."
 msgstr "Er is geen filter-backend ingesteld."
 
-msgid "The query log is only available with AdGuard Home."
-msgstr "Het querylogboek is alleen beschikbaar met AdGuard Home."
+msgid "The query log is only available with AdGuard Home or Pi-hole."
+msgstr "Het querylogboek is alleen beschikbaar met AdGuard Home of Pi-hole."
 
 msgid "No device of this group has a known address right now."
 msgstr "Geen enkel apparaat van deze groep heeft nu een bekend adres."
@@ -887,6 +920,24 @@ msgstr "het volwassenfilter"
 
 msgid "categories"
 msgstr "categorieën"
+
+msgid "Unbound (this firewall): configuration directory is writable and valid"
+msgstr "Unbound (deze firewall): de configuratiemap is schrijfbaar en de configuratie is geldig"
+
+msgid "Unbound has no adult content filter: add a blocklist to Unbound instead"
+msgstr "Unbound heeft geen filter voor volwassen inhoud: voeg in plaats daarvan een blokkeerlijst toe aan Unbound"
+
+msgid "Groups in the filter backend are only used by Pi-hole"
+msgstr "Groepen in de filter-backend worden alleen door Pi-hole gebruikt"
+
+msgid "Unbound rejected the generated configuration: %s"
+msgstr "Unbound heeft de gegenereerde configuratie geweigerd: %s"
+
+msgid "cannot write to %s"
+msgstr "kan niet schrijven naar %s"
+
+msgid "Unbound reports an error in its current configuration: %s"
+msgstr "Unbound meldt een fout in de huidige configuratie: %s"
 
 msgid "You can continue"
 msgstr "Je kunt weer verder"

@@ -41,6 +41,17 @@
         <help>The page only listens locally (127.0.0.1 and ::1) on this port. You do not need to open anything.</help>
     </field>
     <field>
+        <id>general.request_enabled</id>
+        <label>Allow requests for extra time</label>
+        <type>checkbox</type>
+    </field>
+    <field>
+        <id>general.request_cooldown</id>
+        <label>Time between requests (minutes)</label>
+        <type>text</type>
+        <help>A group can make at most one request per period, also after a rejection.</help>
+    </field>
+    <field>
         <id>general.header_dns</id>
         <label>DNS filter (AdGuard Home, Pi-hole, ...)</label>
         <type>header</type>
@@ -78,13 +89,13 @@
         <id>general.filter_backend</id>
         <label>Filter backend</label>
         <type>dropdown</type>
-        <help>Used to apply website profiles per group. AdGuard Home supports SafeSearch, the adult content filter, categories and custom domains. Pi-hole supports groups and custom domains (SafeSearch and categories do not exist per client there). The plugin only manages its own items (prefix "PC: "); nothing you configured yourself is changed.</help>
+        <help>Used to apply website profiles per group. AdGuard Home supports SafeSearch, the adult content filter, categories and custom domains. Unbound (this firewall) supports SafeSearch, categories and custom domains without an external DNS filter. Pi-hole supports groups and custom domains. The plugin only manages its own items; nothing you configured yourself is changed.</help>
     </field>
     <field>
         <id>general.backend_url</id>
         <label>Backend URL</label>
         <type>text</type>
-        <help>Address of the web interface of your DNS filter: AdGuard Home (for example http://192.168.1.2:3000) or Pi-hole (for example https://192.168.1.3). The API uses the same port.</help>
+        <help>Address of the web interface of your DNS filter: AdGuard Home (for example http://192.168.1.2:3000) or Pi-hole (for example https://192.168.1.3). The API uses the same port. Not needed for Unbound.</help>
     </field>
     <field>
         <id>general.backend_user</id>
@@ -109,17 +120,6 @@
         <label>Own DNS server for groups with a profile</label>
         <type>dropdown</type>
         <help>Devices in a group with a profile that configure another DNS server (for example 8.8.8.8): blocking makes sure the profile cannot be bypassed. Redirecting sends the queries to the DNS server, but AdGuard may no longer recognise the device and will not apply the profile. Only works together with "Enforce DNS".</help>
-    </field>
-    <field>
-        <id>general.request_enabled</id>
-        <label>Allow requests for extra time</label>
-        <type>checkbox</type>
-    </field>
-    <field>
-        <id>general.request_cooldown</id>
-        <label>Time between requests (minutes)</label>
-        <type>text</type>
-        <help>A group can make at most one request per period, also after a rejection.</help>
     </field>
     <field>
         <id>general.header_notify</id>

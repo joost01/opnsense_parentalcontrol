@@ -71,6 +71,11 @@ function adminScenario(mode) {
       const post = calls.find((c) => c.startsWith('POST /api/parentalcontrol/settings/add_known_devices/'));
       assert(post, mode + ': no add_known_devices call');
       assert(post.includes('"mac":"00:11:22:33:44:55"') && post.includes('"group":"g1"'), mode + ': wrong data');
+      if (mode === 'plain') {
+        $('#cleanupBackendAct').trigger('click');
+        assert(calls.includes('confirm:Remove items from filter backend'), 'cleanup was not confirmed');
+        assert(calls.some((c) => c.startsWith('POST /api/parentalcontrol/service/cleanup_backend')), 'cleanup not sent');
+      }
       console.log('ok  administration ' + mode);
       w.close();
       resolve();
@@ -121,6 +126,9 @@ function overviewScenario() {
       assert(calls.some((c) => c.includes('"command":"reset_counters"')), 'reset not sent');
       $('.dropdown-menu a:contains("Add 30 minutes")').first().trigger('click');
       assert(calls.some((c) => c.includes('add_time') && c.includes('"minutes":30')), 'add time not sent');
+      $('#emergencyAct').trigger('click');
+      assert(calls.includes('confirm:Emergency stop'), 'emergency stop was not confirmed');
+      assert(calls.some((c) => c.startsWith('POST /api/parentalcontrol/service/emergency')), 'emergency stop not sent');
       console.log('ok  overview');
       w.close();
       resolve();

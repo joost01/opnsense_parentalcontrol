@@ -5,6 +5,8 @@ PIDFILE=/var/run/parentalcontrold.pid          # pid of the daemon itself
 SUPERVISOR=/var/run/parentalcontrold.supervisor.pid  # pid of daemon(8), restarts the daemon after a crash
 SCRIPT=/usr/local/opnsense/scripts/OPNsense/ParentalControl/parentalcontrold.py
 ANCHOR=parentalcontrol
+UNBOUND_FILE=/usr/local/etc/unbound.opnsense.d/parentalcontrol.conf
+CLEANUP=/usr/local/opnsense/scripts/OPNsense/ParentalControl/backend_cleanup.py
 
 running() {
     [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null
@@ -44,8 +46,22 @@ status)
 cleanup)
     /sbin/pfctl -a "$ANCHOR" -F all >/dev/null 2>&1
     ;;
+emergency)
+    # stop the daemon and release everything the firewall holds (the GUI also disables the plugin)
+    "$0" stop
+    "$0" cleanup
+    ;;
+uninstall)
+    # used before the package is removed: stop, release, and remove what we created elsewhere
+    "$0" emergency
+    /usr/local/bin/python3 "$CLEANUP" >/dev/null 2>&1
+    if [ -f "$UNBOUND_FILE" ]; then
+        rm -f "$UNBOUND_FILE"
+        /usr/local/sbin/configctl unbound restart >/dev/null 2>&1
+    fi
+    ;;
 *)
-    echo "usage: $0 start|stop|restart|status|cleanup"
+    echo "usage: $0 start|stop|restart|status|cleanup|emergency|uninstall"
     exit 1
     ;;
 esac

@@ -11,10 +11,10 @@ import json
 import socket
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from pc_common import fmt_dur, norm_ip
-from pc_i18n import _, language
+from pc_i18n import _, negotiate, match_locale, primary, language_choices, system_locale, translator
 
 MAX_CONNECTIONS = 32   # concurrent connections per server; extra connections are closed immediately
 STATUS_PATH = '/__pc/status'
@@ -39,55 +39,59 @@ def status_key(info):
                             info.get('req_state'))
 
 
-def render_page(info):
+def render_page(info, tr=None, locale=None, choices=()):
+    """Render the page in the language of tr/locale (default: the system language)."""
+    tr = tr or _
+    locale = locale or system_locale()
     key = esc(status_key(info))
     if not info.get('blocked'):
-        title = _('You can continue')
-        body = '<h1>%s</h1><p>%s</p>' % (esc(title), esc(_('The page is being reloaded...')))
-        return _wrap(title, body, 'setTimeout(function(){location.reload()},1500);')
+        title = tr('You can continue')
+        body = '<h1>%s</h1><p>%s</p>' % (esc(title), esc(tr('The page is being reloaded...')))
+        return _wrap(title, body, 'setTimeout(function(){location.reload()},1500);', locale)
 
     name = esc(info['group_name'])
     reason = info['reason']
     if reason == 'bedtime':
-        title = _('Bedtime')
-        until = esc(_(' until %s') % info['until']) if info.get('until') else ''
+        title = tr('Bedtime')
+        until = esc(tr(' until %s') % info['until']) if info.get('until') else ''
         body = '<h1>%s &#127769;</h1><p>%s</p>' % (
-            esc(_('It is bedtime')), _('Internet access for <b>%s</b> is switched off%s.') % (name, until))
+            esc(tr('It is bedtime')), tr('Internet access for <b>%s</b> is switched off%s.') % (name, until))
     elif reason == 'manual':
-        title = _('Internet switched off')
+        title = tr('Internet switched off')
         body = '<h1>%s</h1><p>%s</p>' % (
-            esc(title), _('A parent switched off internet access for <b>%s</b> for today.') % name)
+            esc(title), tr('A parent switched off internet access for <b>%s</b> for today.') % name)
     else:
-        title = _('Device time is up')
-        used = fmt_dur(info['used'])
-        total = fmt_dur((info['limit'] or 0) + info['extra'])
+        title = tr('Device time is up')
+        used = fmt_dur(info['used'], tr)
+        total = fmt_dur((info['limit'] or 0) + info['extra'], tr)
         body = '<h1>%s</h1><p>%s</p>' % (
-            esc(_('Your device time is up')),
-            _('Used today by <b>%s</b>: %s of %s.') % (name, esc(used), esc(total)))
-        body += _request_section(info)
-    return _wrap(title, body, _script(key))
+            esc(tr('Your device time is up')),
+            tr('Used today by <b>%s</b>: %s of %s.') % (name, esc(used), esc(total)))
+        body += _request_section(info, tr)
+    body += _switcher(choices, locale)
+    return _wrap(title, body, _script(key, tr, locale), locale)
 
 
-def _request_section(info):
+def _request_section(info, tr):
     state = info.get('req_state')
     left = int(info.get('cooldown_left', 0))
     if state == 'pending':
-        return '<p>&#9203; %s</p>' % esc(_('Your request has been sent. Please wait for a parent to answer...'))
+        return '<p>&#9203; %s</p>' % esc(tr('Your request has been sent. Please wait for a parent to answer...'))
     out = ''
     if state == 'denied':
-        out += '<p>%s</p>' % esc(_('Your last request was rejected.'))
+        out += '<p>%s</p>' % esc(tr('Your last request was rejected.'))
     elif state == 'approved':
-        out += '<p>%s</p>' % esc(_('Your last request was approved.'))
+        out += '<p>%s</p>' % esc(tr('Your last request was approved.'))
     if info.get('can_request'):
-        out += '<p>%s</p>' % esc(_('Would you like to ask for extra time?'))
+        out += '<p>%s</p>' % esc(tr('Would you like to ask for extra time?'))
         for minutes in info['minutes_options']:
-            out += '<button type="button" onclick="ask(%d)">%s</button>' % (minutes, esc(_('%d minutes') % minutes))
+            out += '<button type="button" onclick="ask(%d)">%s</button>' % (minutes, esc(tr('%d minutes') % minutes))
         out += '<div class="msg" id="msg"></div>'
     elif left > 0:
         countdown = '<span id="cd" data-left="%d">%s</span>' % (left, esc(_mmss(left)))
-        out += '<p class="muted">%s</p>' % (_('You can make a new request in %s.') % countdown)
+        out += '<p class="muted">%s</p>' % (tr('You can make a new request in %s.') % countdown)
     elif not info.get('request_enabled', True):
-        out += '<p class="muted">%s</p>' % esc(_('Asking for extra time is disabled.'))
+        out += '<p class="muted">%s</p>' % esc(tr('Asking for extra time is disabled.'))
     return out
 
 
@@ -95,9 +99,9 @@ def _mmss(sec):
     return '%d:%02d' % (sec // 60, sec % 60)
 
 
-def _script(key):
+def _script(key, tr, locale):
     return """
-var KEY="%s";
+var KEY="%s";var LANG=%s;
 function poll(){fetch('%s',{cache:'no-store'}).then(function(r){return r.json()}).then(function(s){
 if(s.key!==KEY){location.reload();}}).catch(function(){});}
 setInterval(poll,4000);
@@ -106,17 +110,28 @@ if(el){var left=parseInt(el.getAttribute('data-left'),10);
 setInterval(function(){left--;if(left<=0){location.reload();return;}
 el.textContent=Math.floor(left/60)+':'+('0'+(left%%60)).slice(-2);},1000);}
 function ask(m){var msg=document.getElementById('msg');
-fetch('%s',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'minutes='+m})
+fetch('%s',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'minutes='+m+'&lang='+encodeURIComponent(LANG)})
 .then(function(r){return r.json()}).then(function(d){if(d.ok){location.reload();}else{msg.textContent=d.message;}})
 .catch(function(){msg.textContent=%s;});}
-""" % (key, STATUS_PATH, REQUEST_PATH, json.dumps(_('Sending failed, please try again later.')))
+""" % (key, json.dumps(locale), STATUS_PATH, REQUEST_PATH,
+           json.dumps(tr('Sending failed, please try again later.')))
 
 
-def _wrap(title, body, script):
+def _wrap(title, body, script, locale):
     return ('<!DOCTYPE html><html lang="%s"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
             '<title>%s</title><style>%s</style></head><body><main>%s</main><script>%s</script></body></html>'
-            % (esc(language()), esc(title), CSS, body, script))
+            % (esc(primary(locale)), esc(title), CSS, body, script))
+
+
+def _switcher(choices, current):
+    """Small language links under the message (only when there is more than one language)."""
+    if len(choices) < 2:
+        return ''
+    links = ' &middot; '.join(
+        '<b>%s</b>' % esc(name) if loc == current else '<a href="?pc_lang=%s">%s</a>' % (esc(primary(loc)), esc(name))
+        for loc, name in choices)
+    return '<p class="muted" style="margin-top:1.5em">%s</p>' % links
 
 
 def make_handler(daemon):
@@ -143,13 +158,22 @@ def make_handler(daemon):
             if not head_only:
                 self.wfile.write(data)
 
+        def _locale(self, requested=None):
+            """?pc_lang=xx (the switcher) > Accept-Language of the browser > system language."""
+            if requested is None:
+                requested = (parse_qs(urlparse(self.path).query).get('pc_lang') or [''])[0]
+            chosen = match_locale(requested) if requested else None
+            return chosen or negotiate(self.headers.get('Accept-Language', ''), system_locale())
+
         def _client(self):
             return norm_ip(self.client_address[0]) or self.client_address[0]
 
         def _serve(self, head_only=False):
             ip = self._client()
             path = self.path.split('?', 1)[0]
-            info = daemon.page_info(ip)
+            locale = self._locale()
+            tr = translator(locale)
+            info = daemon.page_info(ip, tr)
             if path == STATUS_PATH:
                 self._send(200, 'application/json', json.dumps({'key': status_key(info)}), head_only)
                 return
@@ -164,7 +188,7 @@ def make_handler(daemon):
                     self.send_header('Connection', 'close')
                     self.end_headers()
                     return
-            self._send(200, 'text/html; charset=utf-8', render_page(info), head_only)
+            self._send(200, 'text/html; charset=utf-8', render_page(info, tr, locale, language_choices()), head_only)
 
         def do_GET(self):
             self._serve()
@@ -185,7 +209,8 @@ def make_handler(daemon):
                 minutes = int(fields.get('minutes', ['0'])[0])
             except ValueError:
                 minutes = 0
-            result = daemon.create_request(self._client(), minutes)
+            locale = self._locale(fields.get('lang', [''])[0])
+            result = daemon.create_request(self._client(), minutes, translator(locale))
             self._send(200, 'application/json', json.dumps(result))
 
     return Handler

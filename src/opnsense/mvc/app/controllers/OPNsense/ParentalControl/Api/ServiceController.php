@@ -4,6 +4,7 @@ namespace OPNsense\ParentalControl\Api;
 
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\Core\Backend;
+use OPNsense\Core\Config;
 use OPNsense\ParentalControl\ParentalControl;
 
 class ServiceController extends ApiControllerBase
@@ -180,6 +181,37 @@ class ServiceController extends ApiControllerBase
         return false;
     }
 
+    /**
+     * Emergency stop: disable the plugin, release every block and stop the daemon.
+     * The settings are kept; enable the plugin again on the Administration page.
+     */
+    public function emergencyAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $mdl = new ParentalControl();
+        $mdl->general->enabled = '0';
+        $mdl->serializeToConfig(false, true);
+        Config::getInstance()->save();
+        $backend = new Backend();
+        $backend->configdRun('filter reload');
+        $backend->configdRun('parentalcontrol emergency');
+        return ['status' => 'ok'];
+    }
+
+    /**
+     * Remove everything the plugin created in the filter backend (clients, groups, rules).
+     */
+    public function cleanupBackendAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed'];
+        }
+        $response = trim((new Backend())->configdRun('parentalcontrol backendcleanup'));
+        return ['status' => strpos($response, 'OK') === 0 ? 'ok' : 'failed', 'message' => $response];
+    }
+
     public function startAction()
     {
         if ($this->request->isPost()) {
@@ -213,6 +245,8 @@ class ServiceController extends ApiControllerBase
         } else {
             $backend->configdRun('parentalcontrol stop');
             $backend->configdRun('parentalcontrol cleanup');
+            // a disabled plugin must not leave website profiles behind in the filter backend
+            $backend->configdRun('parentalcontrol backendcleanup');
         }
         return ['status' => 'ok'];
     }

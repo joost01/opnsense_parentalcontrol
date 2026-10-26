@@ -16,6 +16,7 @@ class FakePiHole:
         self.domains = [{'domain': 'own.example', 'type': 'deny', 'kind': 'exact', 'comment': 'my own rule',
                          'groups': [0], 'enabled': True}]
         self.next_id = 10
+        self.queries = []                    # newest first: {'id', 'time', 'domain', 'status', 'client': {'ip'}}
         outer = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -50,6 +51,16 @@ class FakePiHole:
                     outer.sessions.discard(sid)
                     outer.logouts += 1
                     return self._send(204)
+                if path.startswith('/api/queries'):
+                    q = urllib.parse.parse_qs(urllib.parse.urlparse(path).query)
+                    ip = q.get('client_ip', [''])[0]
+                    since, until = float(q['from'][0]), float(q['until'][0])
+                    length = int(q.get('length', ['100'])[0])
+                    cursor = int(q['cursor'][0]) if 'cursor' in q else None
+                    rows = [r for r in outer.queries if (not ip or r['client']['ip'] == ip)
+                            and since <= r['time'] <= until and (cursor is None or r['id'] < cursor)]
+                    page = rows[:length]
+                    return self._send(200, {'queries': page, 'cursor': page[-1]['id'] if len(page) == length else None})
                 if path == '/api/info/version':
                     return self._send(200, {'version': {'core': {'local': {'version': 'v6.1'}}}})
                 if path == '/api/groups':
