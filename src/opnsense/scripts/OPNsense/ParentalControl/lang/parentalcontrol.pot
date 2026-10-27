@@ -67,6 +67,10 @@ msgid "Sun"
 msgstr ""
 
 #: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
+msgid "Another part of the configuration is invalid (%s): %s"
+msgstr ""
+
+#: src/opnsense/mvc/app/controllers/OPNsense/ParentalControl/Api/SettingsController.php
 msgid "The group still contains devices."
 msgstr ""
 
@@ -727,7 +731,7 @@ msgid "Blocked categories"
 msgstr ""
 
 #: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt
-msgid "Changes only take effect after you apply them."
+msgid "Apply saves the General tab and then activates all changes."
 msgstr ""
 
 #: src/opnsense/mvc/app/views/OPNsense/ParentalControl/administration.volt

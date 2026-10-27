@@ -32,17 +32,28 @@
         $("#grid-budgets").UIBootgrid(gridOptions("budget"));
         $("#grid-profiles").UIBootgrid(gridOptions("profile"));
 
-        $("#saveAct").click(function () {
-            $("#saveAct_progress").addClass("fa fa-spinner fa-pulse");
+        function saveGeneral(next) {
+            $("#saveAct_progress").removeClass("fa-check").addClass("fa fa-spinner fa-pulse");
             saveFormToEndpoint(base + "set", "frm_general_settings", function () {
+                $("#saveAct_progress").removeClass("fa-spinner fa-pulse").addClass("fa fa-check");
+                setTimeout(function () { $("#saveAct_progress").removeClass("fa fa-check"); }, 2500);
+                if (next) { next(); }
+            }, false, function () {
                 $("#saveAct_progress").removeClass("fa fa-spinner fa-pulse");
+                $("#applyAct_progress").removeClass("fa fa-spinner fa-pulse");
+                $('a[href="#general"]').tab("show");
             });
-        });
+        }
 
+        $("#saveAct").click(function () { saveGeneral(); });
+
+        // Apply also saves the General tab first, so settings are never lost by applying
         $("#applyAct").click(function () {
             $("#applyAct_progress").addClass("fa fa-spinner fa-pulse");
-            ajaxCall("/api/parentalcontrol/service/reconfigure", {}, function () {
-                $("#applyAct_progress").removeClass("fa fa-spinner fa-pulse");
+            saveGeneral(function () {
+                ajaxCall("/api/parentalcontrol/service/reconfigure", {}, function () {
+                    $("#applyAct_progress").removeClass("fa fa-spinner fa-pulse");
+                });
             });
         });
 
@@ -288,7 +299,7 @@
 
 <div class="content-box" style="padding-bottom: 1.5em; margin-top: 1em;">
     <div class="col-md-12">
-        <p>{{ lang._('Changes only take effect after you apply them.') }}</p>
+        <p>{{ lang._('Apply saves the General tab and then activates all changes.') }}</p>
         <button class="btn btn-primary" id="applyAct" type="button">
             <b>{{ lang._('Apply') }}</b> <i id="applyAct_progress"></i>
         </button>

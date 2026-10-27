@@ -42,12 +42,27 @@ class SettingsController extends ApiMutableModelControllerBase
         if ($this->request->isPost() && $this->request->hasPost('general')) {
             $mdl = $this->getModel();
             $mdl->general->setNodes($this->request->getPost('general'));
-            $msgs = $mdl->performValidation();
-            foreach ($msgs as $msg) {
-                if (!isset($result['validations'])) {
-                    $result['validations'] = [];
+            $foreign = ['groups.', 'profiles.', 'devices.', 'bedtimes.', 'budgets.'];
+            foreach ($mdl->performValidation() as $msg) {
+                $field = $msg->getField();
+                $isForeign = false;
+                foreach ($foreign as $prefix) {
+                    if (strpos($field, $prefix) === 0) {
+                        $isForeign = true;
+                    }
                 }
-                $result['validations'][$msg->getField()] = $msg->getMessage();
+                if ($isForeign) {
+                    // an error in another part of the configuration blocks saving: show it on the first
+                    // field of this form instead of failing silently
+                    $result['validations']['general.enabled'] = sprintf(
+                        gettext('Another part of the configuration is invalid (%s): %s'),
+                        $field,
+                        $msg->getMessage()
+                    );
+                } else {
+                    $key = strpos($field, 'general.') === 0 ? $field : 'general.' . $field;
+                    $result['validations'][$key] = $msg->getMessage();
+                }
             }
             if (empty($result['validations'])) {
                 $mdl->serializeToConfig();

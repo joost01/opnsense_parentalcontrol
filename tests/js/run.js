@@ -39,7 +39,7 @@ function boot(file, canned, mode) {
     return this;
   };
   w.mapDataToFormUI = () => $.Deferred().resolve();
-  w.saveFormToEndpoint = () => {};
+  w.saveFormToEndpoint = (url, form, ok) => { calls.push('SAVE ' + url + ' ' + form); ok(); };
   w.stdDialogInform = () => {};
   w.stdDialogConfirm = (title, message, yes, no, cb) => { calls.push('confirm:' + title); cb(); };
   w.ajaxGet = (url, data, cb) => { calls.push('GET ' + url + ' ' + JSON.stringify(data)); cb(canned[url] || {}); };
@@ -72,6 +72,14 @@ function adminScenario(mode) {
       assert(post, mode + ': no add_known_devices call');
       assert(post.includes('"mac":"00:11:22:33:44:55"') && post.includes('"group":"g1"'), mode + ': wrong data');
       if (mode === 'plain') {
+        calls.length = 0;
+        $('#saveAct').trigger('click');
+        assert(calls.includes('SAVE /api/parentalcontrol/settings/set frm_general_settings'), 'Save did not post the General form');
+        calls.length = 0;
+        $('#applyAct').trigger('click');
+        const saveAt = calls.findIndex((c) => c.startsWith('SAVE '));
+        const applyAt = calls.findIndex((c) => c.startsWith('POST /api/parentalcontrol/service/reconfigure'));
+        assert(saveAt >= 0 && applyAt > saveAt, 'Apply must save the General tab first, then reconfigure: ' + calls.join(' | '));
         $('#cleanupBackendAct').trigger('click');
         assert(calls.includes('confirm:Remove items from filter backend'), 'cleanup was not confirmed');
         assert(calls.some((c) => c.startsWith('POST /api/parentalcontrol/service/cleanup_backend')), 'cleanup not sent');

@@ -51,6 +51,9 @@ msgstr "Za"
 msgid "Sun"
 msgstr "Zo"
 
+msgid "Another part of the configuration is invalid (%s): %s"
+msgstr "Een ander deel van de configuratie is ongeldig (%s): %s"
+
 msgid "The group still contains devices."
 msgstr "De groep bevat nog apparaten."
 
@@ -204,6 +207,15 @@ msgstr "Poort blokkeerpagina"
 msgid "The page only listens locally (127.0.0.1 and ::1) on this port. You do not need to open anything."
 msgstr "De pagina luistert alleen lokaal (127.0.0.1 en ::1) op deze poort. Je hoeft niets te openen."
 
+msgid "Allow requests for extra time"
+msgstr "Verzoeken om extra tijd toestaan"
+
+msgid "Time between requests (minutes)"
+msgstr "Tijd tussen verzoeken (minuten)"
+
+msgid "A group can make at most one request per period, also after a rejection."
+msgstr "Een groep kan hooguit een verzoek per periode doen. Ook na afwijzen."
+
 msgid "DNS filter (AdGuard Home, Pi-hole, ...)"
 msgstr "DNS-filter (AdGuard Home, Pi-hole, ...)"
 
@@ -269,15 +281,6 @@ msgstr "Eigen DNS-server bij groepen met profiel"
 
 msgid "Devices in a group with a profile that configure another DNS server (for example 8.8.8.8): blocking makes sure the profile cannot be bypassed. Redirecting sends the queries to the DNS server, but AdGuard may no longer recognise the device and will not apply the profile. Only works together with \"Enforce DNS\"."
 msgstr "Apparaten in een groep met een profiel die een andere DNS-server instellen (bijv. 8.8.8.8): blokkeren zorgt dat het profiel niet te omzeilen is. Omleiden stuurt de vragen naar de DNS-server, maar AdGuard herkent het apparaat dan mogelijk niet meer en past het profiel niet toe. Werkt alleen met \"DNS afdwingen\"."
-
-msgid "Allow requests for extra time"
-msgstr "Verzoeken om extra tijd toestaan"
-
-msgid "Time between requests (minutes)"
-msgstr "Tijd tussen verzoeken (minuten)"
-
-msgid "A group can make at most one request per period, also after a rejection."
-msgstr "Een groep kan hooguit een verzoek per periode doen. Ook na afwijzen."
 
 msgid "Notifications to the parent"
 msgstr "Meldingen aan de ouder"
@@ -546,8 +549,8 @@ msgstr "Volwassen filter"
 msgid "Blocked categories"
 msgstr "Geblokkeerde categorieën"
 
-msgid "Changes only take effect after you apply them."
-msgstr "Wijzigingen worden pas actief nadat je ze toepast."
+msgid "Apply saves the General tab and then activates all changes."
+msgstr "Toepassen bewaart het tabblad General en activeert daarna alle wijzigingen."
 
 msgid "Apply"
 msgstr "Toepassen"
